@@ -29,3 +29,15 @@ export class BillingConflictError extends AppError {
     super(409, message);
   }
 }
+
+export class NotFoundError extends AppError {
+  constructor(message: string = 'Resource not found') {
+    super(404, message);
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(message: string = 'Validation failed') {
+    super(400, message);
+  }
+}

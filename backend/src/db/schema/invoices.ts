@@ -17,6 +17,7 @@ export const invoices = pgTable('invoices', {
   taxTotal: integer('tax_total').notNull().default(0),
   discountTotal: integer('discount_total').notNull().default(0),
   grandTotal: integer('grand_total').notNull().default(0),
+  amountPaid: integer('amount_paid').default(0).notNull(),
   paymentStatus: paymentStatusEnum('payment_status').notNull().default('UNPAID'),
   notes: varchar('notes', { length: 1000 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),

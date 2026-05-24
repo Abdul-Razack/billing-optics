@@ -15,3 +15,24 @@ export const createInvoiceSchema = z.object({
     notes: z.string().optional(),
   }),
 });
+
+export const checkoutSchema = z.object({
+  body: z.object({
+    customerId: z.number().optional(),
+    items: z.array(
+      z.object({
+        productId: z.number(),
+        quantity: z.number().int().positive(),
+      })
+    ).min(1, 'At least one item is required'),
+    paymentMethod: z.enum(['CASH', 'CARD', 'UPI', 'BANK_TRANSFER']),
+  }),
+});
+
+export const addPaymentSchema = z.object({
+  body: z.object({
+    amount: z.number().positive(),
+    paymentMethod: z.enum(['CASH', 'CARD', 'UPI', 'BANK_TRANSFER']),
+    referenceNumber: z.string().optional(),
+  }),
+});
