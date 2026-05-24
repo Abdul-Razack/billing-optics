@@ -7,7 +7,7 @@ import { checkoutSchema, addPaymentSchema } from '../validators/billing.validato
 const router = Router();
 
 router.post(
-  '/checkout',
+  '/:id/checkout',
   authenticate,
   validate(checkoutSchema),
   BillingController.checkout

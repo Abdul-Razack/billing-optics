@@ -29,6 +29,13 @@
       "when": 1779571969389,
       "tag": "0003_watery_starfox",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779618077068,
+      "tag": "0004_open_lethal_legion",
+      "breakpoints": true
     }
   ]
 }

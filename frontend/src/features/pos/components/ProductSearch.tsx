@@ -1,0 +1,114 @@
+import { useEffect, useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useSearchStore } from '../store/search.store';
+import { useProducts } from '../../inventory/hooks/useProducts';
+import { useAddInvoiceItem } from '../hooks/useAddInvoiceItem';
+import { usePosStore } from '../store/usePosStore';
+import ProductRow from './ProductRow';
+
+export default function ProductSearch(): JSX.Element {
+  const { search, highlightedIndex, isSearchFocused, setSearch, setHighlightedIndex, setSearchFocused } = useSearchStore();
+  const activeInvoiceId = usePosStore((state) => state.activeInvoiceId);
+  const { mutate: addItem } = useAddInvoiceItem();
+
+  const [inputValue, setInputValue] = useState(search);
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearch(inputValue);
+    }, 150);
+    return () => clearTimeout(handler);
+  }, [inputValue, setSearch]);
+
+  const { data: products = [], isLoading } = useProducts(search);
+
+  const rowVirtualizer = useVirtualizer({
+    count: products.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 50,
+    overscan: 10,
+  });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isSearchFocused || products.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex(Math.min(highlightedIndex + 1, products.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex(Math.max(highlightedIndex - 1, 0));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const selected = products[highlightedIndex];
+        if (selected && activeInvoiceId) {
+          addItem({ invoiceId: activeInvoiceId, productId: selected.id, qty: 1 });
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchFocused, products, highlightedIndex, activeInvoiceId, setHighlightedIndex, addItem]);
+
+  useEffect(() => {
+    if (products.length > 0) {
+      rowVirtualizer.scrollToIndex(highlightedIndex);
+    }
+  }, [highlightedIndex, rowVirtualizer, products.length]);
+
+  return (
+    <div className="product-search" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <input
+        type="text"
+        placeholder="Search products..."
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onFocus={() => setSearchFocused(true)}
+        onBlur={() => setSearchFocused(false)}
+        style={{ padding: '8px', margin: '8px' }}
+      />
+      
+      {isLoading && <div style={{ padding: '8px' }}>Loading...</div>}
+
+      <div
+        ref={parentRef}
+        style={{
+          flex: 1,
+          overflow: 'auto',
+          position: 'relative',
+        }}
+      >
+        <div
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+            const product = products[virtualItem.index];
+            if (!product) return null;
+            return (
+              <div
+                key={virtualItem.key}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${virtualItem.size}px`,
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <ProductRow productId={product.id} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}

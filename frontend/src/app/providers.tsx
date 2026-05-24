@@ -1,22 +1,45 @@
-import React from 'react';
-import { QueryProvider } from '../providers/QueryProvider';
-import { AuthProvider } from '../providers/AuthProvider';
-import { ThemeProvider } from '../providers/ThemeProvider';
+import React, { useEffect, useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { restoreQueryCache, persistQueryCache } from '../core/db/query-cache';
+import { initializeEventHandlers } from '../core/api/event-handlers';
+import { queueWorker } from '../core/queue/queue.worker';
+import DiagnosticsPanel from '../core/performance/DiagnosticsPanel';
 
-export interface ProvidersProps {
-  children: React.ReactNode;
-}
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-export function Providers({ children }: ProvidersProps) {
+queryClient.getQueryCache().subscribe((event) => {
+  if (event.type === 'updated' || event.type === 'added') {
+    persistQueryCache(queryClient);
+  }
+});
+
+export default function AppProviders({ children }: { children: React.ReactNode }): JSX.Element {
+  const [isRestored, setIsRestored] = useState(false);
+
+  useEffect(() => {
+    restoreQueryCache(queryClient).finally(() => {
+      setIsRestored(true);
+      initializeEventHandlers(queryClient);
+      queueWorker.start();
+    });
+  }, []);
+
+  if (!isRestored) {
+    return <div>Loading application...</div>;
+  }
+
   return (
-    <ThemeProvider defaultTheme="system" storageKey="optics-pos-theme">
-      <QueryProvider>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-      </QueryProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      {children}
+      <DiagnosticsPanel />
+    </QueryClientProvider>
   );
 }
-
-export default Providers;

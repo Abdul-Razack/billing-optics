@@ -1,16 +1,15 @@
-import { Providers } from './providers';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './router';
+import AppProviders from './providers';
+import OfflineBanner from '../ui/components/OfflineBanner';
+import SyncIndicator from '../ui/components/SyncIndicator';
 
-export function App() {
+export default function App(): JSX.Element {
   return (
-    <Providers>
-      <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-extrabold tracking-tight">Optics POS System</h1>
-          <p className="text-muted-foreground">Clean Architecture React Starter Template</p>
-        </div>
-      </div>
-    </Providers>
+    <AppProviders>
+      <OfflineBanner />
+      <RouterProvider router={router} />
+      <SyncIndicator />
+    </AppProviders>
   );
 }
-
-export default App;

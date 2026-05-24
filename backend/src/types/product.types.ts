@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { createProductSchema } from '../validators/product.validator';
+import { createProductSchema } from '../validators/catalog.validator';
 
-export type CreateProductPayload = z.infer<typeof createProductSchema>['body'];
+export type CreateProductPayload = z.infer<typeof createProductSchema>;
 
 export interface ProductDetails {
   id: string;

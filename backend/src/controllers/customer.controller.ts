@@ -47,7 +47,8 @@ export class CustomerController {
   static async addPrescription(req: Request, res: Response, next: NextFunction) {
     try {
       const customerId = parseInt(req.params.id, 10);
-      const data = req.body;
+      const userId = req.user!.id;
+      const data = { ...req.body, createdBy: userId };
       const result = await customerService.addPrescription(customerId, data);
       res.status(201).json({ success: true, data: result });
     } catch (error) {
