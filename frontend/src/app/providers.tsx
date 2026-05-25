@@ -1,7 +1,7 @@
 /* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import React, { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { restoreQueryCache, persistQueryCache } from '../core/db/query-cache';
 import { initializeEventHandlers } from '../core/api/event-handlers';
 import { queueWorker } from '../core/queue/queue.worker';
@@ -79,6 +79,7 @@ export default function AppProviders({ children }: { children: React.ReactNode }
 
   return (
     <QueryClientProvider client={queryClient}>
+      <Toaster position="top-right" toastOptions={{ className: 'text-sm font-medium', duration: 3000 }} />
       {children}
       <DiagnosticsPanel />
     </QueryClientProvider>

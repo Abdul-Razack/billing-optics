@@ -4,7 +4,7 @@ import { invoiceQueryKeys } from './useInvoice';
 
 interface LinkCustomerPayload {
   invoiceId: string;
-  customerId: string;
+  customerId: string | null;
 }
 
 export function useLinkCustomer() {

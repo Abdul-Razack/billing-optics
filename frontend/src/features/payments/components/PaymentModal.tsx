@@ -80,36 +80,50 @@ export default function PaymentModal(): JSX.Element | null {
   if (!isOpen || !activeInvoiceId || !totals || !invoice) return null;
 
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ width: '600px', backgroundColor: 'white', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ margin: '0 0 16px 0' }}>Complete Payment</h2>
-        <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>Balance: ${(totals.balanceAmount / 100).toFixed(2)}</div>
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-[1000] animate-in fade-in duration-200">
+      <div className="w-[500px] bg-white rounded-3xl p-6 flex flex-col shadow-[0_20px_50px_-12px_rgba(0,0,0,0.2)] animate-in zoom-in-95 duration-200 border border-white">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">Complete Payment</h2>
+          <div className="text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full">INV-PENDING</div>
+        </div>
+        
+        <div className="mb-5 p-4 rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 shadow-inner flex flex-col items-center justify-center text-white relative overflow-hidden">
+           <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+           <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-16 h-16 rounded-full bg-white/10 blur-lg"></div>
+           <div className="text-indigo-100 font-medium mb-1 text-[11px] uppercase tracking-wider z-10">Total Balance Due</div>
+           <div className="text-4xl font-black tracking-tight z-10 drop-shadow-sm">${(totals.balanceAmount / 100).toFixed(2)}</div>
+        </div>
         
         <PaymentMethodTabs />
         
-        <div style={{ marginTop: '16px', minHeight: '200px' }}>
+        <div className="mt-3 min-h-[160px]">
           {activeMethod === 'CASH' && <CashPaymentPanel balanceAmount={totals.balanceAmount / 100} />}
           {activeMethod === 'CARD' && <CardPaymentPanel balanceAmount={totals.balanceAmount / 100} />}
           {activeMethod === 'UPI' && <UpiPaymentPanel balanceAmount={totals.balanceAmount / 100} />}
           {activeMethod === 'SPLIT' && <SplitPaymentPanel balanceAmount={totals.balanceAmount / 100} />}
         </div>
         
-        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
-          <button onClick={() => setIsOpen(false)} style={{ padding: '12px 24px', cursor: 'pointer' }}>Cancel (ESC)</button>
+        <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5">
+          <button 
+            onClick={() => setIsOpen(false)} 
+            className="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all"
+          >
+            Cancel (ESC)
+          </button>
           <button 
             onClick={handleConfirm} 
             disabled={isInvalid || isPending}
-            style={{ 
-              padding: '12px 24px', 
-              backgroundColor: isInvalid || isPending ? '#94a3b8' : '#3b82f6', 
-              color: 'white', 
-              cursor: isInvalid || isPending ? 'not-allowed' : 'pointer', 
-              fontWeight: 'bold',
-              border: 'none',
-              borderRadius: '6px'
-            }}
+            className={`px-6 py-2.5 text-sm font-bold text-white rounded-xl transition-all active:scale-95 flex items-center gap-2 ${
+              isInvalid || isPending ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 shadow-md shadow-indigo-600/10'
+            }`}
           >
-            {isPending ? 'Processing...' : 'Confirm (CTRL+ENTER)'}
+            {isPending && (
+              <svg className="animate-spin h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
+            {isPending ? 'Processing...' : 'Confirm Payment (CTRL+ENTER)'}
           </button>
         </div>
       </div>

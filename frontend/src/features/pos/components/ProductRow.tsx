@@ -1,5 +1,6 @@
 /* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import React, { useCallback } from 'react';
+import { toast } from 'react-hot-toast';
 import { Product } from '../../../core/api/types';
 import StockBadge from '../../inventory/components/StockBadge';
 import { useAddInvoiceItem } from '../hooks/useAddInvoiceItem';
@@ -20,14 +21,15 @@ function ProductRow({ product, isHighlighted }: ProductRowProps): JSX.Element {
   const handleClick = useCallback(() => {
     if (activeInvoiceId) {
       addItem({ invoiceId: activeInvoiceId, productId: product.id, qty: 1, unitPrice: product.sellingPrice });
+      toast.success(`Added ${product.name}`);
     }
-  }, [activeInvoiceId, product.id, product.sellingPrice, addItem]);
+  }, [activeInvoiceId, product.id, product.sellingPrice, addItem, product.name]);
 
   return (
     <div
       onClick={handleClick}
-      className={`group flex items-center justify-between px-4 py-3 cursor-pointer border-b border-slate-100 transition-all duration-200 ease-in-out ${
-        isHighlighted ? 'bg-indigo-50/70 border-indigo-100 shadow-[inset_2px_0_0_0_#6366f1]' : 'hover:bg-slate-50'
+      className={`group flex items-center justify-between px-4 py-3 cursor-pointer border-b border-slate-100 transition-all duration-150 ease-in-out active:scale-[0.98] active:bg-slate-100 ${
+        isHighlighted ? 'bg-indigo-50/70 border-indigo-100 shadow-[inset_3px_0_0_0_#6366f1]' : 'hover:bg-slate-50'
       }`}
     >
       <div className="flex flex-col overflow-hidden">

@@ -1,5 +1,6 @@
 /* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useSearchStore } from '../store/search.store';
 import { useProducts } from '../../inventory/hooks/useProducts';
@@ -46,6 +47,7 @@ export default function ProductSearch(): JSX.Element {
         const selected = products[highlightedIndex];
         if (selected && activeInvoiceId) {
           addItem({ invoiceId: activeInvoiceId, productId: selected.id, qty: 1, unitPrice: selected.sellingPrice });
+          toast.success(`Added ${selected.name}`);
         }
       }
     };
@@ -69,6 +71,7 @@ export default function ProductSearch(): JSX.Element {
             type="text"
             placeholder="Search products..."
             value={inputValue}
+            autoFocus
             onChange={(e) => setInputValue(e.target.value)}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
@@ -77,15 +80,29 @@ export default function ProductSearch(): JSX.Element {
         </div>
       </div>
       
-      {isLoading && (
-        <div className="p-4 flex justify-center">
-          <div className="animate-pulse flex space-x-2">
-            <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-            <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-            <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-          </div>
+      {isLoading ? (
+        <div className="flex-1 overflow-hidden p-4 space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="animate-pulse flex items-center justify-between p-2">
+              <div className="flex flex-col space-y-2 w-1/2">
+                <div className="h-4 bg-slate-200 rounded w-full"></div>
+                <div className="h-3 bg-slate-200 rounded w-2/3"></div>
+              </div>
+              <div className="h-4 bg-slate-200 rounded w-16"></div>
+            </div>
+          ))}
         </div>
-      )}
+      ) : products.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
+          <div className="w-16 h-16 mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-slate-600">No products found</p>
+          <p className="text-xs mt-1 text-slate-400">Try adjusting your search terms</p>
+        </div>
+      ) : (
 
       <div
         ref={parentRef}
@@ -122,6 +139,7 @@ export default function ProductSearch(): JSX.Element {
           })}
         </div>
       </div>
+      )}
     </div>
   );
 }

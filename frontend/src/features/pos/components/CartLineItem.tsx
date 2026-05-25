@@ -49,7 +49,7 @@ function CartLineItem({ invoiceId, itemId }: CartLineItemProps): JSX.Element {
   const totalFormatted = ((item.unitPrice * item.quantity) / 100).toFixed(2);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors">
+    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors animate-in slide-in-from-right-4 fade-in duration-300">
       <div className="flex flex-col">
         <span className="font-semibold text-slate-800 text-sm">{productName}</span>
         <span className="text-xs text-slate-500 mt-0.5">
@@ -59,7 +59,7 @@ function CartLineItem({ invoiceId, itemId }: CartLineItemProps): JSX.Element {
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2 border border-slate-200 rounded-lg p-1">
           <button 
-            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded"
+            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded transition-all active:scale-90"
             onClick={() => {
               if (item.quantity > 1) updateQty({ invoiceId, itemId, qty: item.quantity - 1 });
             }}
@@ -68,7 +68,7 @@ function CartLineItem({ invoiceId, itemId }: CartLineItemProps): JSX.Element {
           </button>
           <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
           <button 
-            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded"
+            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded transition-all active:scale-90"
             onClick={() => updateQty({ invoiceId, itemId, qty: item.quantity + 1 })}
           >
             +
@@ -78,7 +78,7 @@ function CartLineItem({ invoiceId, itemId }: CartLineItemProps): JSX.Element {
           ${totalFormatted}
         </div>
         <button 
-          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-all active:scale-90"
           onClick={() => removeItem({ invoiceId, itemId })}
           title="Remove Item"
         >

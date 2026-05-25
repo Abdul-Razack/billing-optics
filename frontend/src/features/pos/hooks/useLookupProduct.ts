@@ -1,5 +1,6 @@
 /* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useMutation } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { Product } from '../../../core/api/types';
 import { useAddInvoiceItem } from './useAddInvoiceItem';
 import { usePosStore } from '../store/usePosStore';
@@ -17,7 +18,11 @@ export function useLookupProduct() {
     onSuccess: (product) => {
       if (activeInvoiceId) {
         addItem({ invoiceId: activeInvoiceId, productId: product.id, qty: 1, unitPrice: product.sellingPrice });
+        toast.success(`Scanned ${product.name}`);
       }
     },
+    onError: () => {
+      toast.error('Product not found or invalid barcode.');
+    }
   });
 }
