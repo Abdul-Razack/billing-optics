@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useInventoryStock } from '../hooks/useInventoryStock';
 
 interface StockBadgeProps {

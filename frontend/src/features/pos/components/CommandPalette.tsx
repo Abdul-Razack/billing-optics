@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 

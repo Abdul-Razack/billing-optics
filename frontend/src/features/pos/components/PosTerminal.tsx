@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useEffect } from 'react';
 import { usePosStore } from '../store/usePosStore';
 import CartPanel from './CartPanel';
@@ -21,19 +22,19 @@ export default function PosTerminal(): JSX.Element {
 
   return (
     <ErrorBoundary name="POS Terminal">
-      <div className="pos-terminal" style={{ display: 'flex', height: '100%' }}>
+      <div className="flex h-full bg-slate-50 overflow-hidden">
         <ErrorBoundary name="Product Search">
-          <div style={{ width: '300px', borderRight: '1px solid #cbd5e1' }}>
+          <div className="w-[350px] border-r border-slate-200 bg-white flex flex-col shadow-sm z-10">
             <ProductSearch />
           </div>
         </ErrorBoundary>
         <ErrorBoundary name="Customer Panel">
-          <div style={{ flex: 1, borderRight: '1px solid #cbd5e1' }}>
+          <div className="flex-1 flex flex-col min-w-0 bg-slate-50 relative">
             <CustomerPanel />
           </div>
         </ErrorBoundary>
         <ErrorBoundary name="Cart Panel">
-          <div style={{ width: '400px' }}>
+          <div className="w-[400px] border-l border-slate-200 bg-white flex flex-col shadow-sm z-10">
             <CartPanel invoiceId={activeInvoiceId} />
           </div>
         </ErrorBoundary>

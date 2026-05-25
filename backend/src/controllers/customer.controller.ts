@@ -16,7 +16,8 @@ export class CustomerController {
 
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await customerService.getAll();
+      const search = req.query.search as string;
+      const result = await customerService.getAll(search);
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);

@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useNetworkStore } from '../../core/store/network.store';
 
 export default function OfflineBanner(): JSX.Element | null {

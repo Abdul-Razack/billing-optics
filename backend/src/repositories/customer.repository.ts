@@ -28,8 +28,17 @@ export class CustomerRepository {
     return result;
   }
 
-  static async findAll(dbClient: DbOrTx = db) {
-    return await dbClient.select().from(customers);
+  static async findAll(search?: string, dbClient: DbOrTx = db) {
+    let query = dbClient.select().from(customers);
+    let result = await query;
+    if (search) {
+      const s = search.toLowerCase();
+      result = result.filter(c => 
+        (c.fullName && c.fullName.toLowerCase().includes(s)) || 
+        (c.phone && c.phone.toLowerCase().includes(s))
+      );
+    }
+    return result;
   }
 
   static async addPrescription(data: typeof prescriptions.$inferInsert, dbClient: DbOrTx = db) {

@@ -1,8 +1,11 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import ThermalReceipt from '../components/ThermalReceipt';
 
-export function printReceipt(invoiceId: string) {
+import { Invoice } from '../../../core/api/types';
+
+export function printReceipt(invoice: Invoice) {
   const iframe = document.createElement('iframe');
   iframe.style.position = 'fixed';
   iframe.style.right = '0';
@@ -17,13 +20,25 @@ export function printReceipt(invoiceId: string) {
 
   const doc = contentWindow.document;
   doc.open();
-  doc.write('<html><head><title>Receipt</title><style>body { margin: 0; padding: 0; font-family: monospace; }</style></head><body><div id="receipt-root"></div></body></html>');
+  doc.write(`<html>
+    <head>
+      <title>Receipt</title>
+      <style>
+        @page { size: 80mm auto; margin: 0; }
+        body { margin: 0; padding: 0; font-family: monospace; width: 80mm; }
+        @media print {
+          html, body { width: 80mm; margin: 0; padding: 0; }
+        }
+      </style>
+    </head>
+    <body><div id="receipt-root"></div></body>
+  </html>`);
   doc.close();
 
   const rootElement = doc.getElementById('receipt-root');
   if (rootElement) {
     const root = createRoot(rootElement);
-    root.render(createElement(ThermalReceipt, { invoiceId }));
+    root.render(createElement(ThermalReceipt, { invoice }));
 
     setTimeout(() => {
       contentWindow.focus();

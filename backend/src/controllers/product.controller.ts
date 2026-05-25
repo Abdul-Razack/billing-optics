@@ -5,8 +5,12 @@ export class ProductController {
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
       const categoryIdStr = req.query.categoryId as string;
+      const search = req.query.search as string;
       const categoryId = categoryIdStr ? parseInt(categoryIdStr, 10) : undefined;
-      const result = await productService.getAllProducts(categoryId ? { categoryId } : undefined);
+      const result = await productService.getAllProducts({
+        ...(categoryId ? { categoryId } : {}),
+        ...(search ? { search } : {})
+      });
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);

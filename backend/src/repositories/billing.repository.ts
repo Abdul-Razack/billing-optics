@@ -23,7 +23,7 @@ export class BillingRepository {
   static async updateInvoicePaymentStatus(id: number, amountPaid: number, paymentStatus: any, dbClient: DbOrTx = db) {
     const [result] = await dbClient
       .update(invoices)
-      .set({ paymentStatus }) // amountPaid is omitted as it does not exist in schema
+      .set({ paymentStatus, amountPaid })
       .where(eq(invoices.id, id))
       .returning();
     return result;
@@ -48,9 +48,17 @@ export class BillingRepository {
       .from(payments)
       .where(eq(payments.invoiceId, id));
 
+    const formattedLines = items.map(item => ({
+      id: item.id.toString(),
+      productId: item.productId,
+      quantity: item.quantity,
+      unitPrice: item.snapshotPrice,
+      subtotal: item.lineTotal,
+    }));
+
     return {
       ...invoice,
-      items,
+      lines: formattedLines,
       payments: invoicePayments,
     };
   }

@@ -39,9 +39,12 @@ export class BillingController {
       if (isNaN(invoiceId)) {
         // Return default draft invoice for string IDs like INV-001
         res.status(200).json({ 
-          id: invoiceIdParam,
-          lineItemIds: [],
-          total: 0
+          success: true,
+          data: {
+            id: invoiceIdParam,
+            lineItemIds: [],
+            total: 0
+          }
         });
         return;
       }

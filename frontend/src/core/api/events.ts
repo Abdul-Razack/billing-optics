@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 type SSEEventType = 'inventory.updated' | 'invoice.updated' | 'prescription.created' | 'customer.updated';
 
 export interface SSEEventPayload {

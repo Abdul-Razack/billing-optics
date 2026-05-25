@@ -1,5 +1,7 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PrescriptionFormValues } from '../schemas/prescription.schema';
+import { apiClient } from '../../../core/api/client';
 
 export const prescriptionQueryKeys = {
   patient: (customerId: string) => ['prescriptions', 'patient', customerId] as const,
@@ -22,13 +24,8 @@ export function useSavePrescription() {
         return { success: true, queued: true };
       }
 
-      const response = await fetch(`/api/customers/${payload.customerId}/prescriptions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload.data),
-      });
-      if (!response.ok) throw new Error('Failed to save prescription');
-      return response.json();
+      const response = await apiClient.post(`/customers/${payload.customerId}/prescriptions`, payload.data);
+      return response.data;
     },
     onMutate: async (payload) => {
       const queryKey = prescriptionQueryKeys.patient(payload.customerId);

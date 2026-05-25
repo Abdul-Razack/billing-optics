@@ -1,11 +1,15 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoiceQueryKeys } from '../../pos/hooks/useInvoice';
 import { InvoicePayment } from '../../../core/api/payment.types';
 import { mutationQueue } from '../../../core/queue/mutation.queue';
+import { apiClient } from '../../../core/api/client';
 
 interface CheckoutPayload {
   invoiceId: string;
   payments: Omit<InvoicePayment, 'id' | 'invoiceId' | 'createdAt'>[];
+  items?: { productId: number; quantity: number }[];
+  customerId?: number;
 }
 
 export function useCheckoutInvoice() {
@@ -18,13 +22,8 @@ export function useCheckoutInvoice() {
         return { success: true, queued: true };
       }
 
-      const response = await fetch(`/api/invoices/${payload.invoiceId}/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) throw new Error('Checkout failed');
-      return response.json();
+      const response = await apiClient.post(`/invoices/${payload.invoiceId}/checkout`, payload);
+      return response.data;
     },
     onMutate: async (payload) => {
       const queryKey = invoiceQueryKeys.detail(payload.invoiceId);

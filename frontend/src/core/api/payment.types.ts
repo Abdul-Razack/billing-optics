@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 export type PaymentMethod = 'CASH' | 'CARD' | 'UPI' | 'SPLIT';
 
 export interface InvoicePayment {

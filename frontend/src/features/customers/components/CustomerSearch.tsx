@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useEffect, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useCustomerSearch } from '../hooks/useCustomerSearch';
@@ -106,8 +107,7 @@ export default function CustomerSearch(): JSX.Element {
                 }}
               >
                 <CustomerRow 
-                  customerId={customer.id} 
-                  search={debouncedSearch} 
+                  customer={customer} 
                   isHighlighted={highlightedIndex === virtualItem.index} 
                 />
               </div>

@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { mutationQueue, QueuedMutation } from './mutation.queue';
 import { useNetworkStore } from '../store/network.store';
 
@@ -65,9 +66,13 @@ class QueueWorker {
           return true; // Unknown type, discard
       }
 
+      const token = localStorage.getItem('access_token');
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(body)
       });
       

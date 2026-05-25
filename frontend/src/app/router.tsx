@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import React, { Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
@@ -19,6 +20,8 @@ const mockAuthState = {
   role: 'ADMIN' as Role,
 };
 
+const LOADING_TEXT = 'Loading...';
+
 function AuthGuard({ children }: { children: React.ReactNode }): JSX.Element {
   if (!mockAuthState.isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -37,11 +40,12 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <AuthLayout />,
+    errorElement: <ErrorBoundary name="Login Route Error" />,
     children: [
       {
         index: true,
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>{LOADING_TEXT}</div>}>
             <LoginView />
           </Suspense>
         ),
@@ -55,6 +59,7 @@ export const router = createBrowserRouter([
         <AppLayout />
       </AuthGuard>
     ),
+    errorElement: <ErrorBoundary name="App Route Error" />,
     children: [
       {
         index: true,
@@ -65,7 +70,7 @@ export const router = createBrowserRouter([
         element: (
           <RoleGuard allowedRoles={['ADMIN', 'CASHIER', 'OPTOMETRIST']}>
             <ErrorBoundary name="Catalog View">
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div>{LOADING_TEXT}</div>}>
                 <CatalogView />
               </Suspense>
             </ErrorBoundary>
@@ -76,7 +81,7 @@ export const router = createBrowserRouter([
         path: 'prescriptions',
         element: (
           <RoleGuard allowedRoles={['ADMIN', 'OPTOMETRIST']}>
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div>{LOADING_TEXT}</div>}>
               <PatientHistoryView />
             </Suspense>
           </RoleGuard>
@@ -87,7 +92,7 @@ export const router = createBrowserRouter([
         element: (
           <RoleGuard allowedRoles={['ADMIN']}>
             <ErrorBoundary name="End Of Day View">
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div>{LOADING_TEXT}</div>}>
                 <EndOfDayView />
               </Suspense>
             </ErrorBoundary>
@@ -109,12 +114,13 @@ export const router = createBrowserRouter([
         </RoleGuard>
       </AuthGuard>
     ),
+    errorElement: <ErrorBoundary name="POS Route Error" />,
     children: [
       {
         index: true,
         element: (
           <ErrorBoundary name="Terminal View">
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div>{LOADING_TEXT}</div>}>
               <TerminalView />
             </Suspense>
           </ErrorBoundary>
@@ -122,4 +128,9 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+], {
+  future: {
+    // @ts-ignore
+    v7_startTransition: true,
+  },
+});

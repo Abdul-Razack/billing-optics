@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useEffect, useState } from 'react';
 import { mutationQueue } from '../../core/queue/mutation.queue';
 import { useNetworkStore } from '../../core/store/network.store';

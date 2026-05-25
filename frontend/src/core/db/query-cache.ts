@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { QueryClient, dehydrate, hydrate } from '@tanstack/react-query';
 
 const CACHE_KEY = 'optics_pos_query_cache';

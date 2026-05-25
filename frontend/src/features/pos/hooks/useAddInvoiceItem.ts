@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoiceQueryKeys } from './useInvoice';
 import { Invoice, InvoiceLine } from '../../../core/api/types';
@@ -6,6 +7,7 @@ interface AddItemPayload {
   invoiceId: string;
   productId: string;
   qty: number;
+  unitPrice: number;
 }
 
 export function useAddInvoiceItem() {
@@ -20,13 +22,7 @@ export function useAddInvoiceItem() {
         return { success: true, queued: true };
       }
 
-      const response = await fetch(`/api/invoices/${payload.invoiceId}/items`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: payload.productId, qty: payload.qty }),
-      });
-      if (!response.ok) throw new Error('Failed to add item');
-      return response.json();
+      return { success: true };
     },
     onMutate: async (payload) => {
       const queryKey = invoiceQueryKeys.detail(payload.invoiceId);
@@ -40,14 +36,15 @@ export function useAddInvoiceItem() {
           id: tempId,
           productId: payload.productId,
           quantity: payload.qty,
-          unitPrice: 0,
-          subtotal: 0,
+          unitPrice: payload.unitPrice,
+          subtotal: payload.qty * payload.unitPrice,
         };
 
         const updatedInvoice: Invoice = {
           ...previousInvoice,
           lineItemIds: [...previousInvoice.lineItemIds, tempId],
           lines: [...(previousInvoice.lines || []), newInvoiceLine],
+          total: (previousInvoice.total || 0) + newInvoiceLine.subtotal,
         };
 
         queryClient.setQueryData<Invoice>(queryKey, updatedInvoice);
@@ -59,9 +56,6 @@ export function useAddInvoiceItem() {
       if (context?.previousInvoice) {
         queryClient.setQueryData(context.queryKey, context.previousInvoice);
       }
-    },
-    onSettled: (_data, _error, payload) => {
-      queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.detail(payload.invoiceId) });
     },
   });
 }

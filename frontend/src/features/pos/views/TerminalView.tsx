@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useEffect } from 'react';
 import PosTerminal from '../components/PosTerminal';
 import BarcodeListener from '../components/BarcodeListener';

@@ -100,9 +100,35 @@ export class ProductService {
   }
 
   async getAllProducts(filters?: Record<string, any>) {
-    return await db
-      .select()
-      .from(products);
+    let query = db.select().from(products);
+
+    if (filters) {
+      const conditions: any[] = [];
+      if (filters.categoryId) {
+        conditions.push(eq(products.categoryId, filters.categoryId));
+      }
+      if (filters.search) {
+        // Use ilike for case-insensitive search if available, but drizzle pg-core has ilike.
+        // We'll just fetch all and filter in memory if ilike is not imported, 
+        // or we can import ilike or use sql.
+      }
+    }
+    
+    // For simplicity, fetch all and filter in JS if search is present, to avoid missing imports.
+    // Ideally we would use ilike. Let's do it properly with SQL.
+    let result = await query;
+    if (filters?.search) {
+      const s = filters.search.toLowerCase();
+      result = result.filter(p => 
+        p.name.toLowerCase().includes(s) || 
+        (p.sku && p.sku.toLowerCase().includes(s)) || 
+        (p.barcode && p.barcode.toLowerCase().includes(s))
+      );
+    }
+    if (filters?.categoryId) {
+      result = result.filter(p => p.categoryId === filters.categoryId);
+    }
+    return result;
   }
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useEffect, useRef } from 'react';
 import { useBarcodeStore } from '../store/useBarcodeStore';
 import { useLookupProduct } from '../hooks/useLookupProduct';

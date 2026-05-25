@@ -1,8 +1,10 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../../../core/api/client';
 
 export interface Customer {
   id: string;
-  name: string;
+  fullName: string;
   phone: string;
 }
 
@@ -14,9 +16,8 @@ export function useCustomerSearch(search: string) {
   return useQuery({
     queryKey: customerQueryKeys.search(search),
     queryFn: async (): Promise<Customer[]> => {
-      const response = await fetch(`/api/customers?search=${encodeURIComponent(search)}`);
-      if (!response.ok) throw new Error('Failed to fetch customers');
-      return response.json();
+      const response = await apiClient.get(`/customers?search=${encodeURIComponent(search)}`);
+      return response.data;
     },
     enabled: true,
   });

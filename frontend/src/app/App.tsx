@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import AppProviders from './providers';

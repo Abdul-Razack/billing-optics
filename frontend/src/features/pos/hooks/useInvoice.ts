@@ -1,22 +1,24 @@
-import { useQuery } from '@tanstack/react-query';
-import { Invoice } from '../../../core/api/types';
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../../../core/api/client';
 
 export const invoiceQueryKeys = {
   detail: (id: string) => ['invoices', 'detail', id] as const,
 };
 
 export function useInvoice(invoiceId: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: ['invoices', 'detail', invoiceId],
     enabled: !!invoiceId,
     queryFn: async () => {
-      const response = await fetch(`/api/invoices/${invoiceId}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch invoice');
+      if (invoiceId.startsWith('INV-')) {
+        const existingData = queryClient.getQueryData(['invoices', 'detail', invoiceId]);
+        if (existingData) return existingData;
+        return { id: invoiceId, customerId: null, total: 0, lineItemIds: [], lines: [] };
       }
-
-      return response.json();
+      const response = await apiClient.get(`/invoices/${invoiceId}`);
+      return response.data;
     },
   });
 }

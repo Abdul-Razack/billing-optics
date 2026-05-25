@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { useEffect, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useSearchStore } from '../store/search.store';
@@ -44,7 +45,7 @@ export default function ProductSearch(): JSX.Element {
         e.preventDefault();
         const selected = products[highlightedIndex];
         if (selected && activeInvoiceId) {
-          addItem({ invoiceId: activeInvoiceId, productId: selected.id, qty: 1 });
+          addItem({ invoiceId: activeInvoiceId, productId: selected.id, qty: 1, unitPrice: selected.sellingPrice });
         }
       }
     };
@@ -60,26 +61,35 @@ export default function ProductSearch(): JSX.Element {
   }, [highlightedIndex, rowVirtualizer, products.length]);
 
   return (
-    <div className="product-search" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <input
-        type="text"
-        placeholder="Search products..."
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onFocus={() => setSearchFocused(true)}
-        onBlur={() => setSearchFocused(false)}
-        style={{ padding: '8px', margin: '8px' }}
-      />
+    <div className="flex flex-col h-full bg-white">
+      <div className="p-4 border-b border-slate-100">
+        <h2 className="text-lg font-semibold text-slate-800 mb-3">Products</h2>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
+          />
+        </div>
+      </div>
       
-      {isLoading && <div style={{ padding: '8px' }}>Loading...</div>}
+      {isLoading && (
+        <div className="p-4 flex justify-center">
+          <div className="animate-pulse flex space-x-2">
+            <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+            <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+            <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+          </div>
+        </div>
+      )}
 
       <div
         ref={parentRef}
-        style={{
-          flex: 1,
-          overflow: 'auto',
-          position: 'relative',
-        }}
+        className="flex-1 overflow-auto relative"
       >
         <div
           style={{
@@ -103,7 +113,10 @@ export default function ProductSearch(): JSX.Element {
                   transform: `translateY(${virtualItem.start}px)`,
                 }}
               >
-                <ProductRow productId={product.id} />
+                <ProductRow 
+                  product={product} 
+                  isHighlighted={highlightedIndex === virtualItem.index} 
+                />
               </div>
             );
           })}

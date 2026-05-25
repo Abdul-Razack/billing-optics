@@ -14,8 +14,8 @@ export class CustomerService {
     return await CustomerRepository.create(dbData);
   }
 
-  async getAll() {
-    return await CustomerRepository.findAll();
+  async getAll(search?: string) {
+    return await CustomerRepository.findAll(search);
   }
 
   async getById(id: number) {

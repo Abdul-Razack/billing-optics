@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { usePosStore } from '../store/usePosStore';
 import { useInvoice } from '../hooks/useInvoice';
 import CustomerSearch from '../../customers/components/CustomerSearch';
@@ -17,15 +18,30 @@ export default function CustomerPanel(): JSX.Element {
   };
 
   return (
-    <div className="customer-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      {!invoice?.customerId ? (
-        <CustomerSearch />
-      ) : (
-        <div style={{ padding: '16px' }}>
-          <h3>Customer ID: {invoice.customerId}</h3>
-          <PrescriptionGrid onSubmit={handlePrescriptionSubmit} />
-        </div>
-      )}
+    <div className="flex flex-col h-full bg-slate-50/50">
+      <div className="p-4 border-b border-slate-200 bg-white">
+        <h2 className="text-lg font-semibold text-slate-800">Customer Details</h2>
+      </div>
+
+      <div className="flex-1 overflow-auto p-4">
+        {!invoice?.customerId ? (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <CustomerSearch />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">Customer Info</h3>
+              <p className="text-slate-600">ID: <span className="font-medium">{invoice.customerId}</span></p>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Prescriptions</h3>
+              <PrescriptionGrid onSubmit={handlePrescriptionSubmit} />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

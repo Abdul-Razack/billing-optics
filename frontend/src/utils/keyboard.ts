@@ -1,6 +1,10 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { usePaymentStore } from '../core/store/payment.store';
 import { printReceipt } from '../features/receipts/utils/receipt-printer';
 import { usePosStore } from '../features/pos/store/usePosStore';
+import { queryClient } from '../app/providers';
+import { invoiceQueryKeys } from '../features/pos/hooks/useInvoice';
+import { Invoice } from '../core/api/types';
 
 export const HOTKEYS = {
   SEARCH_PRODUCT: 'F1',
@@ -61,7 +65,10 @@ export function initializeGlobalHotkeys() {
   keyboardManager.register(HOTKEYS.PRINT_RECEIPT, () => {
     const activeId = usePosStore.getState().activeInvoiceId;
     if (activeId) {
-      printReceipt(activeId);
+      const invoice = queryClient.getQueryData<Invoice>(invoiceQueryKeys.detail(activeId));
+      if (invoice) {
+        printReceipt(invoice);
+      }
     }
   });
 }

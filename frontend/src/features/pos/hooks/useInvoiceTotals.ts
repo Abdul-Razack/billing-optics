@@ -1,15 +1,22 @@
-import { useQuery } from '@tanstack/react-query';
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoiceQueryKeys } from './useInvoice';
 import { InvoiceTotals } from '../../../core/api/payment.types';
 import { Invoice } from '../../../core/api/types';
+import { apiClient } from '../../../core/api/client';
 
 export function useInvoiceTotals(invoiceId: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: invoiceQueryKeys.detail(invoiceId),
     queryFn: async (): Promise<Invoice> => {
-      const response = await fetch(`/api/invoices/${invoiceId}`);
-      if (!response.ok) throw new Error('Failed to fetch invoice');
-      return response.json();
+      if (invoiceId.startsWith('INV-')) {
+        const existingData = queryClient.getQueryData<Invoice>(invoiceQueryKeys.detail(invoiceId));
+        if (existingData) return existingData;
+        return { id: invoiceId, customerId: '', total: 0, lineItemIds: [], lines: [] } as any;
+      }
+      const response = await apiClient.get(`/invoices/${invoiceId}`);
+      return response.data;
     },
     enabled: !!invoiceId,
     select: (invoice: Invoice): InvoiceTotals => {

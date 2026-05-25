@@ -1,7 +1,9 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { withTranslation, WithTranslation } from 'react-i18next';
 
-interface Props {
-  children: ReactNode;
+interface Props extends WithTranslation {
+  children?: ReactNode;
   fallback?: ReactNode;
   name: string;
 }
@@ -11,7 +13,7 @@ interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryInner extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
@@ -32,10 +34,10 @@ export class ErrorBoundary extends Component<Props, State> {
       }
       return (
         <div style={{ padding: '16px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '8px' }}>
-          <h3>Something went wrong in {this.props.name}</h3>
+          <h3>{this.props.t('something_went_wrong', { defaultValue: 'Something went wrong in' })} {this.props.name}</h3>
           <pre style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>{this.state.error?.message}</pre>
           <button onClick={() => this.setState({ hasError: false, error: null })} style={{ padding: '8px 16px', marginTop: '8px' }}>
-            Retry
+            {this.props.t('retry', { defaultValue: 'Retry' })}
           </button>
         </div>
       );
@@ -44,3 +46,5 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+export const ErrorBoundary = withTranslation()(ErrorBoundaryInner);

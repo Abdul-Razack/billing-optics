@@ -18,6 +18,7 @@ export const createInvoiceSchema = z.object({
 
 export const checkoutSchema = z.object({
   body: z.object({
+    invoiceId: z.string().optional(),
     customerId: z.number().optional(),
     items: z.array(
       z.object({
@@ -25,7 +26,13 @@ export const checkoutSchema = z.object({
         quantity: z.number().int().positive(),
       })
     ).min(1, 'At least one item is required'),
-    paymentMethod: z.enum(['CASH', 'CARD', 'UPI', 'BANK_TRANSFER']),
+    payments: z.array(
+      z.object({
+        method: z.enum(['CASH', 'CARD', 'UPI', 'BANK_TRANSFER']),
+        amount: z.number().nonnegative(),
+        reference: z.string().optional(),
+      })
+    ).optional(),
   }),
 });
 

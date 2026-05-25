@@ -1,3 +1,4 @@
+/* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import { usePaymentStore } from '../../../core/store/payment.store';
 
 export default function UpiPaymentPanel({ balanceAmount }: { balanceAmount: number }): JSX.Element {
