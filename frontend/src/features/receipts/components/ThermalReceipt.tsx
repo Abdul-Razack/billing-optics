@@ -18,7 +18,7 @@ export default function ThermalReceipt({ invoice }: { invoice: Invoice }): JSX.E
   };
 
   return (
-    <div style={{ width: '80mm', padding: '8mm', boxSizing: 'border-box', fontSize: '12px', lineHeight: '1.5' }}>
+    <div className="receipt-print" style={{ boxSizing: 'border-box', lineHeight: '1.5' }}>
       <div style={{ textAlign: 'center', marginBottom: '16px' }}>
         <h2 style={{ margin: '0' }}>OPTICS POS</h2>
         <div>123 Vision Street</div>
@@ -57,9 +57,6 @@ export default function ThermalReceipt({ invoice }: { invoice: Invoice }): JSX.E
 
       <div style={{ textAlign: 'center', marginTop: '16px' }}>
         <div>Thank you for your business!</div>
-        <div style={{ marginTop: '8px', width: '100px', height: '100px', border: '1px solid black', margin: '8px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          [QR]
-        </div>
       </div>
     </div>
   );

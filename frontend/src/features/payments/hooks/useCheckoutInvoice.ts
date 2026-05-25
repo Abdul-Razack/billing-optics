@@ -51,7 +51,9 @@ export function useCheckoutInvoice() {
       }
     },
     onSettled: (_data, _error, payload) => {
-      queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.detail(payload.invoiceId) });
+      if (!payload.invoiceId.startsWith('INV-')) {
+        queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.detail(payload.invoiceId) });
+      }
     },
   });
 }

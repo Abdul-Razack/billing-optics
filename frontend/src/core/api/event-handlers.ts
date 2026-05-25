@@ -15,7 +15,9 @@ export function initializeEventHandlers(queryClient: QueryClient) {
         queryClient.invalidateQueries({ queryKey: inventoryQueryKeys.stock(payload.entityId), refetchType: 'active' });
         break;
       case 'invoice.updated':
-        queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.detail(payload.entityId), refetchType: 'active' });
+        if (!payload.entityId.startsWith('INV-')) {
+          queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.detail(payload.entityId), refetchType: 'active' });
+        }
         break;
       case 'prescription.created':
         queryClient.invalidateQueries({ queryKey: prescriptionQueryKeys.patient(payload.entityId), refetchType: 'active' });

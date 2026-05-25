@@ -4,10 +4,12 @@ import { router } from './router';
 import AppProviders from './providers';
 import OfflineBanner from '../ui/components/OfflineBanner';
 import SyncIndicator from '../ui/components/SyncIndicator';
+import { Toaster } from 'react-hot-toast';
 
 export default function App(): JSX.Element {
   return (
     <AppProviders>
+      <Toaster position="top-right" />
       <OfflineBanner />
       <RouterProvider router={router} />
       <SyncIndicator />

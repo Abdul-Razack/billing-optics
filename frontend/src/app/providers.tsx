@@ -1,6 +1,7 @@
 /* eslint-disable typescript.react.portability.i18next.jsx-not-internationalized.jsx-not-internationalized */
 import React, { useEffect, useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { restoreQueryCache, persistQueryCache } from '../core/db/query-cache';
 import { initializeEventHandlers } from '../core/api/event-handlers';
 import { queueWorker } from '../core/queue/queue.worker';
@@ -9,6 +10,18 @@ import DiagnosticsPanel from '../core/performance/DiagnosticsPanel';
 import { apiClient } from '../core/api/client';
 
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      console.error('Query Error:', error);
+      toast.error('Failed to fetch data. Please check your connection.');
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      console.error('Mutation Error:', error);
+      toast.error(error.message || 'An error occurred while saving.');
+    },
+  }),
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
