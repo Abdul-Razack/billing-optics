@@ -24,7 +24,7 @@ export function printReceipt(invoice: Invoice) {
     <head>
       <title>Receipt</title>
       <style>
-        @page { size: 80mm auto; margin: 0; }
+        @page { margin: 0; }
         body { margin: 0; padding: 0; background: white; font-family: monospace; }
         @media print {
           body {

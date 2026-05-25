@@ -39,7 +39,7 @@ export default function CartPanel({ invoiceId }: CartPanelProps): JSX.Element {
         <div className="flex justify-between items-end mb-4">
           <span className="text-slate-500 font-medium">Total</span>
           <span className="text-3xl font-bold text-slate-800">
-            {"$"}{(invoice.total / 100).toFixed(2)}
+            {"$"}{((invoice.lines?.reduce((acc: number, item: any) => acc + ((item.unitPrice || 0) * (item.quantity || 1)), 0) || 0) / 100).toFixed(2)}
           </span>
         </div>
         <button 

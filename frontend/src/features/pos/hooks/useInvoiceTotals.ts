@@ -21,7 +21,7 @@ export function useInvoiceTotals(invoiceId: string) {
     enabled: !!invoiceId,
     select: (invoice: Invoice): InvoiceTotals => {
       const subtotal = invoice.lines?.reduce((acc: number, item: any) => acc + ((item.unitPrice || 0) * (item.quantity || 1)), 0) || 0;
-      const tax = subtotal * 0.1; // Example tax calculation
+      const tax = 0; // Removing frontend mock tax to match backend checkout engine
       const discount = 0;
       const grandTotal = subtotal + tax - discount;
       const paidAmount = invoice.payments?.reduce((acc: number, p: any) => acc + p.amount, 0) || 0;

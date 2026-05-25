@@ -21,31 +21,16 @@ export default function PaymentModal(): JSX.Element | null {
   
   const { data: totals } = useInvoiceTotals(activeInvoiceId || '');
   const { data: invoice } = useInvoice(activeInvoiceId || '');
-  const { mutate: checkout } = useCheckoutInvoice();
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-      if (e.key === 'Escape') {
-        setIsOpen(false);
-      }
-      if (e.ctrlKey && e.key === 'Enter') {
-        handleConfirm();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, activeMethod, enteredCash, reference, splitPayments]);
-
-  if (!isOpen || !activeInvoiceId || !totals || !invoice) return null;
+  const { mutate: checkout, isPending } = useCheckoutInvoice();
 
   const totalSplit = splitPayments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
-  const isInvalid = 
+  const isInvalid = !totals ? true : (
     (activeMethod === 'SPLIT' && Math.abs(totalSplit - (totals.balanceAmount / 100)) > 0.01) ||
-    (activeMethod === 'CASH' && (parseFloat(enteredCash) || 0) < (totals.balanceAmount / 100));
+    (activeMethod === 'CASH' && (parseFloat(enteredCash) || 0) < (totals.balanceAmount / 100))
+  );
 
   const handleConfirm = () => {
-    if (isInvalid) return;
+    if (isInvalid || isPending || !totals || !invoice || !activeInvoiceId) return;
     let payments: any[] = [];
     if (activeMethod === 'CASH') {
       payments.push({ method: 'CASH', amount: totals.grandTotal, reference: '' });
@@ -78,6 +63,22 @@ export default function PaymentModal(): JSX.Element | null {
     );
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+      if (e.ctrlKey && e.key === 'Enter') {
+        handleConfirm();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, activeMethod, enteredCash, reference, splitPayments, isInvalid, isPending, totals, invoice, activeInvoiceId]);
+
+  if (!isOpen || !activeInvoiceId || !totals || !invoice) return null;
+
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
       <div style={{ width: '600px', backgroundColor: 'white', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
@@ -97,18 +98,18 @@ export default function PaymentModal(): JSX.Element | null {
           <button onClick={() => setIsOpen(false)} style={{ padding: '12px 24px', cursor: 'pointer' }}>Cancel (ESC)</button>
           <button 
             onClick={handleConfirm} 
-            disabled={isInvalid}
+            disabled={isInvalid || isPending}
             style={{ 
               padding: '12px 24px', 
-              backgroundColor: isInvalid ? '#94a3b8' : '#3b82f6', 
+              backgroundColor: isInvalid || isPending ? '#94a3b8' : '#3b82f6', 
               color: 'white', 
-              cursor: isInvalid ? 'not-allowed' : 'pointer', 
+              cursor: isInvalid || isPending ? 'not-allowed' : 'pointer', 
               fontWeight: 'bold',
               border: 'none',
               borderRadius: '6px'
             }}
           >
-            Confirm (CTRL+ENTER)
+            {isPending ? 'Processing...' : 'Confirm (CTRL+ENTER)'}
           </button>
         </div>
       </div>
