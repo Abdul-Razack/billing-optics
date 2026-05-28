@@ -1,7 +1,7 @@
 import { db } from '../config/db';
 import { invoices, invoiceItems, payments, products, inventoryLedger } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { AppError } from '../utils/errors';
+import { NotFoundError } from '../utils/errors';
 
 export interface CheckoutDTO {
   customerId?: number;
@@ -26,7 +26,7 @@ export const processCheckout = async (data: CheckoutDTO) => {
 
     for (const item of data.items) {
       const [product] = await tx.select().from(products).where(eq(products.id, item.productId));
-      if (!product) throw new AppError(404, `Product ${item.productId} not found`);
+      if (!product) throw new NotFoundError(`Product ${item.productId} not found`);
 
       const itemTotal = product.sellingPrice * item.quantity;
       subtotal += itemTotal;

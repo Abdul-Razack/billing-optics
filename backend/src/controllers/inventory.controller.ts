@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { inventoryService } from '../services/inventory.service';
 import { InventoryHistoryQuery } from '../repositories/inventory.repository';
+import { UnauthorizedError, ValidationError } from '../utils/errors';
 
 export class InventoryController {
   static async getHistory(req: Request, res: Response, next: NextFunction) {
@@ -17,7 +18,7 @@ export class InventoryController {
       };
 
       const result = await inventoryService.getHistory(query);
-      res.status(200).json({ success: true, data: result });
+      res.status(200).json({ success: true, data: result.data, meta: result.meta });
     } catch (error) {
       next(error);
     }
@@ -27,14 +28,15 @@ export class InventoryController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
+        throw new UnauthorizedError();
       }
 
       const result = await inventoryService.adjustStock(req.body, userId);
       res.status(200).json({ success: true, data: result });
     } catch (error: any) {
       if (error.message.includes('Insufficient stock') || error.message.includes('Product not found') || error.message.includes('Quantity must be non-zero')) {
-        return res.status(400).json({ success: false, error: error.message });
+        next(new ValidationError(error.message));
+        return;
       }
       next(error);
     }
@@ -44,14 +46,15 @@ export class InventoryController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
+        throw new UnauthorizedError();
       }
 
       const result = await inventoryService.bulkAdjustStock(req.body, userId);
       res.status(200).json({ success: true, data: result });
     } catch (error: any) {
       if (error.message.includes('Insufficient stock') || error.message.includes('Product with ID') || error.message.includes('Quantity must be non-zero')) {
-        return res.status(400).json({ success: false, error: error.message });
+        next(new ValidationError(error.message));
+        return;
       }
       next(error);
     }

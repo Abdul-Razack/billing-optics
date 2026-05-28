@@ -4,8 +4,8 @@ import { db } from '../config/db';
 
 export class CustomerService {
   async create(data: any) {
-    const existing = await CustomerRepository.findAll(data.phone);
-    if (existing.some((c: any) => c.phone === data.phone)) {
+    const existing = await CustomerRepository.findAll({ search: data.phone });
+    if (existing.data.some((c: any) => c.phone === data.phone)) {
       throw { status: 400, message: 'Phone number already exists' };
     }
     const dbData = {
@@ -20,8 +20,8 @@ export class CustomerService {
     return await CustomerRepository.create(dbData);
   }
 
-  async getAll(search?: string) {
-    return await CustomerRepository.findAll(search);
+  async getAll(filters?: { search?: string; page?: number; limit?: number }) {
+    return await CustomerRepository.findAll(filters || {});
   }
 
   async getById(id: number, includePrescriptions?: boolean) {

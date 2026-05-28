@@ -1,4 +1,4 @@
-import { fetchClient } from "@/lib/api-client";
+import { fetchClient, ApiResponse } from "@/lib/api-client";
 import { PaymentMethod } from "@/types/order";
 
 export interface ApiPayment {
@@ -39,7 +39,12 @@ export class PaymentService {
     const queryString = query.toString();
     const endpoint = queryString ? `/payments?${queryString}` : "/payments";
     
-    const response = await fetchClient<{ success: boolean; data: { data: ApiPayment[]; total: number; page: number; totalPages: number } }>(endpoint);
-    return response.data;
+    const response = await fetchClient<ApiResponse<ApiPayment[]>>(endpoint);
+    return { 
+      data: response.data, 
+      total: response.meta?.totalRecords || 0,
+      page: response.meta?.currentPage || 1,
+      totalPages: response.meta?.totalPages || 1
+    };
   }
 }

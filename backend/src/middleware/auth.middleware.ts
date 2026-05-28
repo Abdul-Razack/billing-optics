@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../config/db';
 import { eq } from 'drizzle-orm';
 import { users } from '../db/schema';
-import { AppError } from '../utils/errors';
+import { UnauthorizedError, ForbiddenError } from '../utils/errors';
 import env from '../config/env';
 
 declare global {
@@ -14,18 +14,6 @@ declare global {
         role: string;
       };
     }
-  }
-}
-
-export class UnauthorizedError extends AppError {
-  constructor(message = 'Unauthorized access') {
-    super(401, message);
-  }
-}
-
-export class ForbiddenError extends AppError {
-  constructor(message = 'Access forbidden') {
-    super(403, message);
   }
 }
 

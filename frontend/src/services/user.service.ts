@@ -1,4 +1,4 @@
-import { fetchClient } from "@/lib/api-client";
+import { fetchClient, ApiResponse } from "@/lib/api-client";
 
 export interface User {
   id: number;
@@ -41,9 +41,22 @@ export class UserService {
     const queryString = params.toString();
     const url = `/users${queryString ? `?${queryString}` : ""}`;
     
-    const response = await fetchClient<{ success: boolean; data: UserResponse }>(url);
+    const response = await fetchClient<ApiResponse<User[]>>(url);
     if (!response.success) throw new Error("Failed to fetch users");
-    return response.data;
+    return {
+      records: response.data,
+      pagination: response.meta ? {
+        totalRecords: response.meta.totalRecords,
+        totalPages: response.meta.totalPages,
+        currentPage: response.meta.currentPage,
+        limit: response.meta.pageSize
+      } : {
+        totalRecords: 0,
+        totalPages: 1,
+        currentPage: 1,
+        limit: 10
+      }
+    };
   }
 
   static async getById(id: number): Promise<User> {

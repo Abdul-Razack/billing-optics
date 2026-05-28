@@ -1,4 +1,4 @@
-import { fetchClient } from "@/lib/api-client";
+import { fetchClient, ApiResponse } from "@/lib/api-client";
 import { ApiInvoice, PaymentMethod } from "@/types/order";
 import { toast } from "sonner";
 
@@ -35,8 +35,8 @@ export class OrderService {
     const queryString = query.toString();
     const endpoint = queryString ? `/invoices?${queryString}` : "/invoices";
     
-    const response = await fetchClient<{ success: boolean; data: { data: ApiInvoice[]; total: number } }>(endpoint);
-    return response.data;
+    const response = await fetchClient<ApiResponse<ApiInvoice[]>>(endpoint);
+    return { data: response.data, total: response.meta?.totalRecords || 0 };
   }
 
   /**

@@ -1,30 +1,32 @@
 import { z } from 'zod';
+import { paginationQuerySchema } from './common.validator';
 
 export const createCustomerSchema = z.object({
   body: z.object({
-    name: z.string().min(2),
-    phone: z.string().min(6),
-    email: z.string().email().optional().or(z.literal('')),
-    address: z.string().optional().or(z.literal('')),
+    name: z.string().trim().min(2).max(100),
+    phone: z.string().trim().min(6).max(20),
+    email: z.string().trim().email().optional().or(z.literal('')),
+    address: z.string().trim().max(500).optional().or(z.literal('')),
   })
 });
 
 export const updateCustomerSchema = z.object({
-  body: z.object({
-    name: z.string().min(2).optional(),
-    phone: z.string().min(6).optional(),
-  })
+  body: createCustomerSchema.shape.body.partial()
+});
+
+export const getCustomersSchema = z.object({
+  query: paginationQuerySchema
 });
 
 export const addPrescriptionSchema = z.object({
   body: z.object({
-    rightEyeSph: z.number(),
-    rightEyeCyl: z.number(),
-    rightEyeAxis: z.number(),
-    leftEyeSph: z.number(),
-    leftEyeCyl: z.number(),
-    leftEyeAxis: z.number(),
-    pd: z.number(),
-    addPower: z.number().optional(),
+    rightEyeSph: z.number().min(-25).max(25),
+    rightEyeCyl: z.number().min(-10).max(10),
+    rightEyeAxis: z.number().int().min(0).max(180),
+    leftEyeSph: z.number().min(-25).max(25),
+    leftEyeCyl: z.number().min(-10).max(10),
+    leftEyeAxis: z.number().int().min(0).max(180),
+    pd: z.number().min(40).max(80),
+    addPower: z.number().min(0.5).max(4.0).optional(),
   })
 });

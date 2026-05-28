@@ -1,6 +1,7 @@
 import { eq, sum, desc, asc, and, ilike, gte, lte, sql } from 'drizzle-orm';
 import { DbOrTx } from '../types/db';
 import { inventoryLedger, products, users } from '../db/schema';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 export interface InventoryHistoryQuery {
   page?: number;
@@ -29,9 +30,7 @@ export class InventoryRepository {
   }
 
   async getHistory(query: InventoryHistoryQuery, tx: DbOrTx) {
-    const page = query.page || 1;
-    const limit = query.limit || 50;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = getPaginationParams(query.page, query.limit);
     
     const conditions = [];
     
@@ -62,19 +61,13 @@ export class InventoryRepository {
     
     const sortOrder = query.sort === 'oldest' ? asc(inventoryLedger.createdAt) : desc(inventoryLedger.createdAt);
 
-    // Get total count
-    const [countResult] = await tx
-      .select({ count: sql<number>`count(*)` })
-      .from(inventoryLedger)
-      .leftJoin(products, eq(inventoryLedger.productId, products.id))
-      .where(whereClause);
+    const [countResult, records] = await Promise.all([
+      tx.select({ count: sql<number>`cast(count(*) as integer)` })
+        .from(inventoryLedger)
+        .leftJoin(products, eq(inventoryLedger.productId, products.id))
+        .where(whereClause),
       
-    const totalRecords = Number(countResult.count);
-    const totalPages = Math.ceil(totalRecords / limit);
-
-    // Get paginated data
-    const records = await tx
-      .select({
+      tx.select({
         id: inventoryLedger.id,
         productId: inventoryLedger.productId,
         movementType: inventoryLedger.movementType,
@@ -99,16 +92,11 @@ export class InventoryRepository {
       .where(whereClause)
       .orderBy(sortOrder)
       .limit(limit)
-      .offset(offset);
+      .offset(offset)
+    ]);
 
-    return {
-      records,
-      pagination: {
-        totalRecords,
-        totalPages,
-        currentPage: page,
-        limit
-      }
-    };
+    const totalRecords = Number(countResult[0].count);
+
+    return buildPaginatedResponse(records, totalRecords, page, limit);
   }
 }

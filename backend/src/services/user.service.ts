@@ -1,6 +1,6 @@
 import { UserRepository, UserQuery } from '../repositories/user.repository';
 import bcrypt from 'bcryptjs';
-import { AppError } from '../utils/errors';
+import { NotFoundError, ConflictError } from '../utils/errors';
 
 export class UserService {
   private repository: UserRepository;
@@ -16,7 +16,7 @@ export class UserService {
   async getUserById(id: number) {
     const user = await this.repository.findById(id);
     if (!user) {
-      throw new AppError(404, 'User not found');
+      throw new NotFoundError('User not found');
     }
     return user;
   }
@@ -24,7 +24,7 @@ export class UserService {
   async createUser(data: any) {
     const existingUser = await this.repository.findByEmail(data.email);
     if (existingUser) {
-      throw new AppError(400, 'User with this email already exists');
+      throw new ConflictError('User with this email already exists');
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -42,13 +42,13 @@ export class UserService {
   async updateUser(id: number, data: any) {
     const user = await this.repository.findById(id);
     if (!user) {
-      throw new AppError(404, 'User not found');
+      throw new NotFoundError('User not found');
     }
 
     if (data.email && data.email !== user.email) {
       const existingUser = await this.repository.findByEmail(data.email);
       if (existingUser) {
-        throw new AppError(400, 'User with this email already exists');
+        throw new ConflictError('User with this email already exists');
       }
     }
 
@@ -73,7 +73,7 @@ export class UserService {
   async updateStatus(id: number, isActive: boolean) {
     const user = await this.repository.findById(id);
     if (!user) {
-      throw new AppError(404, 'User not found');
+      throw new NotFoundError('User not found');
     }
 
     return await this.repository.update(id, { isActive });

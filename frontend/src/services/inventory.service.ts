@@ -1,4 +1,4 @@
-import { fetchClient } from "@/lib/api-client";
+import { fetchClient, ApiResponse } from "@/lib/api-client";
 
 export interface InventoryHistoryQuery {
   page?: number;
@@ -82,8 +82,21 @@ export class InventoryService {
     const queryString = params.toString();
     const url = `/inventory/history${queryString ? `?${queryString}` : ""}`;
     
-    const response = await fetchClient<{ success: boolean; data: InventoryHistoryResponse }>(url);
+    const response = await fetchClient<ApiResponse<InventoryLedgerRecord[]>>(url);
     if (!response.success) throw new Error("Failed to fetch inventory history");
-    return response.data;
+    return {
+      records: response.data,
+      pagination: response.meta ? {
+        totalRecords: response.meta.totalRecords,
+        totalPages: response.meta.totalPages,
+        currentPage: response.meta.currentPage,
+        limit: response.meta.pageSize
+      } : {
+        totalRecords: 0,
+        totalPages: 1,
+        currentPage: 1,
+        limit: 10
+      }
+    };
   }
 }

@@ -1,8 +1,9 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, or, ilike, and, sql } from 'drizzle-orm';
 import { db } from '../config/db';
 import { customers } from '../db/schema/customers';
 import { prescriptions } from '../db/schema/prescriptions';
 import { DbOrTx } from '../types/db';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 export class CustomerRepository {
   static async create(data: typeof customers.$inferInsert, dbClient: DbOrTx = db) {
@@ -28,18 +29,32 @@ export class CustomerRepository {
     return result;
   }
 
-  static async findAll(search?: string, dbClient: DbOrTx = db) {
-    let query = dbClient.select().from(customers);
-    let result = await query;
-    if (search) {
-      const s = search.toLowerCase();
-      result = result.filter(c => 
-        (c.fullName && c.fullName.toLowerCase().includes(s)) || 
-        (c.phone && c.phone.toLowerCase().includes(s)) ||
-        (c.email && c.email.toLowerCase().includes(s))
+  static async findAll(filters: { search?: string; page?: number; limit?: number }, dbClient: DbOrTx = db) {
+    const { page, limit, offset } = getPaginationParams(filters.page, filters.limit);
+    let baseConditions: any = undefined;
+
+    if (filters.search) {
+      const s = `%${filters.search}%`;
+      baseConditions = or(
+        ilike(customers.fullName, s),
+        ilike(customers.phone, s),
+        ilike(customers.email, s)
       );
     }
-    return result;
+
+    const [countResult, dataResult] = await Promise.all([
+      dbClient.select({ count: sql<number>`cast(count(*) as integer)` })
+        .from(customers)
+        .where(baseConditions),
+      dbClient.select()
+        .from(customers)
+        .where(baseConditions)
+        .orderBy(desc(customers.createdAt))
+        .limit(limit)
+        .offset(offset)
+    ]);
+
+    return buildPaginatedResponse(dataResult, countResult[0].count, page, limit);
   }
 
   static async addPrescription(data: typeof prescriptions.$inferInsert, dbClient: DbOrTx = db) {

@@ -15,6 +15,19 @@ export class ApiError extends Error {
   }
 }
 
+export interface PaginationMeta {
+  totalRecords: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  meta?: PaginationMeta;
+}
+
 export async function fetchClient<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { data, headers: customHeaders, ...rest } = options;
 

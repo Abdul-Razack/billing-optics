@@ -1,6 +1,8 @@
-import { eq, ilike, or, and, desc, sql } from 'drizzle-orm';
+import { eq, sql, desc, asc, ilike, or, and } from 'drizzle-orm';
 import { db } from '../config/db';
-import { users } from '../db/schema';
+import { users } from '../db/schema/users';
+import { DbOrTx } from '../types/db';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 export interface UserQuery {
   page?: number;
@@ -12,9 +14,7 @@ export interface UserQuery {
 
 export class UserRepository {
   async findAll(query: UserQuery) {
-    const page = query.page || 1;
-    const limit = query.limit || 10;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = getPaginationParams(query.page, query.limit);
 
     const conditions = [];
 
@@ -38,8 +38,8 @@ export class UserRepository {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const records = await db
-      .select({
+    const [records, countResult] = await Promise.all([
+      db.select({
         id: users.id,
         fullName: users.fullName,
         email: users.email,
@@ -53,24 +53,16 @@ export class UserRepository {
       .where(whereClause)
       .orderBy(desc(users.createdAt))
       .limit(limit)
-      .offset(offset);
-
-    const [countResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(users)
-      .where(whereClause);
+      .offset(offset),
       
-    const totalRecords = Number(countResult.count);
+      db.select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(users)
+      .where(whereClause)
+    ]);
 
-    return {
-      records,
-      pagination: {
-        totalRecords,
-        totalPages: Math.ceil(totalRecords / limit),
-        currentPage: page,
-        limit
-      }
-    };
+    const totalRecords = Number(countResult[0].count);
+
+    return buildPaginatedResponse(records, totalRecords, page, limit);
   }
 
   async findById(id: number) {

@@ -7,12 +7,13 @@ import { ROLES } from '../constants/roles';
 import {
   createCustomerSchema,
   updateCustomerSchema,
-  addPrescriptionSchema
+  addPrescriptionSchema,
+  getCustomersSchema
 } from '../validators/customer.validator';
 
 const router = Router();
 
-router.get('/', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), CustomerController.getAll);
+router.get('/', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), validate(getCustomersSchema), CustomerController.getAll);
 router.get('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), CustomerController.getById);
 
 router.post(

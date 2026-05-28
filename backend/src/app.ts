@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { errorMiddleware } from './middleware/error.middleware';
+import env from './config/env';
 import authRoutes from './routes/auth.routes';
 import customerRoutes from './routes/customer.routes';
 import categoryRoutes from './routes/category.routes';
@@ -18,8 +21,19 @@ import exportRoutes from './routes/export.routes';
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.use(helmet());
+app.use(cors({ origin: env.CORS_ORIGIN }));
+app.use(express.json({ limit: '1mb' }));
+
+// Global rate limiter for API routes
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per windowMs
+  message: { success: false, message: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', globalLimiter);
 
 // API Routes
 app.use('/api', systemRoutes);

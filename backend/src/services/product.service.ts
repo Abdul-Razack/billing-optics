@@ -1,8 +1,9 @@
 import { db } from '../config/db';
 import { products } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, or, ilike, desc, sql } from 'drizzle-orm';
 import { generateSKU } from '../utils/barcode';
 import { AppError } from '../utils/errors';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 export class NotFoundError extends AppError {
   constructor(message = 'Product not found') {
@@ -100,35 +101,43 @@ export class ProductService {
   }
 
   async getAllProducts(filters?: Record<string, any>) {
-    let query = db.select().from(products);
+    const { page, limit, offset } = getPaginationParams(filters?.page, filters?.limit);
+    
+    let baseConditions: any = undefined;
+    const conditionsArr = [];
 
-    if (filters) {
-      const conditions: any[] = [];
-      if (filters.categoryId) {
-        conditions.push(eq(products.categoryId, filters.categoryId));
-      }
-      if (filters.search) {
-        // Use ilike for case-insensitive search if available, but drizzle pg-core has ilike.
-        // We'll just fetch all and filter in memory if ilike is not imported, 
-        // or we can import ilike or use sql.
-      }
+    if (filters?.categoryId) {
+      conditionsArr.push(eq(products.categoryId, filters.categoryId));
     }
     
-    // For simplicity, fetch all and filter in JS if search is present, to avoid missing imports.
-    // Ideally we would use ilike. Let's do it properly with SQL.
-    let result = await query;
     if (filters?.search) {
-      const s = filters.search.toLowerCase();
-      result = result.filter(p => 
-        p.name.toLowerCase().includes(s) || 
-        (p.sku && p.sku.toLowerCase().includes(s)) || 
-        (p.barcode && p.barcode.toLowerCase().includes(s))
+      const searchTerm = `%${filters.search}%`;
+      conditionsArr.push(
+        or(
+          ilike(products.name, searchTerm),
+          ilike(products.sku, searchTerm),
+          ilike(products.barcode, searchTerm)
+        )
       );
     }
-    if (filters?.categoryId) {
-      result = result.filter(p => p.categoryId === filters.categoryId);
+
+    if (conditionsArr.length > 0) {
+      baseConditions = and(...conditionsArr);
     }
-    return result;
+
+    const [countResult, dataResult] = await Promise.all([
+      db.select({ count: sql<number>`cast(count(*) as integer)` })
+        .from(products)
+        .where(baseConditions),
+      db.select()
+        .from(products)
+        .where(baseConditions)
+        .orderBy(desc(products.createdAt))
+        .limit(limit)
+        .offset(offset)
+    ]);
+
+    return buildPaginatedResponse(dataResult, countResult[0].count, page, limit);
   }
 }
 

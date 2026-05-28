@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrescriptionService } from '../services/prescription.service';
+import { NotFoundError, ValidationError } from '../utils/errors';
 
 export class PrescriptionController {
   static async getPrescriptions(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await PrescriptionService.getPrescriptions(req.query);
-      res.status(200).json({ success: true, data: result });
+      res.status(200).json({ success: true, data: result.data, meta: result.meta });
     } catch (error) {
       next(error);
     }
@@ -15,13 +16,11 @@ export class PrescriptionController {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
-        res.status(400).json({ success: false, message: 'Invalid ID' });
-        return;
+        throw new ValidationError('Invalid ID');
       }
       const result = await PrescriptionService.getPrescriptionById(id);
       if (!result) {
-        res.status(404).json({ success: false, message: 'Prescription not found' });
-        return;
+        throw new NotFoundError('Prescription not found');
       }
       res.status(200).json({ success: true, data: result });
     } catch (error) {
@@ -33,8 +32,7 @@ export class PrescriptionController {
     try {
       const customerId = parseInt(req.params.customerId, 10);
       if (isNaN(customerId)) {
-        res.status(400).json({ success: false, message: 'Invalid Customer ID' });
-        return;
+        throw new ValidationError('Invalid Customer ID');
       }
       const result = await PrescriptionService.getPrescriptionsByCustomerId(customerId);
       res.status(200).json({ success: true, data: result });
@@ -60,13 +58,11 @@ export class PrescriptionController {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
-        res.status(400).json({ success: false, message: 'Invalid ID' });
-        return;
+        throw new ValidationError('Invalid ID');
       }
       const result = await PrescriptionService.updatePrescription(id, req.body);
       if (!result) {
-        res.status(404).json({ success: false, message: 'Prescription not found' });
-        return;
+        throw new NotFoundError('Prescription not found');
       }
       res.status(200).json({ success: true, data: result });
     } catch (error) {

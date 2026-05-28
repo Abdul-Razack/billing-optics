@@ -6,11 +6,14 @@ import { invoiceItems } from '../db/schema/invoiceItems';
 import { payments } from '../db/schema/payments';
 import { users } from '../db/schema/users';
 import { DbOrTx } from '../types/db';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 export class BillingRepository {
   static async getInvoices(params: any) {
-    const page = params.page ? parseInt(params.page, 10) : 1;
-    const limit = params.limit ? parseInt(params.limit, 10) : 10;
+    const { page, limit, offset } = getPaginationParams(
+      params.page ? parseInt(params.page, 10) : undefined,
+      params.limit ? parseInt(params.limit, 10) : undefined
+    );
     const { search, status, paymentStatus, sortBy, sortDirection } = params;
 
     const conditions = [];
@@ -30,7 +33,6 @@ export class BillingRepository {
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-    const offset = (page - 1) * limit;
 
     let orderBy: any = desc(invoices.createdAt);
     if (sortBy === 'amount') {
@@ -81,12 +83,12 @@ export class BillingRepository {
     .leftJoin(customers, eq(invoices.customerId, customers.id))
     .where(whereClause);
 
-    return {
-      data: results.map(r => ({ ...r, customerName: r.customerName || 'Walk-in Customer' })),
-      total: countResult.total || 0,
+    return buildPaginatedResponse(
+      results.map(r => ({ ...r, customerName: r.customerName || 'Walk-in Customer' })),
+      countResult.total || 0,
       page,
-      totalPages: Math.ceil((countResult.total || 0) / limit)
-    };
+      limit
+    );
   }
 
   static async getInvoiceById(id: number, dbClient: DbOrTx = db) {

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { db } from '../config/db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
-import { AppError } from '../utils/errors';
+import { AppError, UnauthorizedError, NotFoundError, ValidationError, ForbiddenError } from '../utils/errors';
 import { userService } from '../services/user.service';
 
 export class UserController {
@@ -10,7 +10,7 @@ export class UserController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new AppError(401, 'Unauthorized');
+        throw new UnauthorizedError();
       }
 
       const result = await db
@@ -22,7 +22,7 @@ export class UserController {
         .limit(1);
 
       if (!result.length) {
-        throw new AppError(404, 'User not found');
+        throw new NotFoundError('User not found');
       }
 
       res.status(200).json({ success: true, data: result[0].preferences });
@@ -35,12 +35,12 @@ export class UserController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new AppError(401, 'Unauthorized');
+        throw new UnauthorizedError();
       }
 
       const { preferences } = req.body;
       if (!preferences || typeof preferences !== 'object') {
-        throw new AppError(400, 'Invalid preferences payload');
+        throw new ValidationError('Invalid preferences payload');
       }
 
       const result = await db
@@ -55,7 +55,7 @@ export class UserController {
         });
 
       if (!result.length) {
-        throw new AppError(404, 'User not found');
+        throw new NotFoundError('User not found');
       }
 
       res.status(200).json({ success: true, data: result[0].preferences });
@@ -75,7 +75,7 @@ export class UserController {
       };
 
       const result = await userService.getAllUsers(query);
-      res.status(200).json({ success: true, data: result });
+      res.status(200).json({ success: true, data: result.data, meta: result.meta });
     } catch (error) {
       next(error);
     }
@@ -106,12 +106,12 @@ export class UserController {
       
       // Prevent users from changing their own role to prevent lockout or escalation
       if (req.user?.id === id && req.body.role) {
-        throw new AppError(403, 'You cannot modify your own role');
+        throw new ForbiddenError('You cannot modify your own role');
       }
 
       // Prevent users from deactivating themselves
       if (req.user?.id === id && req.body.isActive === false) {
-        throw new AppError(403, 'You cannot deactivate your own account');
+        throw new ForbiddenError('You cannot deactivate your own account');
       }
 
       const user = await userService.updateUser(id, req.body);
@@ -127,7 +127,7 @@ export class UserController {
       const { isActive } = req.body;
       
       if (req.user?.id === id) {
-        throw new AppError(403, 'You cannot modify your own account status');
+        throw new ForbiddenError('You cannot modify your own account status');
       }
 
       const user = await userService.updateStatus(id, isActive);

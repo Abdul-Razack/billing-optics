@@ -4,17 +4,17 @@ import { inventoryLedger } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { authenticate } from '../middleware/auth.middleware';
 import { InventoryController } from '../controllers/inventory.controller';
-import { validateRequest } from '../middleware/validate.middleware';
-import { adjustStockSchema, bulkAdjustStockSchema } from '../validators/inventory.validator';
+import { validate } from '../middleware/validation.middleware';
+import { adjustStockSchema, bulkAdjustStockSchema, getInventoryHistorySchema } from '../validators/inventory.validator';
 
 import { authorizeRoles } from '../middleware/role.middleware';
 import { ROLES } from '../constants/roles';
 
 const router = Router();
 
-router.get('/history', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), InventoryController.getHistory);
-router.post('/adjust', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validateRequest(adjustStockSchema), InventoryController.adjustStock);
-router.post('/bulk-adjust', authenticate, authorizeRoles(ROLES.ADMIN), validateRequest(bulkAdjustStockSchema), InventoryController.bulkAdjustStock);
+router.get('/history', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validate(getInventoryHistorySchema), InventoryController.getHistory);
+router.post('/adjust', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validate(adjustStockSchema), InventoryController.adjustStock);
+router.post('/bulk-adjust', authenticate, authorizeRoles(ROLES.ADMIN), validate(bulkAdjustStockSchema), InventoryController.bulkAdjustStock);
 
 router.get('/stock/:productId', authenticate, async (req, res, next) => {
   try {

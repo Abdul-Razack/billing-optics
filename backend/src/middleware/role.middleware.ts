@@ -1,11 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/errors';
-
-export class ForbiddenError extends AppError {
-  constructor(message = 'Insufficient permissions to access this resource') {
-    super(403, message);
-  }
-}
+import { ForbiddenError } from '../utils/errors';
 
 export const authorizeRoles = (...allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {

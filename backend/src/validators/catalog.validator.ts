@@ -1,19 +1,26 @@
 import { z } from 'zod';
 
 export const createCategorySchema = z.object({
-  name: z.string().min(1),
+  body: z.object({
+    name: z.string().trim().min(1).max(255),
+  }),
 });
 
 export const createProductSchema = z.object({
-  categoryId: z.number().int().positive(),
-  name: z.string().min(1),
-  sku: z.string().optional(),
-  barcode: z.string().optional(),
-  description: z.string().optional(),
-  costPrice: z.number().nonnegative(),
-  sellingPrice: z.number().nonnegative(),
-  gstPercent: z.number().int().nonnegative().max(100).optional(),
-  minStockAlert: z.number().int().nonnegative().optional(),
+  body: z.object({
+    categoryId: z.number().int().positive(),
+    name: z.string().trim().min(1).max(255),
+    sku: z.string().trim().max(100).optional(),
+    barcode: z.string().trim().max(100).optional(),
+    description: z.string().trim().max(1000).optional(),
+    costPrice: z.number().nonnegative().max(10000000),
+    sellingPrice: z.number().nonnegative().max(10000000),
+    gstPercent: z.number().int().nonnegative().max(100).optional(),
+    minStockAlert: z.number().int().nonnegative().max(10000).optional(),
+    isActive: z.boolean().optional(),
+  })
 });
 
-export const updateProductSchema = createProductSchema.partial();
+export const updateProductSchema = z.object({
+  body: createProductSchema.shape.body.partial()
+});

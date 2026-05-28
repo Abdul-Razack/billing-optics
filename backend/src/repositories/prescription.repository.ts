@@ -3,11 +3,14 @@ import { db } from '../config/db';
 import { prescriptions } from '../db/schema/prescriptions';
 import { customers } from '../db/schema/customers';
 import { users } from '../db/schema/users';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 export class PrescriptionRepository {
   static async getPrescriptions(params: any) {
-    const page = params.page ? parseInt(params.page, 10) : 1;
-    const limit = params.limit ? parseInt(params.limit, 10) : 10;
+    const { page, limit, offset } = getPaginationParams(
+      params.page ? parseInt(params.page, 10) : undefined,
+      params.limit ? parseInt(params.limit, 10) : undefined
+    );
     const { search, sortBy } = params;
 
     const conditions = [];
@@ -23,7 +26,6 @@ export class PrescriptionRepository {
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-    const offset = (page - 1) * limit;
 
     let orderBy: any = desc(prescriptions.createdAt);
     if (sortBy === 'oldest') {
@@ -91,12 +93,12 @@ export class PrescriptionRepository {
       isActive: true,
     }));
 
-    return {
-      data: formattedData,
-      total: countResult.total || 0,
+    return buildPaginatedResponse(
+      formattedData,
+      countResult.total || 0,
       page,
-      totalPages: Math.ceil((countResult.total || 0) / limit)
-    };
+      limit
+    );
   }
 
   static async getPrescriptionById(id: number) {

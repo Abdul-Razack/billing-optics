@@ -16,9 +16,12 @@ export class CustomerController {
 
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const search = req.query.search as string;
-      const result = await customerService.getAll(search);
-      res.status(200).json({ success: true, data: result });
+      const search = req.query.search as string | undefined;
+      const page = req.query.page ? parseInt(req.query.page as string, 10) : undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+      
+      const result = await customerService.getAll({ search, page, limit });
+      res.status(200).json({ success: true, data: result.data, meta: result.meta });
     } catch (error) {
       next(error);
     }

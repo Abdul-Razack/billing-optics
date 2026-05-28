@@ -45,17 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Default fallback password for development if not provided
       const pwd = password || "123456";
       
-      const response = await fetchClient<{ token: string, user: User }>("/auth/login", {
+      const response = await fetchClient<{ success: boolean; data: { token: string, user: User } }>("/auth/login", {
         data: { email, password: pwd }
       });
 
       const sessionData = {
-        token: response.token,
-        user: response.user
+        token: response.data.token,
+        user: response.data.user
       };
       
       localStorage.setItem("optics_session", JSON.stringify(sessionData));
-      setUser(response.user);
+      setUser(response.data.user);
     } catch (error) {
       console.error("Login failed:", error);
       throw error;

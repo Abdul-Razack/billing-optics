@@ -1,14 +1,16 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { db } from '../config/db';
 import { products, categories } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { parse } from 'csv-parse';
 import * as fs from 'fs';
 
+import { ValidationError, AppError } from '../utils/errors';
+
 export class BulkController {
-  static async uploadProducts(req: Request, res: Response) {
+  static async uploadProducts(req: Request, res: Response, next: NextFunction) {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No CSV file provided' });
+      return next(new ValidationError('No CSV file provided'));
     }
 
     try {
@@ -123,7 +125,7 @@ export class BulkController {
       if (req.file) {
         try { fs.unlinkSync(req.file.path); } catch (e) {}
       }
-      return res.status(500).json({ success: false, message: 'Failed to process CSV file', error: error.message });
+      return next(new AppError(500, 'Failed to process CSV file', error.message));
     }
   }
 }
