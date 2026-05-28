@@ -2,7 +2,7 @@ import { CustomerCard } from "./CustomerCard";
 import { DataTablePlaceholder } from "@/components/tables/DataTablePlaceholder";
 
 interface CustomerHistorySectionProps {
-  customerId: string;
+  customerId: string | number;
 }
 
 export function CustomerHistorySection({ customerId }: CustomerHistorySectionProps) {

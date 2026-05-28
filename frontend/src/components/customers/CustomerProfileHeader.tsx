@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Customer } from "@/types/customer";
+import { ApiCustomer } from "@/types/customer";
 import { Edit, FileText, Phone, Mail, MapPin } from "lucide-react";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 interface CustomerProfileHeaderProps {
-  customer: Customer;
+  customer: ApiCustomer;
   children?: ReactNode;
 }
 
@@ -24,7 +25,12 @@ export function CustomerProfileHeader({ customer, children }: CustomerProfileHea
           {initials}
         </div>
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{customer.fullName}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{customer.fullName}</h1>
+            <Badge variant={customer.isActive ? "default" : "secondary"} className={customer.isActive ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}>
+              {customer.isActive ? "Active" : "Inactive"}
+            </Badge>
+          </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-sm text-muted-foreground">
             {customer.phone && (
               <div className="flex items-center gap-1.5">
@@ -55,9 +61,11 @@ export function CustomerProfileHeader({ customer, children }: CustomerProfileHea
             Edit Profile
           </Link>
         </Button>
-        <Button>
-          <FileText className="mr-2 h-4 w-4" />
-          Create Invoice
+        <Button asChild>
+          <Link href={`/invoices/new?customerId=${customer.id}`}>
+            <FileText className="mr-2 h-4 w-4" />
+            Create Invoice
+          </Link>
         </Button>
       </div>
     </div>

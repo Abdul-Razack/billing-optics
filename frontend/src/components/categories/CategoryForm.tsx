@@ -1,0 +1,126 @@
+"use client";
+
+import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useRouter } from "next/navigation";
+import { Loader2, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { CategoryService } from "@/services/category.service";
+
+const categorySchema = z.object({
+  name: z.string().min(1, "Category Name is required"),
+  description: z.string().optional(),
+  isActive: z.boolean(),
+});
+
+type CategoryFormValues = z.infer<typeof categorySchema>;
+
+export function CategoryForm() {
+  const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useForm<CategoryFormValues>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      isActive: true,
+    },
+  });
+
+  const onSubmit = async (values: CategoryFormValues) => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      await CategoryService.createCategory(values);
+      router.push("/categories");
+      router.refresh(); // Refresh list
+    } catch (err: any) {
+      setError(err.message || "An error occurred while saving the category.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-2xl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="icon" asChild>
+            <Link href="/categories">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Create Category
+          </h1>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" type="button" asChild disabled={isSaving}>
+            <Link href="/categories">Cancel</Link>
+          </Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Category
+          </Button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-4 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-6 rounded-xl border border-border bg-card p-6">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Category Name <span className="text-destructive">*</span></Label>
+            <Input id="name" {...form.register("name")} />
+            {form.formState.errors.name && (
+              <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea 
+              id="description" 
+              {...form.register("description")} 
+              className="resize-none"
+              rows={4}
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="space-y-0.5">
+              <Label>Active Status</Label>
+              <p className="text-sm text-muted-foreground">
+                Active categories can be assigned to products.
+              </p>
+            </div>
+            <Controller
+              control={form.control}
+              name="isActive"
+              render={({ field }) => (
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
+            />
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}

@@ -1,30 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getPaginationRowModel,
-  getSortedRowModel,
+import { 
+  flexRender, 
+  getCoreRowModel, 
   SortingState,
-  getFilteredRowModel,
   ColumnDef,
+  useReactTable,
+  RowSelectionState,
+  OnChangeFn,
 } from "@tanstack/react-table";
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Customer } from "@/types/customer";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Eye, Edit, MoreHorizontal, Trash, ArrowUpDown 
+} from "lucide-react";
 import Link from "next/link";
-import { MoreHorizontal, Search, Trash, Eye, Edit } from "lucide-react";
+import { ApiCustomer } from "@/types/customer";
+import { CustomerStatusBadge } from "./CustomerStatusBadge";
+import { CustomerPagination } from "./CustomerPagination";
+import { DataTableViewOptions } from "@/components/tables/DataTableViewOptions";
+import { TableSkeleton } from "@/components/shared/LoadingSkeletons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,55 +36,117 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { CustomerUrlState } from "@/hooks/useCustomerUrlState";
 
 interface CustomerTableProps {
-  data: Customer[];
+  data: ApiCustomer[];
+  isLoading: boolean;
+  totalItems: number;
+  state: CustomerUrlState;
+  updateState: (updates: Partial<CustomerUrlState>) => void;
+  rowSelection: RowSelectionState;
+  setRowSelection: OnChangeFn<RowSelectionState>;
 }
 
-export function CustomerTable({ data }: CustomerTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
+export function CustomerTable({ 
+  data, 
+  isLoading, 
+  totalItems,
+  state,
+  updateState,
+  rowSelection,
+  setRowSelection
+}: CustomerTableProps) {
 
-  const columns: ColumnDef<Customer>[] = [
+  // Parse sort from string "id-desc" to SortingState
+  const sorting: SortingState = state.sort ? (() => {
+    const [id, dir] = state.sort.split("-");
+    return [{ id, desc: dir === "desc" }];
+  })() : [];
+
+  const columns: ColumnDef<ApiCustomer>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+          className="translate-y-[2px]"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="translate-y-[2px]"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: "fullName",
-      header: "Customer Name",
-      cell: ({ row }) => (
-        <div className="font-medium text-foreground">{row.getValue("fullName")}</div>
-      )
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => {
+            const isDesc = column.getIsSorted() === "desc";
+            updateState({ sort: `fullName-${isDesc ? 'asc' : 'desc'}` });
+          }}
+          className="-ml-4 h-8 data-[state=open]:bg-accent"
+        >
+          <span>Name</span>
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div className="font-medium text-foreground">{row.original.fullName}</div>,
     },
     {
       accessorKey: "phone",
       header: "Phone",
-      cell: ({ row }) => <div className="text-muted-foreground">{row.getValue("phone")}</div>
+      cell: ({ row }) => <div className="text-muted-foreground">{row.original.phone}</div>,
     },
     {
       accessorKey: "email",
       header: "Email",
-      cell: ({ row }) => <div className="text-muted-foreground">{row.getValue("email") || "—"}</div>
+      cell: ({ row }) => <div className="text-muted-foreground">{row.original.email || "-"}</div>,
     },
     {
-      accessorKey: "stats.lastPurchaseDate",
-      id: "lastPurchase",
-      header: "Last Purchase",
-      cell: ({ row }) => {
-        const date = row.original.stats.lastPurchaseDate;
-        return <div className="text-muted-foreground">{date ? new Date(date).toLocaleDateString() : "Never"}</div>;
-      }
+      accessorKey: "isActive",
+      header: "Status",
+      cell: ({ row }) => <CustomerStatusBadge isActive={row.original.isActive} />,
     },
     {
-      accessorKey: "stats.totalPurchases",
-      id: "totalPurchases",
-      header: "Total Purchases",
+      id: "hasCustomFields",
+      accessorFn: (row) => row.customFields && Object.keys(row.customFields).length > 0,
+      header: "Custom Data",
       cell: ({ row }) => {
-        const total = row.original.stats.totalPurchases;
-        return (
-          <Badge variant={total > 0 ? "secondary" : "outline"} className={total > 0 ? "bg-blue-100 text-blue-800" : "text-muted-foreground"}>
-            {total} {total === 1 ? 'order' : 'orders'}
-          </Badge>
-        );
-      }
+        const count = row.original.customFields ? Object.keys(row.original.customFields).length : 0;
+        return <div className="text-muted-foreground text-sm">{count > 0 ? `${count} fields` : "-"}</div>;
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => {
+            const isDesc = column.getIsSorted() === "desc";
+            updateState({ sort: `createdAt-${isDesc ? 'asc' : 'desc'}` });
+          }}
+          className="-ml-4 h-8 data-[state=open]:bg-accent"
+        >
+          <span>Joined Date</span>
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="text-muted-foreground">
+          {new Date(row.original.createdAt).toLocaleDateString()}
+        </div>
+      ),
     },
     {
       id: "actions",
@@ -99,80 +164,95 @@ export function CustomerTable({ data }: CustomerTableProps) {
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem asChild>
                 <Link href={`/customers/${customer.id}`}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  View profile
+                  <Eye className="mr-2 h-4 w-4" /> View Details
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/customers/${customer.id}/edit`}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit details
+                  <Edit className="mr-2 h-4 w-4" /> Edit Customer
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                <Trash className="mr-2 h-4 w-4" />
-                Delete
+              <DropdownMenuItem 
+                className="text-destructive" 
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to delete this customer?")) {
+                    alert("Delete functionality pending implementation.");
+                  }
+                }}
+              >
+                <Trash className="mr-2 h-4 w-4" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
       },
-    },
+    }
   ];
 
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
+    pageCount: Math.ceil(totalItems / state.size),
     state: {
       sorting,
-      globalFilter,
+      rowSelection,
+      pagination: {
+        pageIndex: state.page,
+        pageSize: state.size,
+      }
     },
+    manualPagination: true,
+    manualSorting: true,
+    getRowId: (row) => String(row.id),
+    getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: setRowSelection,
+    onPaginationChange: (updater) => {
+      if (typeof updater === 'function') {
+        const newState = updater({ pageIndex: state.page, pageSize: state.size });
+        updateState({ page: newState.pageIndex, size: newState.pageSize });
+      }
+    }
   });
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, phone or email..."
-            value={globalFilter ?? ""}
-            onChange={(event) => setGlobalFilter(event.target.value)}
-            className="pl-8"
-          />
-        </div>
+      <div className="flex justify-end mb-2">
+        <DataTableViewOptions table={table} />
       </div>
-      
-      <div className="rounded-md border border-border bg-card">
+
+      <div className="border border-border rounded-lg bg-card overflow-hidden shadow-sm">
         <Table>
           <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableSkeleton rows={state.size} columns={columns.length} />
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50"
+                  className="hover:bg-muted/50 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="py-2">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -180,8 +260,8 @@ export function CustomerTable({ data }: CustomerTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                  No customers found matching your search.
+                <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
+                  No customers on this page.
                 </TableCell>
               </TableRow>
             )}
@@ -189,29 +269,9 @@ export function CustomerTable({ data }: CustomerTableProps) {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing {table.getRowModel().rows.length} of {table.getFilteredRowModel().rows.length} customers
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+      {!isLoading && totalItems > 0 && (
+        <CustomerPagination table={table} totalItems={totalItems} />
+      )}
     </div>
   );
 }

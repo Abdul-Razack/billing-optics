@@ -1,42 +1,76 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { ProductCard } from "@/components/products/ProductCard";
 import { ProductStatusBadge } from "@/components/products/ProductStatusBadge";
-import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_CUSTOM_FIELDS } from "@/lib/mock-data";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTablePlaceholder } from "@/components/tables/DataTablePlaceholder";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Edit } from "lucide-react";
+import { Edit, Loader2, ArrowLeft } from "lucide-react";
+import { useFetch } from "@/hooks/useApi";
+import { ApiProduct } from "@/services/product.service";
+import { CategoryService, ApiCategory } from "@/services/category.service";
+import { CustomField } from "@/types/product";
+import { SettingsService } from "@/services/settings.service";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const product = MOCK_PRODUCTS.find(p => p.id === resolvedParams.id);
+  
+  const { data: response, isLoading, error } = useFetch<{ success: boolean, data: ApiProduct }>(`/products/${resolvedParams.id}`);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
 
-  if (!product) {
+  useEffect(() => {
+    CategoryService.getCategories().then(setCategories).catch(console.error);
+    SettingsService.getSettings()
+      .then((res) => setCustomFields(res.customFieldDefinitions?.products || []))
+      .catch(console.error);
+  }, []);
+
+  if (isLoading) {
     return (
-      <PageContainer title="Products">
-        <EmptyState title="Product Not Found" description="The product you are trying to view does not exist." />
+      <PageContainer title="Products" description="View product details and history.">
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </PageContainer>
     );
   }
 
-  const category = MOCK_CATEGORIES.find(c => c.id === product.categoryId);
+  const product = response?.data;
+
+  if (error || !product) {
+    return (
+      <PageContainer title="Products">
+        <EmptyState title="Product Not Found" description="The product you are trying to view does not exist or could not be loaded." />
+      </PageContainer>
+    );
+  }
+
+  const category = categories.find(c => c.id === product.categoryId);
 
   return (
     <PageContainer title="Products" description="View product details and history.">
-      <ProductHeader title={product.name}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="icon" asChild>
+            <Link href="/products">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <ProductHeader title={product.name} />
+        </div>
         <Button asChild variant="outline">
           <Link href={`/products/${product.id}/edit`}>
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </Link>
         </Button>
-      </ProductHeader>
+      </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
@@ -74,6 +108,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     <p className="text-sm mt-1">{product.description}</p>
                   </div>
                 )}
+                
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Created At</p>
+                    <p className="font-medium">{product.createdAt ? new Date(product.createdAt).toLocaleDateString() : "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Updated At</p>
+                    <p className="font-medium">{product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : "N/A"}</p>
+                  </div>
+                </div>
               </div>
             </ProductCard>
 
@@ -82,21 +127,25 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Cost Price</p>
-                    <p className="font-medium">${product.costPrice.toFixed(2)}</p>
+                    <p className="font-medium">${(product.costPrice || 0).toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Selling Price</p>
-                    <p className="font-medium">${product.sellingPrice.toFixed(2)}</p>
+                    <p className="font-medium">${(product.sellingPrice || 0).toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">GST</p>
-                    <p className="font-medium">{product.gstPercent}%</p>
+                    <p className="font-medium">{product.gstPercent || 0}%</p>
                   </div>
                   <div>
+                    <p className="text-sm text-muted-foreground">Min Stock Alert</p>
+                    <p className="font-medium">{product.minStockAlert || 0}</p>
+                  </div>
+                  <div className="col-span-2 pt-4 border-t">
                     <p className="text-sm text-muted-foreground">Current Stock</p>
-                    <div className="flex items-center space-x-2">
-                      <p className="font-medium">{product.currentStock}</p>
-                      <ProductStatusBadge type="stock" status={product.stockStatus} />
+                    <div className="flex items-center space-x-2 mt-1">
+                      <p className="font-medium text-lg">0</p>
+                      <ProductStatusBadge type="stock" status={(0) <= (product.minStockAlert || 5) ? "LOW_STOCK" : "IN_STOCK"} />
                     </div>
                   </div>
                 </div>
@@ -119,20 +168,29 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
         <TabsContent value="attributes">
           <ProductCard title="Dynamic Attributes">
-            {product.customFields && Object.keys(product.customFields).length > 0 ? (
+            {product.attributes && Object.keys(product.attributes).length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {Object.entries(product.customFields).map(([key, value]) => {
-                  const fieldDef = MOCK_CUSTOM_FIELDS.find(f => f.id === key);
+                {Object.entries(product.attributes).map(([key, value]) => {
+                  const fieldDef = customFields.find((f) => f.id === key);
+                  const label = fieldDef?.name || key.replace(/_/g, ' ');
+                  let displayValue = String(value);
+
+                  if (fieldDef?.type === "checkbox") {
+                    displayValue = value ? "Yes" : "No";
+                  } else if (value === null || value === undefined || value === "") {
+                    displayValue = "—";
+                  }
+
                   return (
                     <div key={key}>
-                      <p className="text-sm text-muted-foreground">{fieldDef?.name || key}</p>
-                      <p className="font-medium">{value}</p>
+                      <p className="text-sm text-muted-foreground capitalize">{label}</p>
+                      <p className="font-medium">{displayValue}</p>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No attributes configured for this product.</p>
+              <p className="text-sm text-muted-foreground">No dynamic attributes configured for this product.</p>
             )}
           </ProductCard>
         </TabsContent>

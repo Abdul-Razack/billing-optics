@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 
 export default function CustomerPrescriptionsHistoryPage({ params }: { params: { id: string } }) {
-  const customer = MOCK_CUSTOMERS.find(c => c.id === params.id);
+  const customer = MOCK_CUSTOMERS.find(c => c.id.toString() === params.id);
   
   if (!customer) {
     notFound();

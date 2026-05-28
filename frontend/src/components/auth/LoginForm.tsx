@@ -51,7 +51,7 @@ export function LoginForm() {
         return;
       }
       
-      await login(values.email);
+      await login(values.email, values.password);
       router.push("/");
     } catch (err) {
       setError("An unexpected error occurred.");

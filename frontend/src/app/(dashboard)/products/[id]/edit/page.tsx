@@ -2,30 +2,40 @@
 
 import { use } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { ProductHeader } from "@/components/products/ProductHeader";
 import { ProductForm } from "@/components/products/ProductForm";
-import { SectionCard } from "@/components/dashboard/SectionCard";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { useFetch } from "@/hooks/useApi";
+import { ApiProduct } from "@/services/product.service";
+import { Loader2 } from "lucide-react";
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const product = MOCK_PRODUCTS.find(p => p.id === resolvedParams.id);
+  
+  const { data: response, isLoading, error } = useFetch<{ success: boolean, data: ApiProduct }>(`/products/${resolvedParams.id}`);
 
-  if (!product) {
+  if (isLoading) {
+    return (
+      <PageContainer title="Products" description="Update product details.">
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </PageContainer>
+    );
+  }
+
+  const product = response?.data;
+
+  if (error || !product) {
     return (
       <PageContainer title="Products">
-        <EmptyState title="Product Not Found" description="The product you are trying to edit does not exist." />
+        <EmptyState title="Product Not Found" description="The product you are trying to edit does not exist or could not be loaded." />
       </PageContainer>
     );
   }
 
   return (
     <PageContainer title="Products" description="Update product details.">
-      <ProductHeader title={`Edit ${product.name}`} />
-      <SectionCard className="max-w-4xl mx-auto">
-        <ProductForm initialData={product} />
-      </SectionCard>
+      <ProductForm initialData={product} />
     </PageContainer>
   );
 }
