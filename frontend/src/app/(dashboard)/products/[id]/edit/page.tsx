@@ -34,7 +34,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <PageContainer title="Products" description="Update product details.">
+    <PageContainer title="">
       <ProductForm initialData={product} />
     </PageContainer>
   );

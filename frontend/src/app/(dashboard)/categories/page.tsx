@@ -2,7 +2,7 @@
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
-import { ProductCard } from "@/components/products/ProductCard";
+import { ProductInfoCard } from "@/components/products/ProductInfoCard";
 import { CategoryTable } from "@/components/categories/CategoryTable";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -35,13 +35,13 @@ export default function CategoriesPage() {
         </Button>
       </ProductHeader>
 
-      <ProductCard title="All Categories">
+      <ProductInfoCard title="All Categories">
         <CategoryTable 
           data={categories} 
           isLoading={isLoading} 
           onDelete={handleDelete}
         />
-      </ProductCard>
+      </ProductInfoCard>
     </PageContainer>
   );
 }

@@ -1,30 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useEffect, useState, useRef } from "react";
+import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CategoryService, ApiCategory } from "@/services/category.service";
 import { ProductService, ApiProduct } from "@/services/product.service";
 import { SettingsService } from "@/services/settings.service";
 import { CustomField } from "@/types/product";
-import { DynamicFieldRenderer } from "./DynamicFieldRenderer";
 import { buildDynamicSchema } from "@/lib/dynamic-schema";
+
+import { ProductFormFields } from "./ProductFormFields";
+import { ProductCustomFields } from "./ProductCustomFields";
+import { ProductImageUploader } from "./ProductImageUploader";
+import { ProductFormActions } from "./ProductFormActions";
+import { ProductUpdateActions } from "./ProductUpdateActions";
+import { ProductEditHeader } from "./ProductEditHeader";
+import { UnsavedChangesGuard } from "./UnsavedChangesGuard";
 
 const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -40,8 +36,6 @@ const productSchema = z.object({
   customFields: z.record(z.any()).optional(),
 });
 
-type ProductValues = z.infer<typeof productSchema>;
-
 interface ProductFormInnerProps {
   initialData?: ApiProduct;
   categories: ApiCategory[];
@@ -52,6 +46,9 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track if we should reset or redirect after save
+  const nextActionRef = useRef<"redirect" | "reset">("redirect");
 
   const isEditMode = !!initialData;
   const dynamicSchema = buildDynamicSchema(productSchema, customFields);
@@ -74,6 +71,8 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
     },
   });
 
+  const { formState: { isDirty } } = form;
+
   const onSubmit = async (values: DynamicProductValues) => {
     setIsSaving(true);
     setError(null);
@@ -85,149 +84,77 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
 
       if (isEditMode && initialData) {
         await ProductService.updateProduct(initialData.id, payload);
+        toast.success("Product updated successfully");
       } else {
         await ProductService.createProduct(payload);
+        toast.success("Product created successfully");
       }
-      router.push("/products");
-      router.refresh(); // Refresh list
+      
+      if (nextActionRef.current === "reset") {
+        form.reset();
+        // Reset action back to default
+        nextActionRef.current = "redirect";
+      } else {
+        router.push("/products");
+        router.refresh(); 
+      }
     } catch (err: any) {
       setError(err.message || "An error occurred while saving.");
+      toast.error("An error occurred while saving");
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleSaveAndAddAnother = () => {
+    nextActionRef.current = "reset";
+    form.handleSubmit(onSubmit)();
+  };
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-4xl">
+    <div className="max-w-5xl mx-auto">
+      {isEditMode && initialData && (
+        <ProductEditHeader title={initialData.name} isDirty={isDirty} />
+      )}
+      
       {error && (
-        <div className="p-4 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
+        <div className="mb-6 p-4 rounded-md bg-destructive/10 text-destructive border border-destructive/20 font-medium">
           {error}
         </div>
       )}
 
-      {/* Basic Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name <span className="text-destructive">*</span></Label>
-          <Input id="name" {...form.register("name")} />
-          {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message as string}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="categoryId">Category <span className="text-destructive">*</span></Label>
-          <Controller
-            control={form.control}
-            name="categoryId"
-            render={({ field }) => (
-              <Select
-                onValueChange={(val) => val && field.onChange(parseInt(val, 10))}
-                value={field.value ? field.value.toString() : ""}
-              >
-                <SelectTrigger id="categoryId">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {form.formState.errors.categoryId && <p className="text-xs text-destructive">{form.formState.errors.categoryId.message as string}</p>}
-        </div>
-      </div>
+      <FormProvider {...form}>
+        <UnsavedChangesGuard isDirty={isDirty} />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* Main Form Area */}
+            <div className="xl:col-span-2 space-y-8">
+              <ProductFormFields categories={categories} />
+              
+              {customFields.length > 0 && (
+                <ProductCustomFields customFields={customFields} />
+              )}
+            </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="sku">SKU</Label>
-          <Input id="sku" {...form.register("sku")} placeholder="Auto-generated if left blank" />
-          {form.formState.errors.sku && <p className="text-xs text-destructive">{form.formState.errors.sku.message as string}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="barcode">Barcode</Label>
-          <Input id="barcode" {...form.register("barcode")} />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea id="description" {...form.register("description")} className="min-h-[100px]" />
-      </div>
-
-      {/* Pricing & Stock */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="costPrice">Cost Price</Label>
-          <Input id="costPrice" type="number" step="0.01" {...form.register("costPrice", { valueAsNumber: true })} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="sellingPrice">Selling Price</Label>
-          <Input id="sellingPrice" type="number" step="0.01" {...form.register("sellingPrice", { valueAsNumber: true })} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="gstPercent">GST (%)</Label>
-          <Input id="gstPercent" type="number" {...form.register("gstPercent", { valueAsNumber: true })} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="minStockAlert">Min Stock Alert</Label>
-          <Input id="minStockAlert" type="number" {...form.register("minStockAlert", { valueAsNumber: true })} />
-        </div>
-      </div>
-
-      {/* Dynamic Fields */}
-      {customFields.length > 0 && (
-        <div>
-          <h3 className="text-lg font-medium border-b border-border pb-2 mb-4">Attributes</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {customFields.map((field) => (
-              <div key={field.id} className={field.type === "textarea" ? "md:col-span-3 space-y-2" : "space-y-2"}>
-                {field.type !== "checkbox" && (
-                  <Label>
-                    {field.name} {field.required && <span className="text-destructive">*</span>}
-                  </Label>
-                )}
-                <Controller
-                  control={form.control}
-                  name={`customFields.${field.id}` as any}
-                  render={({ field: controllerField }) => (
-                    <DynamicFieldRenderer 
-                      fieldDef={field}
-                      value={controllerField.value}
-                      onChange={controllerField.onChange}
-                    />
-                  )}
-                />
-              </div>
-            ))}
+            {/* Sidebar Area */}
+            <div className="xl:col-span-1 space-y-8">
+              <ProductImageUploader maxImages={5} />
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* Status */}
-      <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-card">
-        <div className="space-y-0.5">
-          <Label>Active Status</Label>
-          <p className="text-xs text-muted-foreground">Inactive products will not appear in POS.</p>
-        </div>
-        <Controller
-          control={form.control}
-          name="isActive"
-          render={({ field }) => (
-            <Switch checked={field.value} onCheckedChange={field.onChange} />
+          {isEditMode ? (
+            <ProductUpdateActions isSaving={isSaving} isDirty={isDirty} />
+          ) : (
+            <ProductFormActions 
+              isEditMode={false} 
+              isSaving={isSaving} 
+              onSaveAndAddAnother={handleSaveAndAddAnother} 
+            />
           )}
-        />
-      </div>
-
-      <div className="flex justify-end space-x-4 pt-4">
-        <Button variant="outline" type="button" onClick={() => router.back()} disabled={isSaving}>Cancel</Button>
-        <Button type="submit" disabled={isSaving}>
-          {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isEditMode ? "Save Changes" : "Create Product"}
-        </Button>
-      </div>
-    </form>
+        </form>
+      </FormProvider>
+    </div>
   );
 }
 
@@ -261,7 +188,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-24">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
