@@ -27,7 +27,8 @@ export class CustomerController {
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
-      const result = await customerService.getById(id);
+      const includePrescriptions = req.query.includePrescriptions === 'true';
+      const result = await customerService.getById(id, includePrescriptions);
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);

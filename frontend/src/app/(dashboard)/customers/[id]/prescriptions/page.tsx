@@ -1,23 +1,50 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { CustomerPrescriptionCard } from "@/components/prescriptions/CustomerPrescriptionCard";
 import { PrescriptionHistoryTimeline } from "@/components/prescriptions/PrescriptionHistoryTimeline";
-import { MOCK_PRESCRIPTIONS } from "@/lib/mock-prescription-data";
-import { MOCK_CUSTOMERS } from "@/lib/mock-customer-data";
-import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { CustomerService } from "@/services/customer.service";
+import { PrescriptionService } from "@/services/prescription.service";
+import { Customer } from "@/types/customer";
+import { Prescription } from "@/types/prescription";
+import { toast } from "sonner";
 
 export default function CustomerPrescriptionsHistoryPage({ params }: { params: { id: string } }) {
-  const customer = MOCK_CUSTOMERS.find(c => c.id.toString() === params.id);
-  
-  if (!customer) {
-    notFound();
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [customerHistory, setCustomerHistory] = useState<Prescription[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const cust = await CustomerService.getCustomerById(Number(params.id));
+        setCustomer(cust);
+        
+        const history = await PrescriptionService.getPrescriptionsByCustomerId(params.id);
+        setCustomerHistory(history);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load customer prescriptions");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [params.id]);
+
+  if (loading) {
+    return <PageContainer title="Loading..."><div className="p-8">Loading...</div></PageContainer>;
   }
 
-  // Find all prescriptions for this customer
-  const customerHistory = MOCK_PRESCRIPTIONS.filter(p => p.customerId === customer.id);
+  if (!customer) {
+    return <PageContainer title="Not Found"><div className="p-8">Customer not found.</div></PageContainer>;
+  }
+
   const activePrescription = customerHistory.find(p => p.isActive) || customerHistory[0];
 
   return (

@@ -4,7 +4,14 @@ import { processCheckout, CheckoutDTO } from '../engine/checkout.engine';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { DbOrTx } from '../types/db';
 
+import { SettingsRepository } from '../repositories/settings.repository';
+import { generateInvoicePdf } from '../utils/pdf.util';
+
 export class BillingService {
+  async getInvoices(params: any) {
+    return await BillingRepository.getInvoices(params);
+  }
+
   async checkout(data: CheckoutDTO) {
     return await processCheckout(data);
   }
@@ -53,5 +60,17 @@ export class BillingService {
 
   async getInvoiceDetails(invoiceId: number) {
     return await BillingRepository.getInvoiceWithItemsAndPayments(invoiceId);
+  }
+
+  async generateInvoicePdf(invoiceId: number): Promise<Buffer> {
+    const invoice = await BillingRepository.getInvoiceWithItemsAndPayments(invoiceId);
+    if (!invoice) {
+      throw new NotFoundError(`Invoice with ID ${invoiceId} not found`);
+    }
+    
+    const settingsRepo = new SettingsRepository();
+    const settings = await settingsRepo.getSettings();
+
+    return await generateInvoicePdf(invoice, settings);
   }
 }

@@ -1,80 +1,135 @@
+"use client";
+
+import { useMemo } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { ProductHeader } from "@/components/products/ProductHeader";
-import { InventorySummaryCard } from "@/components/inventory/InventorySummaryCard";
-import { ActivityTimeline } from "@/components/inventory/ActivityTimeline";
-import { ProductStockCard } from "@/components/inventory/ProductStockCard";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
-import { MOCK_STOCK_ALERTS } from "@/lib/mock-inventory-data";
-import { Package, AlertTriangle, ArrowUpRight, Archive } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { InventoryStatCard } from "@/components/inventory/InventoryStatCard";
+import { InventoryActivityFeed } from "@/components/inventory/InventoryActivityFeed";
+import { InventoryQuickActions } from "@/components/inventory/InventoryQuickActions";
+import { CategoryStockSummary } from "@/components/inventory/CategoryStockSummary";
+import { ProductService, ApiProduct } from "@/services/product.service";
+import { CategoryService, ApiCategory } from "@/services/category.service";
+import { useFetch } from "@/hooks/useApi";
+import { Package, Boxes, AlertTriangle, XOctagon, DollarSign } from "lucide-react";
+import { calculateStockStatus } from "@/lib/stock";
 
 export default function InventoryOverviewPage() {
-  const totalProducts = MOCK_PRODUCTS.length;
-  const lowStockCount = MOCK_STOCK_ALERTS.length;
-  const totalItemsInStock = MOCK_PRODUCTS.reduce((acc, p) => acc + p.currentStock, 0);
+  const { data: response, isLoading: isLoadingProducts, error: productsError } = useFetch<{ success: boolean, data: ApiProduct[] }>("/products");
+  const { data: catResponse, isLoading: isLoadingCategories } = useFetch<{ success: boolean, data: ApiCategory[] }>("/categories");
+
+  const products = response?.data || [];
+  const categories = catResponse?.data || [];
+
+  const isLoading = isLoadingProducts || isLoadingCategories;
+
+  // Compute Inventory KPIs
+  const {
+    totalProducts,
+    totalStockUnits,
+    lowStockCount,
+    outOfStockCount,
+    totalValueCents
+  } = useMemo(() => {
+    let totalStockUnits = 0;
+    let lowStockCount = 0;
+    let outOfStockCount = 0;
+    let totalValueCents = 0;
+
+    products.forEach(p => {
+      const currentStock = (p as any).currentStock ?? 0;
+      const { status } = calculateStockStatus(currentStock, p.minStockAlert);
+      
+      totalStockUnits += currentStock;
+      totalValueCents += (currentStock * (p.costPrice || 0));
+
+      if (status === "LOW_STOCK") lowStockCount++;
+      if (status === "OUT_OF_STOCK") outOfStockCount++;
+    });
+
+    return {
+      totalProducts: products.length,
+      totalStockUnits,
+      lowStockCount,
+      outOfStockCount,
+      totalValueCents
+    };
+  }, [products]);
+
+  const totalValueDisplay = `$${(totalValueCents / 100).toFixed(2)}`;
+
+  if (productsError) {
+    return (
+      <PageContainer title="Inventory Dashboard" description="Overview of your store's inventory and stock levels.">
+        <div className="p-4 rounded bg-destructive/10 text-destructive border border-destructive/20 mt-6">
+          Failed to load inventory data. Please try again.
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
-    <PageContainer title="Inventory Overview" description="Monitor stock levels, value, and recent activity.">
-      <ProductHeader 
-        title="Dashboard" 
-        action={{ label: "Adjust Stock", href: "/inventory/adjustments/new" }} 
-      >
-        <Button variant="outline" asChild className="mr-2">
-          <Link href="/inventory/ledger">View Ledger</Link>
-        </Button>
-      </ProductHeader>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <InventorySummaryCard 
+    <PageContainer title="Inventory Dashboard" description="Overview of your store's inventory and stock levels.">
+      
+      {/* KPI Stats Row */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mt-6 mb-8">
+        <InventoryStatCard 
           title="Total Products" 
           value={totalProducts} 
-          icon={<Package className="h-4 w-4" />} 
-          description="Active catalog items"
+          icon={Package} 
+          description="Unique items in catalog"
+          isLoading={isLoading}
         />
-        <InventorySummaryCard 
-          title="Items in Stock" 
-          value={totalItemsInStock} 
-          icon={<Archive className="h-4 w-4" />} 
-          description="Total physical units"
+        <InventoryStatCard 
+          title="Total Units" 
+          value={totalStockUnits} 
+          icon={Boxes} 
+          description="Physical stock on hand"
+          isLoading={isLoading}
         />
-        <InventorySummaryCard 
-          title="Low Stock Alerts" 
+        <InventoryStatCard 
+          title="Stock Value" 
+          value={totalValueDisplay} 
+          icon={DollarSign} 
+          description="Estimated based on cost price"
+          isLoading={isLoading}
+        />
+        <InventoryStatCard 
+          title="Low Stock" 
           value={lowStockCount} 
-          icon={<AlertTriangle className="h-4 w-4 text-orange-500" />} 
-          description="Items needing reorder"
-          className={lowStockCount > 0 ? "border-orange-200 bg-orange-50/50" : ""}
+          icon={AlertTriangle} 
+          description="Items reaching min alert level"
+          trend={lowStockCount > 0 ? { value: `${lowStockCount} items`, isPositive: false } : undefined}
+          isLoading={isLoading}
         />
-        <InventorySummaryCard 
-          title="Recent Purchases" 
-          value="4" 
-          icon={<ArrowUpRight className="h-4 w-4 text-green-500" />} 
-          trend={{ value: 12, isPositive: true }}
-          description="vs last week"
+        <InventoryStatCard 
+          title="Out of Stock" 
+          value={outOfStockCount} 
+          icon={XOctagon} 
+          description="Items with 0 inventory"
+          trend={outOfStockCount > 0 ? { value: "Action needed", isPositive: false } : undefined}
+          isLoading={isLoading}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-medium text-foreground">Stock Health Overview</h3>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/products">View All Products</Link>
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {MOCK_PRODUCTS.slice(0, 6).map(product => (
-                <ProductStockCard key={product.id} product={product} />
-              ))}
-            </div>
-          </div>
+      <div className="grid gap-6 md:grid-cols-12 mb-8">
+        {/* Left Column - 8/12 */}
+        <div className="md:col-span-8 flex flex-col gap-6">
+          <InventoryQuickActions />
+          <CategoryStockSummary 
+            products={products} 
+            categories={categories} 
+            isLoading={isLoading} 
+          />
         </div>
-        
-        <div className="space-y-6">
-          <ActivityTimeline />
+
+        {/* Right Column - 4/12 */}
+        <div className="md:col-span-4 h-full">
+          <InventoryActivityFeed 
+            products={products} 
+            isLoading={isLoading} 
+          />
         </div>
       </div>
+
     </PageContainer>
   );
 }

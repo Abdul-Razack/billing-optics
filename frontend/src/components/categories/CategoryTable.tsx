@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -34,6 +34,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SecureActionConfirm } from "@/components/shared/SecureActionConfirm";
+import { RequireRole } from "@/components/auth/RequireRole";
 
 interface CategoryTableProps {
   data: ApiCategory[];
@@ -45,7 +47,7 @@ export function CategoryTable({ data, isLoading = false, onDelete }: CategoryTab
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
-  const columns: ColumnDef<ApiCategory>[] = [
+  const columns = useMemo<ColumnDef<ApiCategory>[]>(() => [
     {
       accessorKey: "name",
       header: "Category Name",
@@ -81,23 +83,28 @@ export function CategoryTable({ data, isLoading = false, onDelete }: CategoryTab
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                className="text-destructive" 
-                onClick={() => {
-                  if (window.confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
-                    onDelete?.(category.id);
-                  }
-                }}
-              >
-                <Trash className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
+              <RequireRole allowedRoles={["ADMIN"]}>
+                <SecureActionConfirm
+                  title="Delete Category?"
+                  description={`Are you sure you want to delete "${category.name}"? This action cannot be undone.`}
+                  onConfirm={() => onDelete?.(category.id)}
+                  actionLabel="Delete"
+                >
+                  <DropdownMenuItem 
+                    className="text-destructive" 
+                    onSelect={(e: Event) => e.preventDefault()}
+                  >
+                    <Trash className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </SecureActionConfirm>
+              </RequireRole>
             </DropdownMenuContent>
           </DropdownMenu>
         );
       },
     },
-  ];
+  ], [onDelete]);
 
   const table = useReactTable({
     data,

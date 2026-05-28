@@ -7,7 +7,7 @@ import { CustomerCard } from "@/components/customers/CustomerCard";
 import { CustomerStatsCard } from "@/components/customers/CustomerStatsCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingBag, Calendar, DollarSign, Loader2 } from "lucide-react";
+import { ShoppingBag, Calendar, DollarSign, Loader2, FileText } from "lucide-react";
 import { useFetch } from "@/hooks/useApi";
 import { ApiCustomer } from "@/types/customer";
 import { ApiSettings } from "@/services/settings.service";
@@ -21,7 +21,7 @@ interface CustomerWithDetails extends ApiCustomer {
 export default function CustomerProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   
-  const { data: response, isLoading, error } = useFetch<{ success: boolean; data: CustomerWithDetails }>(`/customers/${resolvedParams.id}`);
+  const { data: response, isLoading, error } = useFetch<{ success: boolean; data: CustomerWithDetails }>(`/customers/${resolvedParams.id}?includePrescriptions=true`);
   const { data: settingsResponse } = useFetch<{ success: boolean; data: ApiSettings }>('/settings');
   
   const customer = response?.data;
@@ -54,7 +54,7 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
     <PageContainer title="Customer Profile" description="Manage customer details, history, and preferences.">
       <CustomerProfileHeader customer={customer} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <CustomerStatsCard 
           title="Total Purchases" 
           value={totalPurchases} 
@@ -69,6 +69,11 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
           title="Last Visit" 
           value={lastVisit} 
           icon={<Calendar className="h-4 w-4" />} 
+        />
+        <CustomerStatsCard 
+          title="Prescriptions" 
+          value={customer.prescriptionCount || 0} 
+          icon={<FileText className="h-4 w-4" />} 
         />
       </div>
 
@@ -107,6 +112,29 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
                 <p className="text-sm text-muted-foreground italic">No notes added for this customer.</p>
               )}
             </CustomerCard>
+
+            {/* Latest Prescription Summary */}
+            {customer.latestPrescription && (
+              <CustomerCard title="Latest Prescription">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Right Eye (OD)</p>
+                      <p className="font-medium">SPH: {customer.latestPrescription.rightEye.sphere}</p>
+                      {customer.latestPrescription.rightEye.cylinder && <p>CYL: {customer.latestPrescription.rightEye.cylinder}</p>}
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Left Eye (OS)</p>
+                      <p className="font-medium">SPH: {customer.latestPrescription.leftEye.sphere}</p>
+                      {customer.latestPrescription.leftEye.cylinder && <p>CYL: {customer.latestPrescription.leftEye.cylinder}</p>}
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t text-xs text-muted-foreground">
+                    Recorded on: {new Date(customer.latestPrescription.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              </CustomerCard>
+            )}
 
             {/* Custom Fields rendered inside Overview to match instructions */}
             <div className="col-span-1 md:col-span-2">
@@ -148,7 +176,29 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
             title="Prescription History" 
             description="Past optical prescriptions and measurements."
           >
-            <DataTablePlaceholder />
+            {customer.prescriptionHistory && customer.prescriptionHistory.length > 0 ? (
+              <div className="space-y-4">
+                {customer.prescriptionHistory.map((rx: any) => (
+                  <div key={rx.id} className="p-4 border rounded-lg bg-card">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-medium">Prescription #{rx.id}</p>
+                        <p className="text-sm text-muted-foreground">{new Date(rx.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="text-sm text-right">
+                        {rx.pd && <p>PD: {rx.pd}</p>}
+                        {rx.addPower && <p>ADD: {rx.addPower}</p>}
+                      </div>
+                    </div>
+                    {rx.notes && (
+                      <p className="text-sm bg-muted/50 p-2 rounded mt-2">{rx.notes}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">No prescriptions found for this customer.</p>
+            )}
           </CustomerCard>
         </TabsContent>
 

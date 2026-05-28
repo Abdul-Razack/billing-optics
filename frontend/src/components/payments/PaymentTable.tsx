@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Payment } from "@/types/payment";
-import { MOCK_CUSTOMERS } from "@/lib/mock-customer-data";
 import { PaymentMethodBadge, PaymentStatusBadge } from "./PaymentBadges";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -49,11 +48,11 @@ export function PaymentTable({ data }: PaymentTableProps) {
       cell: ({ row }) => <div className="text-muted-foreground">{row.getValue("invoiceId")}</div>
     },
     {
-      accessorKey: "customerId",
+      accessorKey: "customer",
       header: "Customer",
       cell: ({ row }) => {
-        const customer = MOCK_CUSTOMERS.find(c => c.id === row.getValue("customerId"));
-        return <div>{customer?.fullName || "Unknown"}</div>;
+        const customer = row.getValue("customer") as any;
+        return <div>{customer?.name || "Walk-in"}</div>;
       }
     },
     {
@@ -65,20 +64,20 @@ export function PaymentTable({ data }: PaymentTableProps) {
       }
     },
     {
-      accessorKey: "method",
+      accessorKey: "paymentMethod",
       header: "Method",
-      cell: ({ row }) => <PaymentMethodBadge method={row.getValue("method")} />
+      cell: ({ row }) => <PaymentMethodBadge method={row.getValue("paymentMethod")} />
     },
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => <PaymentStatusBadge status={row.getValue("status")} />
+      cell: ({ row }) => <PaymentStatusBadge status={row.getValue("status") || "COMPLETED"} />
     },
     {
-      accessorKey: "date",
+      accessorKey: "createdAt",
       header: "Date",
       cell: ({ row }) => {
-        const date = new Date(row.getValue("date"));
+        const date = new Date(row.getValue("createdAt"));
         return <div className="text-sm">{date.toLocaleDateString()}</div>;
       }
     },

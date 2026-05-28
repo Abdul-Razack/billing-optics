@@ -11,6 +11,7 @@ export interface ApiProduct {
   sellingPrice: number;
   gstPercent: number;
   minStockAlert: number;
+  stock?: number;
   isActive: boolean;
   attributes: Record<string, any>;
   createdAt: string;
@@ -41,33 +42,17 @@ export const ProductService = {
   },
 
   createProduct: async (data: Partial<ApiProduct>): Promise<ApiProduct> => {
-    // The backend uses a specific validator which is problematic, but we send the full payload
-    // and rely on the backend to handle it or error out if the schema is too strict.
-    // However, to satisfy the validator partially, we also explicitly map costPrice/sellingPrice 
-    // to `price` and `stock` just in case the backend was hacked together to use those fields.
-    const payload = {
-      ...data,
-      price: data.sellingPrice,
-      stock: data.minStockAlert || 0,
-    };
-    
     const response = await fetchClient<{ success: boolean, data: ApiProduct }>("/products", {
       method: "POST",
-      data: payload,
+      data,
     });
     return response.data;
   },
 
   updateProduct: async (id: number, data: Partial<ApiProduct>): Promise<ApiProduct> => {
-    const payload = {
-      ...data,
-      price: data.sellingPrice,
-      stock: data.minStockAlert || 0,
-    };
-
     const response = await fetchClient<{ success: boolean, data: ApiProduct }>(`/products/${id}`, {
       method: "PUT",
-      data: payload,
+      data,
     });
     return response.data;
   },

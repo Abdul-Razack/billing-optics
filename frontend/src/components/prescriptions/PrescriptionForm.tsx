@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,10 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EyeMeasurementCard } from "./EyeMeasurementCard";
 import { MeasurementInput } from "./MeasurementInput";
-import { MOCK_CUSTOMERS } from "@/lib/mock-customer-data";
 import { CheckCircle } from "lucide-react";
 import { Prescription } from "@/types/prescription";
 import { Input } from "@/components/ui/input";
+import { CustomerService } from "@/services/customer.service";
+import { PrescriptionService } from "@/services/prescription.service";
+import { ApiCustomer } from "@/types/customer";
+import { toast } from "sonner";
 
 const eyeMeasurementSchema = z.object({
   sphere: z.string().min(1, "Required"),
@@ -37,6 +41,20 @@ interface PrescriptionFormProps {
 
 export function PrescriptionForm({ initialData }: PrescriptionFormProps) {
   const router = useRouter();
+  const [customers, setCustomers] = useState<ApiCustomer[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function loadCustomers() {
+      try {
+        const data = await CustomerService.getCustomers();
+        setCustomers(data);
+      } catch (error) {
+        toast.error("Failed to load customers");
+      }
+    }
+    loadCustomers();
+  }, []);
 
   const form = useForm<PrescriptionValues>({
     resolver: zodResolver(prescriptionSchema),
@@ -59,9 +77,39 @@ export function PrescriptionForm({ initialData }: PrescriptionFormProps) {
     },
   });
 
-  const onSubmit = (values: PrescriptionValues) => {
-    console.log("Mock Prescription Saved:", values);
-    router.push("/prescriptions");
+  const onSubmit = async (values: PrescriptionValues) => {
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        ...values,
+        rightEye: {
+          ...values.rightEye,
+          cylinder: values.rightEye.cylinder || "",
+          axis: values.rightEye.axis || "",
+          addPower: values.rightEye.addPower || "",
+        },
+        leftEye: {
+          ...values.leftEye,
+          cylinder: values.leftEye.cylinder || "",
+          axis: values.leftEye.axis || "",
+          addPower: values.leftEye.addPower || "",
+        },
+      };
+
+      if (initialData) {
+        await PrescriptionService.updatePrescription(initialData.id, payload);
+        toast.success("Prescription updated successfully");
+      } else {
+        await PrescriptionService.createPrescription(payload);
+        toast.success("Prescription created successfully");
+      }
+      router.push("/prescriptions");
+      router.refresh();
+    } catch (error) {
+      toast.error("Failed to save prescription");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -82,8 +130,8 @@ export function PrescriptionForm({ initialData }: PrescriptionFormProps) {
               <SelectValue placeholder="Select patient..." />
             </SelectTrigger>
             <SelectContent>
-              {MOCK_CUSTOMERS.map(c => (
-                <SelectItem key={c.id} value={c.id}>{c.fullName} ({c.phone})</SelectItem>
+              {customers.map(c => (
+                <SelectItem key={c.id} value={c.id.toString()}>{c.fullName} ({c.phone})</SelectItem>
               ))}
             </SelectContent>
           </Select>

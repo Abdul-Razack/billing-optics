@@ -9,8 +9,9 @@ export class CustomerService {
     return response.data;
   }
 
-  static async getCustomerById(id: number): Promise<ApiCustomer> {
-    const response = await fetchClient<{ success: boolean; data: ApiCustomer }>(`/customers/${id}`);
+  static async getCustomerById(id: number, includePrescriptions: boolean = false): Promise<ApiCustomer> {
+    const url = `/customers/${id}${includePrescriptions ? '?includePrescriptions=true' : ''}`;
+    const response = await fetchClient<{ success: boolean; data: ApiCustomer }>(url);
     if (!response.success) throw new Error("Failed to fetch customer");
     return response.data;
   }

@@ -1,5 +1,5 @@
 "use client";
-
+import React from "react";
 import { 
   flexRender, 
   getCoreRowModel, 
@@ -37,6 +37,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CustomerUrlState } from "@/hooks/useCustomerUrlState";
+import { SecureActionConfirm } from "@/components/shared/SecureActionConfirm";
+import { RequireRole } from "@/components/auth/RequireRole";
 
 interface CustomerTableProps {
   data: ApiCustomer[];
@@ -64,7 +66,7 @@ export function CustomerTable({
     return [{ id, desc: dir === "desc" }];
   })() : [];
 
-  const columns: ColumnDef<ApiCustomer>[] = [
+  const columns = React.useMemo<ColumnDef<ApiCustomer>[]>(() => [
     {
       id: "select",
       header: ({ table }) => (
@@ -173,22 +175,29 @@ export function CustomerTable({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                className="text-destructive" 
-                onClick={() => {
-                  if (window.confirm("Are you sure you want to delete this customer?")) {
+              <RequireRole allowedRoles={["ADMIN"]}>
+                <SecureActionConfirm
+                  title="Delete Customer?"
+                  description={`Are you sure you want to delete ${customer.fullName}? This action cannot be undone.`}
+                  onConfirm={() => {
                     alert("Delete functionality pending implementation.");
-                  }
-                }}
-              >
-                <Trash className="mr-2 h-4 w-4" /> Delete
-              </DropdownMenuItem>
+                  }}
+                  actionLabel="Delete"
+                >
+                  <DropdownMenuItem 
+                    className="text-destructive" 
+                    onSelect={(e: Event) => e.preventDefault()}
+                  >
+                    <Trash className="mr-2 h-4 w-4" /> Delete
+                  </DropdownMenuItem>
+                </SecureActionConfirm>
+              </RequireRole>
             </DropdownMenuContent>
           </DropdownMenu>
         );
       },
     }
-  ];
+  ], [updateState]);
 
   const table = useReactTable({
     data,

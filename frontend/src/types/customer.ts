@@ -1,3 +1,5 @@
+import { Prescription } from "./prescription";
+
 export interface ApiCustomer {
   id: number;
   fullName: string;
@@ -10,6 +12,10 @@ export interface ApiCustomer {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  prescriptionCount?: number;
+  latestPrescription?: Prescription | null;
+  prescriptionHistory?: any[];
+  invoices?: any[];
 }
 
 export interface CustomerCustomField {

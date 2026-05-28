@@ -1,204 +1,239 @@
-"use client";
-
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ApiProduct, ProductService } from "@/services/product.service";
+import { InventoryService } from "@/services/inventory.service";
+import { toast } from "sonner";
+import { PackagePlus, AlertTriangle } from "lucide-react";
+import { QuantityPreviewCard } from "./QuantityPreviewCard";
+import { AdjustmentReasonSelector, ADJUSTMENT_REASONS } from "./AdjustmentReasonSelector";
 
-const adjustmentSchema = z.object({
-  productId: z.string().min(1, "Product is required"),
-  type: z.enum(["PURCHASE", "RETURN", "ADJUSTMENT"]),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
-  action: z.enum(["ADD", "REMOVE"]),
-  referenceId: z.string().optional(),
-  notes: z.string().optional(),
-});
+type AdjustmentType = "add" | "reduce" | "replace";
 
-type AdjustmentValues = z.infer<typeof adjustmentSchema>;
+interface StockAdjustmentFormProps {
+  product: ApiProduct;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
 
-export function StockAdjustmentForm() {
-  const router = useRouter();
+export function StockAdjustmentForm({ product, isOpen, onClose, onSuccess }: StockAdjustmentFormProps) {
+  const currentStock = (product as any).currentStock ?? 0;
   
-  const form = useForm<AdjustmentValues>({
-    resolver: zodResolver(adjustmentSchema),
-    defaultValues: {
-      productId: "",
-      type: "ADJUSTMENT",
-      quantity: 1,
-      action: "ADD",
-      referenceId: "",
-      notes: "",
-    },
-  });
-
-  const watchProductId = form.watch("productId");
-  const watchQuantity = form.watch("quantity");
-  const watchAction = form.watch("action");
+  const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>("add");
+  const [quantityStr, setQuantityStr] = useState<string>("");
+  const [reason, setReason] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
   
-  const selectedProduct = MOCK_PRODUCTS.find(p => p.id === watchProductId);
-  
-  // Calculate projected stock purely for UI feedback
-  const currentStock = selectedProduct?.currentStock || 0;
-  const projectedStock = watchAction === "ADD" 
-    ? currentStock + (watchQuantity || 0) 
-    : currentStock - (watchQuantity || 0);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const onSubmit = (values: AdjustmentValues) => {
-    // In a real app, this would be an API call
-    console.log("Mock Stock Adjustment:", values);
-    
-    // Simulate API success and redirect
-    router.push("/inventory/ledger");
+  // Calculate new stock based on type and input
+  const quantity = parseInt(quantityStr, 10) || 0;
+  let newStock = currentStock;
+  
+  if (!isNaN(quantity) && quantityStr !== "") {
+    if (adjustmentType === "add") newStock = currentStock + quantity;
+    if (adjustmentType === "reduce") newStock = currentStock - quantity;
+    if (adjustmentType === "replace") newStock = quantity;
+  }
+
+  const isValid = quantity > 0 && newStock >= 0 && reason !== "";
+
+  const handleProceed = () => {
+    if (!isValid) {
+      toast.error("Please ensure all required fields are valid.");
+      return;
+    }
+    setShowConfirmation(true);
   };
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-card rounded-lg border border-border shadow-sm p-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select Product <span className="text-destructive">*</span></label>
-            <Controller
-              control={form.control}
-              name="productId"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className={form.formState.errors.productId ? "border-destructive" : ""}>
-                    <SelectValue placeholder="Select a product..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MOCK_PRODUCTS.map(p => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name} (SKU: {p.sku})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {form.formState.errors.productId && <p className="text-xs text-destructive">{form.formState.errors.productId.message}</p>}
-          </div>
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      let adjType: "IN" | "OUT" | "ADJUSTMENT" = "ADJUSTMENT";
+      let deltaQuantity = quantity;
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      if (adjustmentType === "add") {
+        adjType = "IN";
+      } else if (adjustmentType === "reduce") {
+        adjType = "OUT";
+      } else if (adjustmentType === "replace") {
+        adjType = "ADJUSTMENT";
+        deltaQuantity = newStock - currentStock;
+      }
+
+      if (deltaQuantity === 0) {
+        toast.error("Adjustment results in no change to stock.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const selectedReason = ADJUSTMENT_REASONS.find(r => r.value === reason)?.label || reason;
+      const combinedNotes = selectedReason ? `${selectedReason}${notes ? ` - ${notes}` : ""}` : notes;
+
+      await InventoryService.adjustStock({
+        productId: product.id,
+        adjustmentType: adjType,
+        quantity: deltaQuantity,
+        notes: combinedNotes
+      });
+      
+      toast.success("Stock adjusted successfully!");
+      setShowConfirmation(false);
+      onSuccess();
+      onClose();
+      
+      // Reset form
+      setQuantityStr("");
+      setReason("");
+      setNotes("");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to apply stock adjustment. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (showConfirmation) {
+    const selectedReason = ADJUSTMENT_REASONS.find(r => r.value === reason)?.label;
+    
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Confirm Stock Adjustment
+            </DialogTitle>
+            <DialogDescription>
+              Please review the adjustment details before confirming.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div className="bg-muted/30 p-3 rounded-md border border-border">
+              <p className="text-sm text-muted-foreground">Product</p>
+              <p className="font-medium text-foreground">{product.name} <span className="text-muted-foreground text-xs font-normal">({product.sku})</span></p>
+            </div>
+            
+            <QuantityPreviewCard 
+              currentStock={currentStock} 
+              newStock={newStock} 
+              adjustmentType={adjustmentType} 
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Reason</p>
+                <p className="text-sm font-medium">{selectedReason}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Type</p>
+                <p className="text-sm font-medium capitalize">{adjustmentType} Stock</p>
+              </div>
+            </div>
+            
+            {notes && (
+              <div>
+                <p className="text-xs text-muted-foreground">Notes</p>
+                <p className="text-sm italic">{notes}</p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmation(false)} disabled={isSubmitting}>
+              Back to Edit
+            </Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Confirming..." : "Confirm Adjustment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <PackagePlus className="h-5 w-5 text-primary" />
+            Adjust Stock Level
+          </DialogTitle>
+          <DialogDescription>
+            Update inventory for <strong className="text-foreground">{product.name}</strong>.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="py-2 space-y-5">
+          <QuantityPreviewCard 
+            currentStock={currentStock} 
+            newStock={newStock} 
+            adjustmentType={adjustmentType} 
+          />
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Transaction Type</label>
-              <Controller
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PURCHASE">Purchase (Stock In)</SelectItem>
-                      <SelectItem value="RETURN">Return (Stock In/Out)</SelectItem>
-                      <SelectItem value="ADJUSTMENT">Manual Adjustment</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Label>Adjustment Type</Label>
+              <Select value={adjustmentType} onValueChange={(v: AdjustmentType | null) => { if (v) setAdjustmentType(v) }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="add">Add Stock (+)</SelectItem>
+                  <SelectItem value="reduce">Reduce Stock (-)</SelectItem>
+                  <SelectItem value="replace">Replace Quantity (=)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Action</label>
-              <Controller
-                control={form.control}
-                name="action"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ADD">Add to Stock (+)</SelectItem>
-                      <SelectItem value="REMOVE">Remove from Stock (-)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Quantity <span className="text-destructive">*</span></label>
+              <Label>Quantity</Label>
               <Input 
                 type="number" 
                 min="1"
-                {...form.register("quantity", { valueAsNumber: true })}
-                className={form.formState.errors.quantity ? "border-destructive" : ""}
+                placeholder="e.g. 10" 
+                value={quantityStr}
+                onChange={(e) => setQuantityStr(e.target.value)}
               />
-              {form.formState.errors.quantity && <p className="text-xs text-destructive">{form.formState.errors.quantity.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Reference ID (Optional)</label>
-              <Input 
-                placeholder="e.g. PO-1234, INV-999"
-                {...form.register("referenceId")}
-              />
+              {newStock < 0 && (
+                <p className="text-xs text-destructive">Resulting stock cannot be negative.</p>
+              )}
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Reason / Notes</label>
+            <Label>Reason for Adjustment <span className="text-destructive">*</span></Label>
+            <AdjustmentReasonSelector value={reason} onChange={setReason} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Additional Notes (Optional)</Label>
             <Textarea 
-              placeholder="Explain the reason for this adjustment..."
-              className="resize-none h-24"
-              {...form.register("notes")}
+              placeholder="Provide any additional context here..." 
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
             />
           </div>
-
-          <div className="flex justify-end space-x-4 pt-4 border-t border-border">
-            <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit">Confirm Adjustment</Button>
-          </div>
-        </form>
-      </div>
-
-      {/* RIGHT COLUMN: Summary Card */}
-      <div className="space-y-6">
-        <div className="bg-card rounded-lg border border-border shadow-sm p-6 space-y-4 sticky top-6">
-          <h3 className="font-medium text-foreground border-b border-border pb-2">Adjustment Summary</h3>
-          
-          {!selectedProduct ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Select a product to see stock projections.</p>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Product</span>
-                <span className="font-medium truncate max-w-[150px]" title={selectedProduct.name}>{selectedProduct.name}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Current Stock</span>
-                <span className="font-medium">{currentStock}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Adjustment</span>
-                <span className={`font-medium ${watchAction === "ADD" ? "text-green-600" : "text-destructive"}`}>
-                  {watchAction === "ADD" ? "+" : "-"}{watchQuantity || 0}
-                </span>
-              </div>
-              <div className="border-t border-border pt-4 mt-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Projected Stock</span>
-                  <span className="font-bold text-xl">{projectedStock}</span>
-                </div>
-              </div>
-              {projectedStock < 0 && (
-                <div className="bg-red-50 text-red-800 text-xs p-3 rounded-md border border-red-200 mt-4">
-                  Warning: This adjustment will result in negative stock. Ensure this is intentional.
-                </div>
-              )}
-            </div>
-          )}
         </div>
-      </div>
-    </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleProceed} disabled={!isValid}>
+            Review Adjustment
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

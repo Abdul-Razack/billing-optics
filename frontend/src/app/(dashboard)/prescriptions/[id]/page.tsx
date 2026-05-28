@@ -1,26 +1,56 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PrescriptionHeader } from "@/components/prescriptions/PrescriptionHeader";
 import { CustomerPrescriptionCard } from "@/components/prescriptions/CustomerPrescriptionCard";
 import { PrescriptionHistoryTimeline } from "@/components/prescriptions/PrescriptionHistoryTimeline";
-import { MOCK_PRESCRIPTIONS } from "@/lib/mock-prescription-data";
-import { MOCK_CUSTOMERS } from "@/lib/mock-customer-data";
-import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
+import { PrescriptionService } from "@/services/prescription.service";
+import { Prescription } from "@/types/prescription";
+import { toast } from "sonner";
+import { CustomerService } from "@/services/customer.service";
+import { Customer } from "@/types/customer";
 
 export default function PrescriptionDetailPage({ params }: { params: { id: string } }) {
-  const prescription = MOCK_PRESCRIPTIONS.find(p => p.id === params.id);
-  
-  if (!prescription) {
-    notFound();
+  const [prescription, setPrescription] = useState<Prescription | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [customerHistory, setCustomerHistory] = useState<Prescription[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const data = await PrescriptionService.getPrescriptionById(params.id);
+        setPrescription(data);
+        
+        if (data && data.customerId) {
+          const cust = await CustomerService.getCustomerById(Number(data.customerId));
+          setCustomer(cust);
+          
+          const history = await PrescriptionService.getPrescriptionsByCustomerId(data.customerId);
+          setCustomerHistory(history);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load prescription data");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [params.id]);
+
+  if (loading) {
+    return <PageContainer title="Loading..."><div className="p-8">Loading...</div></PageContainer>;
   }
 
-  const customer = MOCK_CUSTOMERS.find(c => c.id === prescription.customerId);
-  
-  // Find all prescriptions for this customer
-  const customerHistory = MOCK_PRESCRIPTIONS.filter(p => p.customerId === prescription.customerId);
+  if (!prescription) {
+    return <PageContainer title="Not Found"><div className="p-8">Prescription not found.</div></PageContainer>;
+  }
 
   return (
     <PageContainer title="Prescription Details" description={`Viewing Rx ${prescription.id.toUpperCase()}`}>

@@ -1,12 +1,34 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { PaymentTable } from "@/components/payments/PaymentTable";
-import { MOCK_PAYMENTS } from "@/lib/mock-payment-data";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Clock } from "lucide-react";
+import { PaymentService, ApiPayment } from "@/services/payment.service";
+import { toast } from "sonner";
 
 export default function PaymentListPage() {
+  const [payments, setPayments] = useState<ApiPayment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadPayments() {
+      try {
+        const response = await PaymentService.getPayments({ limit: 100 });
+        setPayments(response.data);
+      } catch (error) {
+        console.error("Failed to load payments:", error);
+        toast.error("Failed to load payment records.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPayments();
+  }, []);
+
   return (
     <PageContainer title="Payments" description="Manage incoming payments and transaction history.">
       <ProductHeader 
@@ -21,7 +43,11 @@ export default function PaymentListPage() {
         </Button>
       </ProductHeader>
       
-      <PaymentTable data={MOCK_PAYMENTS} />
+      {loading ? (
+        <div className="flex justify-center p-8">Loading payments...</div>
+      ) : (
+        <PaymentTable data={payments as any} />
+      )}
     </PageContainer>
   );
 }

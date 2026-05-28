@@ -193,7 +193,7 @@ async function seed() {
         invoiceId: invoice.id,
         productId: product.id,
         snapshotName: product.name,
-        snapshotSku: product.sku,
+        snapshotSku: product.sku || '',
         snapshotPrice: product.sellingPrice,
         snapshotCostPrice: product.costPrice,
         snapshotTaxPercent: product.gstPercent,

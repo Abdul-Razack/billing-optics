@@ -98,7 +98,7 @@ export function ExportModal({ isOpen, onClose, customers, selectedIds, totalCoun
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Export Scope</Label>
-              <Select value={scope} onValueChange={(v: ExportScope) => setScope(v)}>
+              <Select value={scope} onValueChange={(v: ExportScope | null) => v && setScope(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select scope" />
                 </SelectTrigger>
@@ -113,7 +113,7 @@ export function ExportModal({ isOpen, onClose, customers, selectedIds, totalCoun
             </div>
             <div className="space-y-2">
               <Label>Format</Label>
-              <Select value={format} onValueChange={(v: ExportFormat) => setFormat(v)}>
+              <Select value={format} onValueChange={(v: any) => v && setFormat(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select format" />
                 </SelectTrigger>

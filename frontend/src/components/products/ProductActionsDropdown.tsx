@@ -12,6 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SecureActionConfirm } from "@/components/shared/SecureActionConfirm";
+import { RequireRole } from "@/components/auth/RequireRole";
 
 interface ProductActionsDropdownProps {
   product: ApiProduct;
@@ -47,17 +49,22 @@ export function ProductActionsDropdown({ product, onDelete, onQuickStockUpdate }
           Quick Stock Update
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          className="text-destructive" 
-          onClick={() => {
-            if (window.confirm("Are you sure you want to delete this product?")) {
-              onDelete?.(product.id);
-            }
-          }}
-        >
-          <Trash className="mr-2 h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
+        <RequireRole allowedRoles={["ADMIN"]}>
+          <SecureActionConfirm
+            title="Delete Product?"
+            description={`Are you sure you want to delete "${product.name}"? This action cannot be undone.`}
+            onConfirm={() => onDelete?.(product.id)}
+            actionLabel="Delete"
+          >
+            <DropdownMenuItem 
+              className="text-destructive" 
+              onSelect={(e: Event) => e.preventDefault()}
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </SecureActionConfirm>
+        </RequireRole>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User } from "@/types/user";
+import { User } from "@/services/user.service";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { RoleBadge } from "./RoleBadge";
 import Link from "next/link";
@@ -38,9 +38,9 @@ export function UserTable({ data }: UserTableProps) {
 
   const columns: ColumnDef<User>[] = [
     {
-      accessorKey: "name",
+      accessorKey: "fullName",
       header: "Name",
-      cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>
+      cell: ({ row }) => <div className="font-medium">{row.getValue("fullName")}</div>
     },
     {
       accessorKey: "email",
@@ -53,23 +53,23 @@ export function UserTable({ data }: UserTableProps) {
       cell: ({ row }) => <RoleBadge role={row.getValue("role")} />
     },
     {
-      accessorKey: "status",
+      accessorKey: "isActive",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("status") as string;
+        const isActive = row.getValue("isActive") as boolean;
         return (
-          <Badge variant={status === "ACTIVE" ? "default" : status === "INACTIVE" ? "secondary" : "destructive"}>
-            {status}
+          <Badge variant={isActive ? "default" : "secondary"}>
+            {isActive ? "ACTIVE" : "INACTIVE"}
           </Badge>
         );
       }
     },
     {
-      accessorKey: "lastLogin",
-      header: "Last Login",
+      accessorKey: "createdAt",
+      header: "Registered",
       cell: ({ row }) => {
-        const dateStr = row.getValue("lastLogin") as string;
-        if (!dateStr) return <span className="text-muted-foreground">Never</span>;
+        const dateStr = row.getValue("createdAt") as string;
+        if (!dateStr) return <span className="text-muted-foreground">-</span>;
         return <div className="text-sm">{new Date(dateStr).toLocaleString()}</div>;
       }
     },

@@ -1,9 +1,38 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { UserTable } from "@/components/users/UserTable";
-import { MOCK_USERS } from "@/lib/mock-user-data";
+import { UserService, User } from "@/services/user.service";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function UsersListPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await UserService.getAll({ limit: 1000 }); // fetch large amount for client table
+        if (isMounted) setUsers(response.records);
+      } catch (error: any) {
+        if (isMounted) toast.error(error.message || "Failed to load users");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    
+    fetchUsers();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <PageContainer title="User Management" description="Manage system access and roles for staff.">
       <ProductHeader 
@@ -11,7 +40,13 @@ export default function UsersListPage() {
         action={{ label: "Add New User", href: "/users/new" }}
       />
       
-      <UserTable data={MOCK_USERS} />
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <UserTable data={users} />
+      )}
     </PageContainer>
   );
 }

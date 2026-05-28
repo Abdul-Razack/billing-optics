@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -88,7 +88,7 @@ export function ProductListTable({
     localStorage.setItem("productViewMode", mode);
   };
 
-  const columns: ColumnDef<ApiProduct>[] = [
+  const columns = useMemo<ColumnDef<ApiProduct>[]>(() => [
     {
       id: "select",
       header: ({ table }) => (
@@ -201,7 +201,7 @@ export function ProductListTable({
         />
       ),
     },
-  ];
+  ], [categories, onDelete, onQuickStockUpdate]);
 
   const table = useReactTable({
     data,

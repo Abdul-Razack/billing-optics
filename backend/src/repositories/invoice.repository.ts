@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { DbOrTx } from '../types/db';
 import { invoices, invoiceItems } from '../db/schema';
 
@@ -20,7 +20,6 @@ export class InvoiceRepository {
   }
 
   async findInvoicesByCustomerId(customerId: number, tx: DbOrTx) {
-    const { desc } = await import('drizzle-orm');
     return await tx
       .select()
       .from(invoices)

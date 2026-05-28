@@ -9,7 +9,7 @@ import { validateRequest } from '../middleware/validate.middleware';
 const router = Router();
 
 router.get('/', authenticate, CategoryController.getAll);
-router.post('/', authenticate, authorizeRoles(ROLES.ADMIN), validateRequest(createCategorySchema), CategoryController.create);
-router.delete('/:id', authenticate, authorizeRoles(ROLES.ADMIN), CategoryController.delete);
+router.post('/', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validateRequest(createCategorySchema), CategoryController.create);
+router.delete('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), CategoryController.delete);
 
 export default router;

@@ -12,10 +12,10 @@ const upload = multer({ dest: 'uploads/' });
 
 const router = Router();
 
-router.get('/', authenticate, ProductController.getAll);
+router.get('/', authenticate, ProductController.getAll); // All authenticated can read products (cashier needs them)
 router.post('/bulk', authenticate, authorizeRoles(ROLES.ADMIN), upload.single('file'), BulkController.uploadProducts);
-router.post('/', authenticate, authorizeRoles(ROLES.ADMIN), validateRequest(createProductSchema), ProductController.create);
-router.put('/:id', authenticate, authorizeRoles(ROLES.ADMIN), validateRequest(updateProductSchema), ProductController.update);
-router.delete('/:id', authenticate, authorizeRoles(ROLES.ADMIN), ProductController.delete);
+router.post('/', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validateRequest(createProductSchema), ProductController.create);
+router.put('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validateRequest(updateProductSchema), ProductController.update);
+router.delete('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), ProductController.delete);
 
 export default router;

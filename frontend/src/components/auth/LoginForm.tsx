@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
+  email: z.string().trim().email({ message: "Please enter a valid email address." }),
   password: z.string().min(1, { message: "Password is required." }),
   rememberMe: z.boolean(),
 });
@@ -53,12 +53,23 @@ export function LoginForm() {
       
       await login(values.email, values.password);
       router.push("/");
-    } catch (err) {
-      setError("An unexpected error occurred.");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("expired") === "true") {
+        setError("Your session has expired. Please log in again.");
+        // Clean up the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -68,7 +79,7 @@ export function LoginForm() {
           <label className="text-sm font-medium text-foreground">Email</label>
           <Input 
             type="email" 
-            placeholder="admin@example.com" 
+            placeholder="admin@opticspos.com" 
             {...form.register("email")}
             className={form.formState.errors.email ? "border-destructive" : ""}
           />

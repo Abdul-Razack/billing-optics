@@ -5,10 +5,15 @@ export const createCategorySchema = z.object({
 });
 
 export const createProductSchema = z.object({
+  categoryId: z.number().int().positive(),
   name: z.string().min(1),
-  sku: z.string().min(1),
-  price: z.number().positive(),
-  stock: z.number().int().nonnegative(),
+  sku: z.string().optional(),
+  barcode: z.string().optional(),
+  description: z.string().optional(),
+  costPrice: z.number().nonnegative(),
+  sellingPrice: z.number().nonnegative(),
+  gstPercent: z.number().int().nonnegative().max(100).optional(),
+  minStockAlert: z.number().int().nonnegative().optional(),
 });
 
 export const updateProductSchema = createProductSchema.partial();

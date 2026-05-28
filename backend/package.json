@@ -22,6 +22,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.1.1",
+    "pdfkit": "^0.18.0",
     "pg": "^8.21.0",
     "shared": "*",
     "zod": "^3.23.8"
@@ -35,6 +36,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/multer": "^2.1.0",
     "@types/node": "^20.19.41",
+    "@types/pdfkit": "^0.17.6",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^7.2.0",
     "cross-env": "^10.1.0",
