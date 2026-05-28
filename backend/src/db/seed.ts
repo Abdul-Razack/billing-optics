@@ -69,48 +69,29 @@ async function seed() {
     console.log('Categories seeded.');
 
     console.log('Seeding products...');
-    const insertedProducts = await db.insert(products).values([
-      {
-        categoryId: framesCategory.id,
-        name: 'Classic Aviator Frame',
-        sku: 'FRM-AVI-001',
-        barcode: '111111111111',
-        costPrice: 50000,
-        sellingPrice: 150000,
-        gstPercent: 18,
+    const productTemplates = [
+      { name: 'Classic Aviator Frame', categoryId: framesCategory.id, skuPrefix: 'FRM-AVI', costPrice: 50000, sellingPrice: 150000, gstPercent: 18 },
+      { name: 'Modern Wayfarer Frame', categoryId: framesCategory.id, skuPrefix: 'FRM-WAY', costPrice: 60000, sellingPrice: 180000, gstPercent: 18 },
+      { name: 'Single Vision Anti-Glare Lens', categoryId: lensesCategory.id, skuPrefix: 'LNS-SV', costPrice: 30000, sellingPrice: 80000, gstPercent: 12 },
+      { name: 'Progressive Blue-Cut Lens', categoryId: lensesCategory.id, skuPrefix: 'LNS-PRO', costPrice: 120000, sellingPrice: 300000, gstPercent: 12 }
+    ];
+
+    const productsToInsert = [];
+    for (let i = 1; i <= 100; i++) {
+      const template = productTemplates[(i - 1) % productTemplates.length];
+      productsToInsert.push({
+        categoryId: template.categoryId,
+        name: `${template.name} ${i}`,
+        sku: `${template.skuPrefix}-${String(i).padStart(3, '0')}`,
+        barcode: String(100000000000 + i).padStart(12, '0'),
+        costPrice: template.costPrice,
+        sellingPrice: template.sellingPrice,
+        gstPercent: template.gstPercent,
         minStockAlert: 5,
-      },
-      {
-        categoryId: framesCategory.id,
-        name: 'Modern Wayfarer Frame',
-        sku: 'FRM-WAY-002',
-        barcode: '222222222222',
-        costPrice: 60000,
-        sellingPrice: 180000,
-        gstPercent: 18,
-        minStockAlert: 5,
-      },
-      {
-        categoryId: lensesCategory.id,
-        name: 'Single Vision Anti-Glare Lens',
-        sku: 'LNS-SV-001',
-        barcode: '333333333333',
-        costPrice: 30000,
-        sellingPrice: 80000,
-        gstPercent: 12,
-        minStockAlert: 10,
-      },
-      {
-        categoryId: lensesCategory.id,
-        name: 'Progressive Blue-Cut Lens',
-        sku: 'LNS-PRO-002',
-        barcode: '444444444444',
-        costPrice: 120000,
-        sellingPrice: 300000,
-        gstPercent: 12,
-        minStockAlert: 5,
-      },
-    ]).returning();
+      });
+    }
+
+    const insertedProducts = await db.insert(products).values(productsToInsert).returning();
     console.log('Products seeded.');
 
     console.log('Seeding inventory ledger...');
@@ -127,39 +108,109 @@ async function seed() {
     console.log('Inventory ledger seeded.');
 
     console.log('Seeding customers...');
-    const insertedCustomers = await db.insert(customers).values([
-      {
-        fullName: 'John Doe',
-        phone: '9876543210',
-        email: 'john@example.com',
-        gender: 'MALE',
-        address: '123 Main Street',
-      },
-      {
-        fullName: 'Jane Smith',
-        phone: '8765432109',
-        email: 'jane@example.com',
-        gender: 'FEMALE',
-        address: '456 Oak Avenue',
-      },
-    ]).returning();
+    const customersToInsert = [];
+    const firstNames = ['John', 'Jane', 'Michael', 'Emily', 'David', 'Sarah', 'James', 'Jessica', 'Robert', 'Karen'];
+    const lastNames = ['Smith', 'Doe', 'Johnson', 'Brown', 'Williams', 'Miller', 'Jones', 'Davis', 'Wilson', 'Anderson'];
+    
+    for (let i = 1; i <= 100; i++) {
+      const firstName = firstNames[(i - 1) % firstNames.length];
+      const lastName = lastNames[(i - 1) % lastNames.length];
+      customersToInsert.push({
+        fullName: `${firstName} ${lastName} ${i}`,
+        phone: String(9876543000 + i),
+        email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${i}@example.com`,
+        gender: i % 2 === 0 ? ('MALE' as const) : ('FEMALE' as const),
+        address: `${i} Main Street, Apt ${i}`,
+      });
+    }
+
+    const insertedCustomers = await db.insert(customers).values(customersToInsert).returning();
     console.log('Customers seeded.');
 
     console.log('Seeding prescription...');
-    await db.insert(prescriptions).values({
-      customerId: insertedCustomers[0].id,
-      rightEyeSph: '-1.50',
-      rightEyeCyl: '-0.50',
-      rightEyeAxis: 90,
-      leftEyeSph: '-1.25',
-      leftEyeCyl: '-0.75',
-      leftEyeAxis: 95,
-      addPower: '1.75',
-      pd: '63.00',
-      notes: 'Distance prescription',
-      createdBy: adminId,
-    });
-    console.log('Prescription seeded.');
+    const prescriptionsToInsert = [];
+    for (let i = 0; i < insertedCustomers.length; i++) {
+      prescriptionsToInsert.push({
+        customerId: insertedCustomers[i].id,
+        rightEyeSph: '-1.50',
+        rightEyeCyl: '-0.50',
+        rightEyeAxis: 90,
+        leftEyeSph: '-1.25',
+        leftEyeCyl: '-0.75',
+        leftEyeAxis: 95,
+        addPower: '1.75',
+        pd: '63.00',
+        notes: `Distance prescription for customer ${i + 1}`,
+        createdBy: adminId,
+      });
+    }
+    await db.insert(prescriptions).values(prescriptionsToInsert);
+    console.log('Prescriptions seeded.');
+
+    console.log('Seeding invoices...');
+    const invoicesToInsert = [];
+    const invoiceItemsToInsert = [];
+    const paymentsToInsert = [];
+    let invoiceCounter = 1;
+
+    for (let i = 0; i < insertedCustomers.length; i++) {
+      const customer = insertedCustomers[i];
+      // Create 1-2 invoices for each customer
+      const numInvoices = (i % 2) + 1;
+      
+      for (let j = 0; j < numInvoices; j++) {
+        const product = insertedProducts[(i + j) % insertedProducts.length];
+        const quantity = 1;
+        const subtotal = product.sellingPrice * quantity;
+        const taxTotal = Math.round((subtotal * product.gstPercent) / 100);
+        const grandTotal = subtotal + taxTotal;
+        const amountPaid = grandTotal;
+
+        invoicesToInsert.push({
+          invoiceNumber: `INV-2026-${String(invoiceCounter).padStart(5, '0')}`,
+          customerId: customer.id,
+          createdBy: adminId,
+          subtotal,
+          taxTotal,
+          discountTotal: 0,
+          grandTotal,
+          amountPaid,
+          paymentStatus: 'PAID' as const,
+          createdAt: new Date(Date.now() - Math.random() * 10000000000), // Random past date
+        });
+        invoiceCounter++;
+      }
+    }
+
+    const insertedInvoices = await db.insert(invoices).values(invoicesToInsert).returning();
+
+    for (let i = 0; i < insertedInvoices.length; i++) {
+      const invoice = insertedInvoices[i];
+      // For simplicity, match back the product using the loop index (this is just mock data)
+      const product = insertedProducts[i % insertedProducts.length];
+      
+      invoiceItemsToInsert.push({
+        invoiceId: invoice.id,
+        productId: product.id,
+        snapshotName: product.name,
+        snapshotSku: product.sku,
+        snapshotPrice: product.sellingPrice,
+        snapshotCostPrice: product.costPrice,
+        snapshotTaxPercent: product.gstPercent,
+        quantity: 1,
+        lineTotal: invoice.subtotal,
+      });
+
+      paymentsToInsert.push({
+        invoiceId: invoice.id,
+        amount: invoice.amountPaid,
+        paymentMethod: 'CASH' as const,
+      });
+    }
+
+    await db.insert(invoiceItems).values(invoiceItemsToInsert);
+    await db.insert(payments).values(paymentsToInsert);
+    console.log('Invoices seeded.');
 
     console.log('Database seeding completed successfully!');
     process.exit(0);

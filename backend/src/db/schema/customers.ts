@@ -1,4 +1,4 @@
-import { pgTable, bigserial, varchar, boolean, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, bigserial, varchar, boolean, timestamp, index, jsonb } from 'drizzle-orm/pg-core';
 import { genderEnum } from './enums';
 
 export const customers = pgTable('customers', {
@@ -9,6 +9,7 @@ export const customers = pgTable('customers', {
   gender: genderEnum('gender'),
   address: varchar('address', { length: 500 }),
   notes: varchar('notes', { length: 1000 }),
+  customFields: jsonb('custom_fields').default('{}'),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')

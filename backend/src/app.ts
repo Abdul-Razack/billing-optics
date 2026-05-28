@@ -9,6 +9,8 @@ import billingRoutes from './routes/billing.routes';
 import inventoryRoutes from './routes/inventory.routes';
 import reportRoutes from './routes/report.routes';
 import systemRoutes from './routes/system.routes';
+import userRoutes from './routes/user.routes';
+import settingsRoutes from './routes/settings.routes';
 
 const app = express();
 
@@ -24,6 +26,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/invoices', billingRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Global Error Handler
 app.use(errorMiddleware);

@@ -36,6 +36,20 @@
       "when": 1779618077068,
       "tag": "0004_open_lethal_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779903690588,
+      "tag": "0005_military_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779904184853,
+      "tag": "0006_young_blue_marvel",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,10 @@ import { CustomerRepository } from '../repositories/customer.repository';
 
 export class CustomerService {
   async create(data: any) {
+    const existing = await CustomerRepository.findAll(data.phone);
+    if (existing.some((c: any) => c.phone === data.phone)) {
+      throw { status: 400, message: 'Phone number already exists' };
+    }
     const dbData = {
       fullName: data.name,
       phone: data.phone,
@@ -24,9 +28,18 @@ export class CustomerService {
       throw new Error('Customer not found');
     }
     const prescriptions = await CustomerRepository.findPrescriptionsByCustomerId(id);
+    
+    // Dynamically import InvoiceRepository since we need it here
+    const { InvoiceRepository } = await import('../repositories/invoice.repository');
+    const invoiceRepo = new InvoiceRepository();
+    // Pass db instance
+    const { db } = await import('../config/db');
+    const invoices = await invoiceRepo.findInvoicesByCustomerId(id, db);
+
     return {
       ...customer,
       prescriptions,
+      invoices,
     };
   }
 

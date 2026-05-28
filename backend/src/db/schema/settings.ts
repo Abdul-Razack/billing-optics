@@ -1,4 +1,4 @@
-import { pgTable, bigserial, varchar, timestamp, check } from 'drizzle-orm/pg-core';
+import { pgTable, bigserial, varchar, timestamp, check, jsonb } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const settings = pgTable('settings', {
@@ -10,6 +10,7 @@ export const settings = pgTable('settings', {
   gstNumber: varchar('gst_number', { length: 50 }),
   currency: varchar('currency', { length: 10 }).notNull().default('INR'),
   timezone: varchar('timezone', { length: 50 }).notNull().default('Asia/Kolkata'),
+  customFieldDefinitions: jsonb('custom_field_definitions').default('{"products": [], "customers": []}'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()

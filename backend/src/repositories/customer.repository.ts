@@ -35,7 +35,8 @@ export class CustomerRepository {
       const s = search.toLowerCase();
       result = result.filter(c => 
         (c.fullName && c.fullName.toLowerCase().includes(s)) || 
-        (c.phone && c.phone.toLowerCase().includes(s))
+        (c.phone && c.phone.toLowerCase().includes(s)) ||
+        (c.email && c.email.toLowerCase().includes(s))
       );
     }
     return result;

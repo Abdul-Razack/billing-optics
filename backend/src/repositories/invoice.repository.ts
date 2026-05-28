@@ -18,4 +18,13 @@ export class InvoiceRepository {
     if (data.length === 0) return [];
     return await tx.insert(invoiceItems).values(data).returning();
   }
+
+  async findInvoicesByCustomerId(customerId: number, tx: DbOrTx) {
+    const { desc } = await import('drizzle-orm');
+    return await tx
+      .select()
+      .from(invoices)
+      .where(eq(invoices.customerId, customerId))
+      .orderBy(desc(invoices.createdAt));
+  }
 }

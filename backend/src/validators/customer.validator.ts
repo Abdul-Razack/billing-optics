@@ -3,17 +3,17 @@ import { z } from 'zod';
 export const createCustomerSchema = z.object({
   body: z.object({
     name: z.string().min(2),
-    phone: z.string().min(10),
-    email: z.string().email().optional(),
-    address: z.string().optional(),
-  }),
+    phone: z.string().min(6),
+    email: z.string().email().optional().or(z.literal('')),
+    address: z.string().optional().or(z.literal('')),
+  })
 });
 
 export const updateCustomerSchema = z.object({
   body: z.object({
     name: z.string().min(2).optional(),
-    phone: z.string().min(10).optional(),
-  }),
+    phone: z.string().min(6).optional(),
+  })
 });
 
 export const addPrescriptionSchema = z.object({
@@ -26,5 +26,5 @@ export const addPrescriptionSchema = z.object({
     leftEyeAxis: z.number(),
     pd: z.number(),
     addPower: z.number().optional(),
-  }),
+  })
 });

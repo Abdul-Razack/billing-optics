@@ -1,0 +1,430 @@
+
+--- categories.ts ---
+import { pgTable, bigserial, varchar, boolean, timestamp } from 'drizzle-orm/pg-core';
+
+export const categories = pgTable('categories', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  name: varchar('name', { length: 255 }).notNull().unique(),
+  description: varchar('description', { length: 500 }),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+--- customers.ts ---
+import { pgTable, bigserial, varchar, boolean, timestamp, index, jsonb } from 'drizzle-orm/pg-core';
+import { genderEnum } from './enums';
+
+export const customers = pgTable('customers', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  fullName: varchar('full_name', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }).notNull().unique(),
+  email: varchar('email', { length: 255 }),
+  gender: genderEnum('gender'),
+  address: varchar('address', { length: 500 }),
+  notes: varchar('notes', { length: 1000 }),
+  customFields: jsonb('custom_fields').default('{}'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+}, (table) => ({
+  phoneIdx: index('customers_phone_idx').on(table.phone),
+}));
+
+--- enums.ts ---
+import { pgEnum } from 'drizzle-orm/pg-core';
+
+export const roleEnum = pgEnum('role', ['ADMIN', 'CASHIER', 'OPTOMETRIST']);
+export const paymentMethodEnum = pgEnum('payment_method', ['CASH', 'CARD', 'UPI', 'BANK_TRANSFER']);
+export const movementTypeEnum = pgEnum('movement_type', ['PURCHASE', 'SALE', 'RETURN', 'ADJUSTMENT']);
+
+export const paymentStatusEnum = pgEnum('payment_status', ['UNPAID', 'PARTIAL', 'PAID', 'REFUNDED']);
+export const referenceTypeEnum = pgEnum('reference_type', ['INVOICE', 'PURCHASE', 'RETURN', 'ADJUSTMENT']);
+export const genderEnum = pgEnum('gender', ['MALE', 'FEMALE', 'OTHER']);
+
+--- index.ts ---
+export * from './enums';
+export * from './users';
+export * from './customers';
+export * from './prescriptions';
+export * from './categories';
+export * from './products';
+export * from './inventoryLedger';
+export * from './invoices';
+export * from './invoiceItems';
+export * from './payments';
+export * from './settings';
+export * from './relations';
+export * from './ledger';
+
+--- inventoryLedger.ts ---
+import { pgTable, bigserial, bigint, varchar, integer, timestamp, index } from 'drizzle-orm/pg-core';
+import { products } from './products';
+import { users } from './users';
+import { movementTypeEnum, referenceTypeEnum } from './enums';
+
+export const inventoryLedger = pgTable('inventory_ledger', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  productId: bigint('product_id', { mode: 'number' })
+    .references(() => products.id, { onDelete: 'restrict' })
+    .notNull(),
+  movementType: movementTypeEnum('movement_type').notNull(),
+  quantityChange: integer('quantity_change').notNull(),
+  referenceType: referenceTypeEnum('reference_type'),
+  referenceId: bigint('reference_id', { mode: 'number' }),
+  notes: varchar('notes', { length: 500 }),
+  createdBy: bigint('created_by', { mode: 'number' })
+    .references(() => users.id, { onDelete: 'restrict' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  productIdIdx: index('inventory_ledger_product_id_idx').on(table.productId),
+  createdAtIdx: index('inventory_ledger_created_at_idx').on(table.createdAt),
+}));
+
+--- invoiceItems.ts ---
+import { pgTable, bigserial, bigint, varchar, integer, check, index } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { invoices } from './invoices';
+import { products } from './products';
+
+export const invoiceItems = pgTable('invoice_items', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  invoiceId: bigint('invoice_id', { mode: 'number' })
+    .references(() => invoices.id, { onDelete: 'restrict' })
+    .notNull(),
+  productId: bigint('product_id', { mode: 'number' })
+    .references(() => products.id, { onDelete: 'restrict' })
+    .notNull(),
+  snapshotName: varchar('snapshot_name', { length: 255 }).notNull(),
+  snapshotSku: varchar('snapshot_sku', { length: 100 }).notNull(),
+  snapshotPrice: integer('snapshot_price').notNull(),
+  snapshotCostPrice: integer('snapshot_cost_price').notNull().default(0),
+  snapshotTaxPercent: integer('snapshot_tax_percent').notNull(),
+  quantity: integer('quantity').notNull().default(1),
+  lineTotal: integer('line_total').notNull(),
+}, (table) => ({
+  snapshotPriceCheck: check('snapshot_price_check', sql`${table.snapshotPrice} >= 0`),
+  snapshotCostPriceCheck: check('snapshot_cost_price_check', sql`${table.snapshotCostPrice} >= 0`),
+  snapshotTaxPercentCheck: check('snapshot_tax_percent_check', sql`${table.snapshotTaxPercent} BETWEEN 0 AND 100`),
+  quantityCheck: check('quantity_check', sql`${table.quantity} > 0`),
+  lineTotalCheck: check('line_total_check', sql`${table.lineTotal} >= 0`),
+  invoiceIdIdx: index('invoice_items_invoice_id_idx').on(table.invoiceId),
+  productIdIdx: index('invoice_items_product_id_idx').on(table.productId),
+}));
+
+--- invoices.ts ---
+import { pgTable, bigserial, bigint, varchar, integer, timestamp, check, index } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { customers } from './customers';
+import { users } from './users';
+import { paymentStatusEnum } from './enums';
+
+export const invoices = pgTable('invoices', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  requestId: varchar('request_id', { length: 255 }).unique(),
+  invoiceNumber: varchar('invoice_number', { length: 100 }).notNull().unique(),
+  customerId: bigint('customer_id', { mode: 'number' })
+    .references(() => customers.id, { onDelete: 'restrict' }),
+  createdBy: bigint('created_by', { mode: 'number' })
+    .references(() => users.id, { onDelete: 'restrict' })
+    .notNull(),
+  subtotal: integer('subtotal').notNull().default(0),
+  taxTotal: integer('tax_total').notNull().default(0),
+  discountTotal: integer('discount_total').notNull().default(0),
+  grandTotal: integer('grand_total').notNull().default(0),
+  amountPaid: integer('amount_paid').default(0).notNull(),
+  paymentStatus: paymentStatusEnum('payment_status').notNull().default('UNPAID'),
+  notes: varchar('notes', { length: 1000 }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+}, (table) => ({
+  subtotalCheck: check('invoices_subtotal_check', sql`${table.subtotal} >= 0`),
+  taxTotalCheck: check('invoices_tax_total_check', sql`${table.taxTotal} >= 0`),
+  discountTotalCheck: check('invoices_discount_total_check', sql`${table.discountTotal} >= 0`),
+  grandTotalCheck: check('invoices_grand_total_check', sql`${table.grandTotal} >= 0`),
+  invoiceNumberIdx: index('invoices_invoice_number_idx').on(table.invoiceNumber),
+  customerIdIdx: index('invoices_customer_id_idx').on(table.customerId),
+  createdAtIdx: index('invoices_created_at_idx').on(table.createdAt),
+}));
+
+--- ledger.ts ---
+import { pgTable, varchar, json, bigint } from 'drizzle-orm/pg-core';
+
+export const ledger_events = pgTable('ledger_events', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  type: varchar('type', { length: 255 }).notNull(),
+  payload: json('payload').notNull(),
+  timestamp: bigint('timestamp', { mode: 'number' }).notNull(),
+  prevHash: varchar('prev_hash', { length: 255 }),
+  hash: varchar('hash', { length: 255 }).notNull(),
+  idempotencyKey: varchar('idempotency_key', { length: 255 }).notNull().unique(),
+  sequenceNumber: bigint('sequence_number', { mode: 'number' }).notNull().unique(),
+});
+
+export const ledger_snapshots = pgTable('ledger_snapshots', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  state: json('state').notNull(),
+  lastEventId: varchar('last_event_id', { length: 255 }).notNull(),
+  lastEventHash: varchar('last_event_hash', { length: 255 }).notNull(),
+  createdAt: bigint('created_at', { mode: 'number' }).notNull(),
+  stateRootHash: varchar('state_root_hash', { length: 255 }).notNull(),
+});
+
+export const invoices_view = pgTable('invoices_view', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  customerId: varchar('customer_id', { length: 255 }),
+  subtotal: bigint('subtotal', { mode: 'number' }).notNull(),
+  taxTotal: bigint('tax_total', { mode: 'number' }).notNull(),
+  discountTotal: bigint('discount_total', { mode: 'number' }).notNull(),
+  grandTotal: bigint('grand_total', { mode: 'number' }).notNull(),
+  amountPaid: bigint('amount_paid', { mode: 'number' }).notNull(),
+  status: varchar('status', { length: 50 }).notNull(),
+  items: json('items').notNull(),
+  createdAt: bigint('created_at', { mode: 'number' }).notNull(),
+  projectionVersion: bigint('projection_version', { mode: 'number' }).notNull(),
+});
+
+export const inventory_view = pgTable('inventory_view', {
+  productId: varchar('product_id', { length: 255 }).primaryKey(),
+  quantity: bigint('quantity', { mode: 'number' }).notNull(),
+  lastUpdated: bigint('last_updated', { mode: 'number' }).notNull(),
+  projectionVersion: bigint('projection_version', { mode: 'number' }).notNull(),
+});
+
+export const customer_balances_view = pgTable('customer_balances_view', {
+  customerId: varchar('customer_id', { length: 255 }).primaryKey(),
+  balance: bigint('balance', { mode: 'number' }).notNull(),
+  lastUpdated: bigint('last_updated', { mode: 'number' }).notNull(),
+  projectionVersion: bigint('projection_version', { mode: 'number' }).notNull(),
+});
+
+--- payments.ts ---
+import { pgTable, bigserial, bigint, varchar, integer, timestamp, check, index } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { invoices } from './invoices';
+import { paymentMethodEnum } from './enums';
+
+export const payments = pgTable('payments', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  invoiceId: bigint('invoice_id', { mode: 'number' })
+    .references(() => invoices.id, { onDelete: 'restrict' })
+    .notNull(),
+  amount: integer('amount').notNull(),
+  paymentMethod: paymentMethodEnum('payment_method').notNull().default('CASH'),
+  referenceNumber: varchar('reference_number', { length: 100 }),
+  notes: varchar('notes', { length: 500 }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  amountCheck: check('amount_check', sql`${table.amount} >= 0`),
+  invoiceIdIdx: index('payments_invoice_id_idx').on(table.invoiceId),
+}));
+
+--- prescriptions.ts ---
+import { pgTable, bigserial, bigint, varchar, integer, numeric, timestamp, check, index } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { customers } from './customers';
+import { users } from './users';
+
+export const prescriptions = pgTable('prescriptions', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  customerId: bigint('customer_id', { mode: 'number' })
+    .references(() => customers.id, { onDelete: 'restrict' })
+    .notNull(),
+  rightEyeSph: numeric('right_eye_sph', { precision: 5, scale: 2 }),
+  rightEyeCyl: numeric('right_eye_cyl', { precision: 5, scale: 2 }),
+  rightEyeAxis: integer('right_eye_axis'),
+  leftEyeSph: numeric('left_eye_sph', { precision: 5, scale: 2 }),
+  leftEyeCyl: numeric('left_eye_cyl', { precision: 5, scale: 2 }),
+  leftEyeAxis: integer('left_eye_axis'),
+  addPower: numeric('add_power', { precision: 5, scale: 2 }),
+  pd: numeric('pd', { precision: 5, scale: 2 }),
+  notes: varchar('notes', { length: 1000 }),
+  createdBy: bigint('created_by', { mode: 'number' })
+    .references(() => users.id, { onDelete: 'restrict' })
+    .notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+}, (table) => ({
+  rightEyeAxisCheck: check('right_eye_axis_check', sql`${table.rightEyeAxis} BETWEEN 1 AND 180`),
+  leftEyeAxisCheck: check('left_eye_axis_check', sql`${table.leftEyeAxis} BETWEEN 1 AND 180`),
+  customerIdIdx: index('prescriptions_customer_id_idx').on(table.customerId),
+}));
+
+--- products.ts ---
+import { pgTable, bigserial, bigint, varchar, integer, boolean, timestamp, check, index, jsonb } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { categories } from './categories';
+
+export const products = pgTable('products', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  categoryId: bigint('category_id', { mode: 'number' })
+    .references(() => categories.id, { onDelete: 'restrict' })
+    .notNull(),
+  sku: varchar('sku', { length: 100 }).unique(),
+  barcode: varchar('barcode', { length: 100 }).unique(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: varchar('description', { length: 1000 }),
+  costPrice: integer('cost_price').notNull().default(0),
+  sellingPrice: integer('selling_price').notNull().default(0),
+  gstPercent: integer('gst_percent').notNull().default(18),
+  minStockAlert: integer('min_stock_alert').notNull().default(5),
+  isActive: boolean('is_active').notNull().default(true),
+  attributes: jsonb('attributes').default('{}'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+}, (table) => ({
+  costPriceCheck: check('cost_price_check', sql`${table.costPrice} >= 0`),
+  sellingPriceCheck: check('selling_price_check', sql`${table.sellingPrice} >= 0`),
+  gstPercentCheck: check('gst_percent_check', sql`${table.gstPercent} BETWEEN 0 AND 100`),
+  minStockAlertCheck: check('min_stock_alert_check', sql`${table.minStockAlert} >= 0`),
+  skuIdx: index('products_sku_idx').on(table.sku),
+  barcodeIdx: index('products_barcode_idx').on(table.barcode),
+  categoryIdIdx: index('products_category_id_idx').on(table.categoryId),
+  isActiveIdx: index('products_is_active_idx').on(table.isActive),
+}));
+
+--- relations.ts ---
+import { relations } from 'drizzle-orm';
+import { users } from './users';
+import { customers } from './customers';
+import { prescriptions } from './prescriptions';
+import { categories } from './categories';
+import { products } from './products';
+import { invoices } from './invoices';
+import { invoiceItems } from './invoiceItems';
+import { payments } from './payments';
+import { inventoryLedger } from './inventoryLedger';
+
+export const usersRelations = relations(users, ({ many }) => ({
+  invoices: many(invoices),
+  prescriptions: many(prescriptions),
+  inventoryLedger: many(inventoryLedger),
+}));
+
+export const customersRelations = relations(customers, ({ many }) => ({
+  invoices: many(invoices),
+  prescriptions: many(prescriptions),
+}));
+
+export const prescriptionsRelations = relations(prescriptions, ({ one }) => ({
+  customer: one(customers, {
+    fields: [prescriptions.customerId],
+    references: [customers.id],
+  }),
+  creator: one(users, {
+    fields: [prescriptions.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  products: many(products),
+}));
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [products.categoryId],
+    references: [categories.id],
+  }),
+  invoiceItems: many(invoiceItems),
+  inventoryLedger: many(inventoryLedger),
+}));
+
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [invoices.customerId],
+    references: [customers.id],
+  }),
+  creator: one(users, {
+    fields: [invoices.createdBy],
+    references: [users.id],
+  }),
+  items: many(invoiceItems),
+  payments: many(payments),
+}));
+
+export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [invoiceItems.invoiceId],
+    references: [invoices.id],
+  }),
+  product: one(products, {
+    fields: [invoiceItems.productId],
+    references: [products.id],
+  }),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [payments.invoiceId],
+    references: [invoices.id],
+  }),
+}));
+
+export const inventoryLedgerRelations = relations(inventoryLedger, ({ one }) => ({
+  product: one(products, {
+    fields: [inventoryLedger.productId],
+    references: [products.id],
+  }),
+  creator: one(users, {
+    fields: [inventoryLedger.createdBy],
+    references: [users.id],
+  }),
+}));
+
+--- settings.ts ---
+import { pgTable, bigserial, varchar, timestamp, check, jsonb } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+
+export const settings = pgTable('settings', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  businessName: varchar('business_name', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }),
+  email: varchar('email', { length: 255 }),
+  address: varchar('address', { length: 500 }),
+  gstNumber: varchar('gst_number', { length: 50 }),
+  currency: varchar('currency', { length: 10 }).notNull().default('INR'),
+  timezone: varchar('timezone', { length: 50 }).notNull().default('Asia/Kolkata'),
+  customFieldDefinitions: jsonb('custom_field_definitions').default('{"products": [], "customers": []}'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+}, (table) => ({
+  singleRowCheck: check('settings_single_row_check', sql`${table.id} = 1`),
+}));
+
+--- users.ts ---
+import { pgTable, bigserial, varchar, boolean, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { roleEnum } from './enums';
+
+export const users = pgTable('users', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  fullName: varchar('full_name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  role: roleEnum('role').notNull().default('CASHIER'),
+  preferences: jsonb('preferences').default('{}'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
