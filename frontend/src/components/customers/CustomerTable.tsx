@@ -27,10 +27,11 @@ import { ApiCustomer } from "@/types/customer";
 import { CustomerStatusBadge } from "./CustomerStatusBadge";
 import { CustomerPagination } from "./CustomerPagination";
 import { DataTableViewOptions } from "@/components/tables/DataTableViewOptions";
-import { TableSkeleton } from "@/components/shared/LoadingSkeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -163,35 +164,37 @@ export function CustomerTable({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link href={`/customers/${customer.id}`}>
-                  <Eye className="mr-2 h-4 w-4" /> View Details
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/customers/${customer.id}/edit`}>
-                  <Edit className="mr-2 h-4 w-4" /> Edit Customer
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <RequireRole allowedRoles={["ADMIN"]}>
-                <SecureActionConfirm
-                  title="Delete Customer?"
-                  description={`Are you sure you want to delete ${customer.fullName}? This action cannot be undone.`}
-                  onConfirm={() => {
-                    alert("Delete functionality pending implementation.");
-                  }}
-                  actionLabel="Delete"
-                >
-                  <DropdownMenuItem 
-                    className="text-destructive" 
-                    onSelect={(e: Event) => e.preventDefault()}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link href={`/customers/${customer.id}`}>
+                    <Eye className="mr-2 h-4 w-4" /> View Details
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/customers/${customer.id}/edit`}>
+                    <Edit className="mr-2 h-4 w-4" /> Edit Customer
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <RequireRole allowedRoles={["ADMIN"]}>
+                  <SecureActionConfirm
+                    title="Delete Customer?"
+                    description={`Are you sure you want to delete ${customer.fullName}? This action cannot be undone.`}
+                    onConfirm={() => {
+                      alert("Delete functionality pending implementation.");
+                    }}
+                    actionLabel="Delete"
                   >
-                    <Trash className="mr-2 h-4 w-4" /> Delete
-                  </DropdownMenuItem>
-                </SecureActionConfirm>
-              </RequireRole>
+                    <DropdownMenuItem 
+                      className="text-destructive" 
+                      onSelect={(e: Event) => e.preventDefault()}
+                    >
+                      <Trash className="mr-2 h-4 w-4" /> Delete
+                    </DropdownMenuItem>
+                  </SecureActionConfirm>
+                </RequireRole>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -252,7 +255,15 @@ export function CustomerTable({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableSkeleton rows={state.size} columns={columns.length} />
+              Array.from({ length: state.size || 5 }).map((_, i) => (
+                <TableRow key={i} className="hover:bg-muted/50">
+                  {columns.map((_, j) => (
+                    <TableCell key={j} className="py-4">
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow

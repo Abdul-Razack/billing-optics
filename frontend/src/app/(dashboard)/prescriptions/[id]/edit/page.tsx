@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { PrescriptionForm } from "@/components/prescriptions/PrescriptionForm";
@@ -10,14 +10,20 @@ import { PrescriptionService } from "@/services/prescription.service";
 import { Prescription } from "@/types/prescription";
 import { toast } from "sonner";
 
-export default function EditPrescriptionPage({ params }: { params: { id: string } }) {
+export default function EditPrescriptionPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const [prescription, setPrescription] = useState<Prescription | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!resolvedParams.id || resolvedParams.id === "undefined") {
+      setLoading(false);
+      return;
+    }
+
     async function loadData() {
       try {
-        const data = await PrescriptionService.getPrescriptionById(params.id);
+        const data = await PrescriptionService.getPrescriptionById(resolvedParams.id);
         setPrescription(data);
       } catch (error) {
         console.error(error);
@@ -27,7 +33,7 @@ export default function EditPrescriptionPage({ params }: { params: { id: string 
       }
     }
     loadData();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   if (loading) {
     return <PageContainer title="Loading..."><div className="p-8">Loading...</div></PageContainer>;

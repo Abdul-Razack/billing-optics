@@ -27,7 +27,14 @@ export const updatePrescriptionSchema = z.object({
 export const getPrescriptionsSchema = z.object({
   query: paginationQuerySchema.merge(
     z.object({
-      sortBy: z.enum(['newest', 'oldest']).optional(),
-    }).partial()
+      sortBy: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.enum(['newest', 'oldest']).optional()
+      ),
+      customerId: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.coerce.number().min(1).optional()
+      ),
+    })
   )
 });

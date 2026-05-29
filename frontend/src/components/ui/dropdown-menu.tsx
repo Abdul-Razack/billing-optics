@@ -5,6 +5,7 @@ import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, CheckIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
@@ -16,7 +17,10 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
 
 function DropdownMenuTrigger({ asChild, children, ...props }: any) {
   if (asChild && React.isValidElement(children)) {
-    return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" render={children} {...props} />
+    const isNative = typeof children.type === 'string' 
+      ? children.type === 'button' 
+      : (children.type === Button || (children.type as any).displayName === "Button") && !(children.props as any).asChild;
+    return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" render={children as React.ReactElement} nativeButton={isNative} {...props} />
   }
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props}>{children}</MenuPrimitive.Trigger>
 }
@@ -96,7 +100,10 @@ function DropdownMenuItem({
   };
 
   if (asChild && React.isValidElement(children)) {
-    return <MenuPrimitive.Item render={children} {...commonProps} />
+    const isNative = typeof children.type === 'string' 
+      ? children.type === 'button' 
+      : (children.type === Button || (children.type as any).displayName === "Button") && !(children.props as any).asChild;
+    return <MenuPrimitive.Item render={children as React.ReactElement} nativeButton={isNative} {...commonProps} />
   }
 
   return <MenuPrimitive.Item {...commonProps}>{children}</MenuPrimitive.Item>

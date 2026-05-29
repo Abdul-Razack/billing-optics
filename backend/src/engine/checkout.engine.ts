@@ -1,7 +1,7 @@
 import { db } from '../config/db';
 import { invoices, invoiceItems, payments, products, inventoryLedger } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { NotFoundError } from '../utils/errors';
+import { NotFoundError, ValidationError } from '../utils/errors';
 
 export interface CheckoutDTO {
   customerId?: number;
@@ -21,6 +21,7 @@ export const processCheckout = async (data: CheckoutDTO) => {
   return await db.transaction(async (tx) => {
     // 1. Calculate totals and deduct stock
     let subtotal = 0;
+    let taxTotal = 0;
     const itemsToInsert = [];
     const ledgerEntries: any[] = [];
 
@@ -29,7 +30,10 @@ export const processCheckout = async (data: CheckoutDTO) => {
       if (!product) throw new NotFoundError(`Product ${item.productId} not found`);
 
       const itemTotal = product.sellingPrice * item.quantity;
+      const itemTax = Math.round((itemTotal * product.gstPercent) / 100);
+      
       subtotal += itemTotal;
+      taxTotal += itemTax;
 
       itemsToInsert.push({
         productId: item.productId,
@@ -39,7 +43,7 @@ export const processCheckout = async (data: CheckoutDTO) => {
         snapshotPrice: product.sellingPrice,
         snapshotCostPrice: product.costPrice || 0,
         snapshotTaxPercent: product.gstPercent || 0,
-        lineTotal: itemTotal,
+        lineTotal: itemTotal, // Subtotal for this line (cents)
       });
 
       // Prepare ledger entry
@@ -53,15 +57,31 @@ export const processCheckout = async (data: CheckoutDTO) => {
       });
     }
 
-    const grandTotal = subtotal; // Ignoring tax/discount for simplicity in this draft
+    // TODO: if you pass discountPercent in payload, calculate discountTotal. For now, 0.
+    const discountTotal = 0; 
+    const grandTotal = subtotal + taxTotal - discountTotal;
 
-    const invoiceNum = `INV-${Date.now()}`;
+    // Validate payments
+    let totalPaid = 0;
+    if (data.payments && data.payments.length > 0) {
+      data.payments.forEach(p => { totalPaid += p.amount; });
+    }
+
+    if (totalPaid > grandTotal) {
+      throw new ValidationError(`Payment total (${totalPaid}) exceeds grand total (${grandTotal})`);
+    }
+
+    // Generate unique invoice number avoiding collision
+    const hex = Math.floor(Math.random() * 0xffff).toString(16).padStart(4, '0').toUpperCase();
+    const invoiceNum = `INV-${Date.now()}-${hex}`;
     
     const [newInvoice] = await tx.insert(invoices).values({
       invoiceNumber: invoiceNum,
       customerId: data.customerId,
       createdBy: data.createdBy,
       subtotal,
+      taxTotal,
+      discountTotal,
       grandTotal,
       amountPaid: 0,
       paymentStatus: 'UNPAID',
@@ -77,17 +97,13 @@ export const processCheckout = async (data: CheckoutDTO) => {
     }
 
     // 4. Create payments
-    let totalPaid = 0;
     if (data.payments && data.payments.length > 0) {
-      const paymentsToInsert = data.payments.map(p => {
-        totalPaid += p.amount;
-        return {
-          invoiceId: newInvoice.id,
-          amount: p.amount,
-          paymentMethod: p.method,
-          referenceNumber: p.reference,
-        };
-      });
+      const paymentsToInsert = data.payments.map(p => ({
+        invoiceId: newInvoice.id,
+        amount: p.amount,
+        paymentMethod: p.method,
+        referenceNumber: p.reference,
+      }));
       await tx.insert(payments).values(paymentsToInsert);
     }
 

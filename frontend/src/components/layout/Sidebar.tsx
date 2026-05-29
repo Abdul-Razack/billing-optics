@@ -35,8 +35,8 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-card border-r border-border min-h-screen flex flex-col transition-all duration-300">
-      <div className="h-16 flex items-center px-6 border-b border-border">
+    <aside className="w-56 bg-card border-r border-border min-h-screen flex flex-col transition-all duration-300">
+      <div className="h-16 flex items-center px-5 border-b border-border">
         <span className="font-bold text-lg text-primary tracking-tight">Optics ERP</span>
       </div>
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">

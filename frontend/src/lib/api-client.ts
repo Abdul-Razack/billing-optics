@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 interface FetchOptions extends RequestInit {
   data?: any;
@@ -64,8 +64,22 @@ export async function fetchClient<T>(endpoint: string, options: FetchOptions = {
 
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
-  console.log("FETCHING API:", { url, config });
-  const response = await fetch(url, config);
+  let response: Response;
+  try {
+    console.log("FETCHING API:", { url, config });
+    response = await fetch(url, config);
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      throw error;
+    }
+    // Catch native fetch network errors (ERR_CONNECTION_REFUSED, offline, DNS failure)
+    console.error("Network Error or Connection Refused:", error);
+    throw new ApiError(
+      0, 
+      "Cannot connect to the server. Please check your internet connection or ensure the backend is running.", 
+      { isOffline: true }
+    );
+  }
 
   if (!response.ok) {
     let errorData;
@@ -117,7 +131,13 @@ export async function downloadFile(endpoint: string, filename: string): Promise<
 
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
-  const response = await fetch(url, { headers });
+  let response: Response;
+  try {
+    response = await fetch(url, { headers });
+  } catch (error: any) {
+    console.error("Network Error or Connection Refused during download:", error);
+    throw new Error("Cannot connect to the server to download the file. Please check your connection.");
+  }
 
   if (!response.ok) {
     throw new Error(`Failed to download file: ${response.statusText}`);

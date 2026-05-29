@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchClient, ApiError } from "@/lib/api-client";
 
 interface UseFetchOptions<T> {
@@ -13,6 +13,16 @@ export function useFetch<T>(endpoint: string, options: UseFetchOptions<T> = {}) 
   const [isLoading, setIsLoading] = useState<boolean>(enabled);
   const [error, setError] = useState<Error | null>(null);
 
+  // Store latest callbacks in refs to prevent infinite re-renders
+  // when users pass inline functions as options
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+  }, [onSuccess, onError]);
+
   const fetchData = useCallback(async (abortController?: AbortController) => {
     setIsLoading(true);
     setError(null);
@@ -20,16 +30,17 @@ export function useFetch<T>(endpoint: string, options: UseFetchOptions<T> = {}) 
       const result = await fetchClient<T>(endpoint, {
         signal: abortController?.signal,
       });
+      if (abortController?.signal.aborted) return;
       setData(result);
-      onSuccess?.(result);
+      onSuccessRef.current?.(result);
+      setIsLoading(false);
     } catch (err: any) {
-      if (err.name === "AbortError") return;
+      if (err.name === "AbortError" || abortController?.signal.aborted) return;
       setError(err);
-      onError?.(err);
-    } finally {
+      onErrorRef.current?.(err);
       setIsLoading(false);
     }
-  }, [endpoint, onSuccess, onError]);
+  }, [endpoint]);
 
   useEffect(() => {
     if (!enabled) {

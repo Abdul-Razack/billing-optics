@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { DynamicFieldBuilder } from "@/components/custom-fields/DynamicFieldBuilder";
@@ -10,9 +10,15 @@ import { MOCK_CUSTOM_FIELDS } from "@/lib/mock-custom-field-data";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 
-export default function EditCustomFieldPage({ params }: { params: { id: string } }) {
+export default function EditCustomFieldPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const router = useRouter();
-  const existingField = MOCK_CUSTOM_FIELDS.find(f => f.id === params.id);
+  
+  if (!resolvedParams.id || resolvedParams.id === "undefined") {
+    notFound();
+  }
+
+  const existingField = MOCK_CUSTOM_FIELDS.find(f => f.id === resolvedParams.id);
   
   if (!existingField) {
     notFound();

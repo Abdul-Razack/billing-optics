@@ -5,11 +5,17 @@ import { ValidationError } from '../utils/errors';
 export const validate = (schema: AnyZodObject) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await schema.parseAsync({
-        body: req.body,
+      const parsed = await schema.parseAsync({
+        body: req.method === 'GET' ? undefined : req.body, // Prevent GET body validation
         query: req.query,
         params: req.params,
       });
+
+      // Apply the parsed, coerced, and defaulted values back to the request
+      if (parsed.body !== undefined) req.body = parsed.body;
+      if (parsed.query !== undefined) req.query = parsed.query;
+      if (parsed.params !== undefined) req.params = parsed.params;
+
       next();
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -17,9 +23,15 @@ export const validate = (schema: AnyZodObject) => {
           path: err.path.join('.'),
           message: err.message,
         }));
+        
+        // Log validation error safely (diagnostic improvement)
+        console.warn(`[Validation Error] ${req.method} ${req.originalUrl}:`, JSON.stringify(errors));
+
         next(new ValidationError('Validation failed', errors));
         return;
       }
+      
+      console.error(`[Validation Fatal Error] ${req.method} ${req.originalUrl}:`, error);
       next(new ValidationError('Invalid request data'));
     }
   };

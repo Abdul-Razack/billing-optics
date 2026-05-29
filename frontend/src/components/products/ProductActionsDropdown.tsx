@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -31,40 +32,42 @@ export function ProductActionsDropdown({ product, onDelete, onQuickStockUpdate }
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem asChild>
-          <Link href={`/products/${product.id}`}>
-            <Eye className="mr-2 h-4 w-4" />
-            View details
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href={`/products/${product.id}/edit`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit product
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onQuickStockUpdate?.(product)}>
-          <PackagePlus className="mr-2 h-4 w-4" />
-          Quick Stock Update
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <RequireRole allowedRoles={["ADMIN"]}>
-          <SecureActionConfirm
-            title="Delete Product?"
-            description={`Are you sure you want to delete "${product.name}"? This action cannot be undone.`}
-            onConfirm={() => onDelete?.(product.id)}
-            actionLabel="Delete"
-          >
-            <DropdownMenuItem 
-              className="text-destructive" 
-              onSelect={(e: Event) => e.preventDefault()}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <Link href={`/products/${product.id}`}>
+              <Eye className="mr-2 h-4 w-4" />
+              View details
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={`/products/${product.id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit product
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onQuickStockUpdate?.(product)}>
+            <PackagePlus className="mr-2 h-4 w-4" />
+            Quick Stock Update
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <RequireRole allowedRoles={["ADMIN"]}>
+            <SecureActionConfirm
+              title="Delete Product?"
+              description={`Are you sure you want to delete "${product.name}"? This action cannot be undone.`}
+              onConfirm={() => onDelete?.(product.id)}
+              actionLabel="Delete"
             >
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </SecureActionConfirm>
-        </RequireRole>
+              <DropdownMenuItem 
+                className="text-destructive" 
+                onSelect={(e: Event) => e.preventDefault()}
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </SecureActionConfirm>
+          </RequireRole>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

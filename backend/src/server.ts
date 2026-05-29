@@ -3,8 +3,8 @@ import env from './config/env';
 
 const port = env.PORT;
 
-const server = app.listen(port, () => {
-  console.log(`Server running in ${env.NODE_ENV} mode on port ${port}`);
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running in ${env.NODE_ENV} mode on port ${port} (bound to 0.0.0.0)`);
 });
 
 process.on('SIGTERM', () => {

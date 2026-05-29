@@ -34,12 +34,12 @@ export default function CreateOrderPage() {
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
 
-  // Live Math
+  // Live Math (grandTotal is in cents because product.sellingPrice is in cents)
   const grandTotal = useMemo(() => {
     return lineItems.reduce((sum, item) => sum + (item.product.sellingPrice * item.quantity), 0);
   }, [lineItems]);
 
-  const balanceDue = Math.max(0, grandTotal - amountPaid);
+  const balanceDue = Math.max(0, grandTotal - Math.round(amountPaid * 100));
 
   // Handlers
   const handleAddProduct = (product: ApiProduct) => {
@@ -62,7 +62,7 @@ export default function CreateOrderPage() {
 
   // Set default full payment when items change, if not manually overridden
   const handleAutoFillPayment = () => {
-    setAmountPaid(grandTotal);
+    setAmountPaid(grandTotal / 100);
   };
 
   const handleSubmit = async () => {
@@ -77,12 +77,13 @@ export default function CreateOrderPage() {
 
     setIsSubmitting(true);
     try {
+      const amountPaidCents = Math.round(amountPaid * 100);
       const payload = {
         customerId,
         items: lineItems.map(i => ({ productId: i.product.id, quantity: i.quantity })),
-        payments: amountPaid > 0 ? [{
+        payments: amountPaidCents > 0 ? [{
           method: paymentMethod,
-          amount: amountPaid,
+          amount: amountPaidCents,
           reference: paymentMethod !== "CASH" ? referenceNumber : undefined
         }] : undefined
       };
@@ -257,7 +258,7 @@ export default function CreateOrderPage() {
                   
                   <div className="flex justify-between items-center text-sm mt-4">
                     <span className="text-muted-foreground">Amount Paid</span>
-                    <span className="font-medium text-emerald-600">{formatCurrency(amountPaid)}</span>
+                    <span className="font-medium text-emerald-600">{formatCurrency(Math.round(amountPaid * 100))}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm mt-2">
                     <span className="text-muted-foreground font-medium">Balance Due</span>

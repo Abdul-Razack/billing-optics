@@ -62,7 +62,7 @@ export function CustomerProfileHeader({ customer, children }: CustomerProfileHea
           </Link>
         </Button>
         <Button asChild>
-          <Link href={`/invoices/new?customerId=${customer.id}`}>
+          <Link href={`/orders/create?customerId=${customer.id}`}>
             <FileText className="mr-2 h-4 w-4" />
             Create Invoice
           </Link>

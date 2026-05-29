@@ -23,9 +23,13 @@ import { CustomField } from "@/types/product";
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const productId = parseInt(resolvedParams.id, 10);
   
-  const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiProduct }>(`/products/${productId}`);
+  const isValidId = resolvedParams.id && resolvedParams.id !== "undefined";
+  const productId = isValidId ? parseInt(resolvedParams.id, 10) : NaN;
+  
+  const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiProduct }>(
+    isValidId && !isNaN(productId) ? `/products/${productId}` : null
+  );
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
 

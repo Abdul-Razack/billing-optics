@@ -6,10 +6,17 @@ import { MOCK_CUSTOMERS } from "@/lib/mock-customer-data";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Printer, FileText } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
+import { PrintButton } from "@/components/shared/PrintButton";
 
-export default function PaymentDetailPage({ params }: { params: { id: string } }) {
-  const payment = MOCK_PAYMENTS.find(p => p.id === params.id);
+export default async function PaymentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  
+  if (!resolvedParams.id || resolvedParams.id === "undefined") {
+    notFound();
+  }
+
+  const payment = MOCK_PAYMENTS.find(p => p.id === resolvedParams.id);
   
   if (!payment) {
     notFound();
@@ -19,7 +26,7 @@ export default function PaymentDetailPage({ params }: { params: { id: string } }
 
   return (
     <PageContainer title="Payment Details" description={`Transaction ID: ${payment.id.toUpperCase()}`}>
-      <div className="mb-6">
+      <div className="mb-6 print:hidden">
         <Button variant="ghost" asChild className="-ml-4 text-muted-foreground hover:text-foreground">
           <Link href="/payments">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -30,10 +37,7 @@ export default function PaymentDetailPage({ params }: { params: { id: string } }
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Payment Summary</h1>
-        <Button variant="outline">
-          <Printer className="mr-2 h-4 w-4" />
-          Print Receipt
-        </Button>
+        <PrintButton label="Print Receipt" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -13,7 +13,10 @@ function Dialog({ ...props }: DialogPrimitive.Root.Props) {
 
 function DialogTrigger({ asChild, children, ...props }: any) {
   if (asChild && React.isValidElement(children)) {
-    return <DialogPrimitive.Trigger data-slot="dialog-trigger" render={children} {...props} />
+    const isNative = typeof children.type === 'string' 
+      ? children.type === 'button' 
+      : (children.type === Button || (children.type as any).displayName === "Button") && !(children.props as any).asChild;
+    return <DialogPrimitive.Trigger data-slot="dialog-trigger" render={children as React.ReactElement} nativeButton={isNative} {...props} />
   }
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props}>{children}</DialogPrimitive.Trigger>
 }

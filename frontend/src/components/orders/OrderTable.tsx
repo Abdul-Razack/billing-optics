@@ -8,6 +8,7 @@ import { MoreHorizontal, Eye, Edit, Trash2, ArrowUpDown, Copy, Printer, Download
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
+  DropdownMenuGroup,
   DropdownMenuItem, 
   DropdownMenuLabel, 
   DropdownMenuSeparator, 
@@ -139,41 +140,43 @@ export function OrderTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[160px]">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/orders/${order.id}`}>
-                          <Eye className="mr-2 h-4 w-4" /> View Details
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/orders/${order.id}/edit`}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit Order
-                        </Link>
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuSeparator />
-                      
-                      <DropdownMenuItem onClick={() => {}}>
-                        <Copy className="mr-2 h-4 w-4" /> Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {}}>
-                        <Printer className="mr-2 h-4 w-4" /> Print
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {}}>
-                        <Download className="mr-2 h-4 w-4" /> Download PDF
-                      </DropdownMenuItem>
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/orders/${order.id}`}>
+                            <Eye className="mr-2 h-4 w-4" /> View Details
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/orders/${order.id}/edit`}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit Order
+                          </Link>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuSeparator />
+                        
+                        <DropdownMenuItem onClick={() => {}}>
+                          <Copy className="mr-2 h-4 w-4" /> Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {}}>
+                          <Printer className="mr-2 h-4 w-4" /> Print
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {}}>
+                          <Download className="mr-2 h-4 w-4" /> Download PDF
+                        </DropdownMenuItem>
 
-                      {onDelete && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={() => onDelete(order.id)}
-                            className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                          </DropdownMenuItem>
-                        </>
-                      )}
+                        {onDelete && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => onDelete(order.id)}
+                              className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuGroup>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

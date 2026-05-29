@@ -29,6 +29,7 @@ import { ProductStatusBadge } from "@/components/products/ProductStatusBadge";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -81,24 +82,26 @@ export function CategoryTable({ data, isLoading = false, onDelete }: CategoryTab
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <RequireRole allowedRoles={["ADMIN"]}>
-                <SecureActionConfirm
-                  title="Delete Category?"
-                  description={`Are you sure you want to delete "${category.name}"? This action cannot be undone.`}
-                  onConfirm={() => onDelete?.(category.id)}
-                  actionLabel="Delete"
-                >
-                  <DropdownMenuItem 
-                    className="text-destructive" 
-                    onSelect={(e: Event) => e.preventDefault()}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <RequireRole allowedRoles={["ADMIN"]}>
+                  <SecureActionConfirm
+                    title="Delete Category?"
+                    description={`Are you sure you want to delete "${category.name}"? This action cannot be undone.`}
+                    onConfirm={() => onDelete?.(category.id)}
+                    actionLabel="Delete"
                   >
-                    <Trash className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </SecureActionConfirm>
-              </RequireRole>
+                    <DropdownMenuItem 
+                      className="text-destructive" 
+                      onSelect={(e: Event) => e.preventDefault()}
+                    >
+                      <Trash className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </SecureActionConfirm>
+                </RequireRole>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         );

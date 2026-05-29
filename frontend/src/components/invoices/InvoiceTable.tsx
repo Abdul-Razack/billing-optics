@@ -30,6 +30,7 @@ import { MoreHorizontal, Search, Printer, Eye, XCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -103,26 +104,28 @@ export function InvoiceTable({ data }: InvoiceTableProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link href={`/invoices/${invoice.id}`}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  View details
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Printer className="mr-2 h-4 w-4" />
-                Print
-              </DropdownMenuItem>
-              {invoice.status !== "CANCELLED" && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive">
-                    <XCircle className="mr-2 h-4 w-4" />
-                    Cancel Invoice
-                  </DropdownMenuItem>
-                </>
-              )}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link href={`/invoices/${invoice.id}`}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    View details
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </DropdownMenuItem>
+                {invoice.status !== "CANCELLED" && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive">
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Cancel Invoice
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         );

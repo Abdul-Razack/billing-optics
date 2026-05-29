@@ -29,6 +29,7 @@ import { MoreHorizontal, Search, Printer, Eye, Edit } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -103,24 +104,26 @@ export function PrescriptionTable({ data }: PrescriptionTableProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link href={`/prescriptions/${rx.id}`}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  View details
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/prescriptions/${rx.id}/edit`}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Rx
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Printer className="mr-2 h-4 w-4" />
-                Print Rx
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link href={`/prescriptions/${rx.id}`}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    View details
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/prescriptions/${rx.id}/edit`}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Rx
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print Rx
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         );

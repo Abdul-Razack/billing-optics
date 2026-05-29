@@ -23,9 +23,9 @@ interface CartTableProps {
 export function CartTable({ items, onUpdateQuantity, onUpdatePrice, onRemove }: CartTableProps) {
   if (items.length === 0) {
     return (
-      <div className="border border-border rounded-md border-dashed p-8 text-center bg-muted/20">
-        <p className="text-sm text-muted-foreground">No items added to invoice yet.</p>
-        <p className="text-xs text-muted-foreground mt-1">Search and select products to add them.</p>
+      <div className="border border-border rounded-md border-dashed p-6 text-center bg-muted/10">
+        <p className="text-sm font-medium text-muted-foreground">No items added to invoice</p>
+        <p className="text-xs text-muted-foreground mt-1">Search and select products above to begin.</p>
       </div>
     );
   }

@@ -47,16 +47,7 @@ export class BillingController {
       const invoiceId = parseInt(invoiceIdParam, 10);
       
       if (isNaN(invoiceId)) {
-        // Return default draft invoice for string IDs like INV-001
-        res.status(200).json({ 
-          success: true,
-          data: {
-            id: invoiceIdParam,
-            items: [],
-            grandTotal: 0
-          }
-        });
-        return;
+        throw new ValidationError('Invalid invoice ID format');
       }
 
       const result = await billingService.getInvoiceDetails(invoiceId);

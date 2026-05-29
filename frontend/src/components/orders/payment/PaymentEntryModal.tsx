@@ -22,7 +22,7 @@ interface PaymentEntryModalProps {
 export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, onPaymentSuccess }: PaymentEntryModalProps) {
   const balanceDue = Math.max(0, invoice.grandTotal - invoice.amountPaid);
   
-  const [amount, setAmount] = useState<string>(initialIsFull ? balanceDue.toString() : "");
+  const [amount, setAmount] = useState<string>(initialIsFull ? (balanceDue / 100).toFixed(2) : "");
   const [method, setMethod] = useState<PaymentMethod>("CASH");
   const [reference, setReference] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
@@ -31,7 +31,7 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
   // Update amount if modal opens with different intent
   useEffect(() => {
     if (open) {
-      setAmount(initialIsFull ? balanceDue.toString() : "");
+      setAmount(initialIsFull ? (balanceDue / 100).toFixed(2) : "");
       setMethod("CASH");
       setReference("");
       setNotes("");
@@ -42,11 +42,13 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
     e.preventDefault();
     
     const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    const amountInCents = Math.round(parsedAmount * 100);
+
+    if (isNaN(parsedAmount) || amountInCents <= 0) {
       toast.error("Please enter a valid positive amount.");
       return;
     }
-    if (parsedAmount > balanceDue) {
+    if (amountInCents > balanceDue) {
       toast.error(`Cannot overpay. Maximum allowed is ${formatCurrency(balanceDue)}.`);
       return;
     }
@@ -54,12 +56,9 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
     setIsSubmitting(true);
     try {
       await OrderService.addPayment(invoice.id, {
-        amount: parsedAmount,
+        amount: amountInCents,
         method,
         reference: reference || undefined,
-        // Optional notes if your backend supports it, OrderService currently doesn't map notes in addPayment type, 
-        // but we can pass it anyway or omit it if it causes errors. Let's pass it for now.
-        // Wait, looking at grep, addPayment takes: { amount: number; paymentMethod: PaymentMethod; referenceNumber?: string }
       });
       
       toast.success("Payment recorded successfully.");
@@ -94,7 +93,7 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
                   type="number" 
                   step="0.01" 
                   min="0.01" 
-                  max={balanceDue}
+                  max={balanceDue / 100}
                   className="pl-7"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}

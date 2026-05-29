@@ -29,9 +29,9 @@ export function StockAlertCard({
         <CardContent>
           <div className="text-2xl font-bold"><div className="h-8 w-16 bg-muted rounded animate-pulse mt-1"></div></div>
           {description && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-muted-foreground mt-1">
               <div className="h-3 w-32 bg-muted rounded animate-pulse"></div>
-            </p>
+            </div>
           )}
         </CardContent>
       </Card>

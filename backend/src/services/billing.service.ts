@@ -1,4 +1,6 @@
 import { db } from '../config/db';
+import { invoices } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { BillingRepository } from '../repositories/billing.repository';
 import { processCheckout, CheckoutDTO } from '../engine/checkout.engine';
 import { NotFoundError, ValidationError } from '../utils/errors';
@@ -18,7 +20,9 @@ export class BillingService {
 
   async addPayment(invoiceId: number, amount: number, paymentMethod: 'CASH' | 'CARD' | 'UPI' | 'BANK_TRANSFER', referenceNumber?: string) {
     return await db.transaction(async (tx: DbOrTx) => {
-      const invoice = await BillingRepository.getInvoiceById(invoiceId, tx);
+      // Use FOR UPDATE to prevent race conditions during concurrent payments
+      const [invoice] = await tx.select().from(invoices).where(eq(invoices.id, invoiceId)).for('update');
+      
       if (!invoice) {
         throw new NotFoundError(`Invoice with ID ${invoiceId} not found`);
       }

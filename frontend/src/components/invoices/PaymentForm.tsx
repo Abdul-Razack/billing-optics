@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PaymentMethod } from "@/types/invoice";
+import { cn } from "@/lib/utils";
 
 interface PaymentFormProps {
   amount: number;
@@ -27,7 +28,7 @@ export function PaymentForm({
   grandTotal
 }: PaymentFormProps) {
   return (
-    <div className="bg-card rounded-lg border border-border shadow-sm p-6 space-y-4">
+    <div className="bg-card rounded-lg border border-border shadow-sm p-5 space-y-4">
       <h3 className="font-medium text-foreground border-b border-border pb-2">Payment Details</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -58,16 +59,19 @@ export function PaymentForm({
               onChange={(e) => onAmountChange(Number(e.target.value) || 0)}
             />
           </div>
-          <div className="flex justify-between mt-1">
+          <div className="flex justify-between mt-1.5 items-center">
             <button 
               type="button"
-              className="text-xs text-primary hover:underline"
+              className="text-xs font-medium text-primary hover:underline"
               onClick={() => onAmountChange(grandTotal)}
             >
               Pay Full Amount
             </button>
-            <span className="text-xs text-muted-foreground">
-              Balance: ${(grandTotal - amount).toFixed(2)}
+            <span className={cn(
+              "text-xs font-semibold",
+              (grandTotal - amount) > 0.01 ? "text-destructive" : "text-green-600"
+            )}>
+              Balance: ${(Math.max(0, grandTotal - amount)).toFixed(2)}
             </span>
           </div>
         </div>

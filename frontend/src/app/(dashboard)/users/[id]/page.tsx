@@ -7,8 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { ArrowLeft, Edit, Mail, Phone, Calendar, Clock, Shield } from "lucide-react";
 
-export default function UserDetailPage({ params }: { params: { id: string } }) {
-  const user = MOCK_USERS.find(u => u.id === params.id);
+export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  
+  if (!resolvedParams.id || resolvedParams.id === "undefined") {
+    notFound();
+  }
+
+  const user = MOCK_USERS.find(u => u.id === resolvedParams.id);
   
   if (!user) {
     notFound();

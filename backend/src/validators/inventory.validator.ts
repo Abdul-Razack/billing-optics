@@ -28,8 +28,14 @@ export const bulkAdjustStockSchema = z.object({
 export const getInventoryHistorySchema = z.object({
   query: paginationQuerySchema.merge(
     z.object({
-      type: z.enum(['IN', 'OUT', 'ADJUSTMENT']).optional(),
-      productId: z.string().regex(/^\d+$/).transform(Number).optional(),
-    }).partial()
+      type: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.enum(['IN', 'OUT', 'ADJUSTMENT']).optional()
+      ),
+      productId: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.coerce.number().optional()
+      ),
+    })
   )
 });

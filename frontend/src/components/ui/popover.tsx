@@ -4,6 +4,7 @@ import * as React from "react"
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />
@@ -11,7 +12,10 @@ function Popover({ ...props }: PopoverPrimitive.Root.Props) {
 
 function PopoverTrigger({ asChild, children, ...props }: any) {
   if (asChild && React.isValidElement(children)) {
-    return <PopoverPrimitive.Trigger data-slot="popover-trigger" render={children} {...props} />
+    const isNative = typeof children.type === 'string' 
+      ? children.type === 'button' 
+      : (children.type === Button || (children.type as any).displayName === "Button") && !(children.props as any).asChild;
+    return <PopoverPrimitive.Trigger data-slot="popover-trigger" render={children as React.ReactElement} nativeButton={isNative} {...props} />
   }
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props}>{children}</PopoverPrimitive.Trigger>
 }

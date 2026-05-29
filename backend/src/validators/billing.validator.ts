@@ -48,10 +48,22 @@ export const addPaymentSchema = z.object({
 export const getInvoicesSchema = z.object({
   query: paginationQuerySchema.merge(
     z.object({
-      status: z.enum(['DRAFT', 'COMPLETED', 'CANCELLED']).optional(),
-      paymentStatus: z.enum(['UNPAID', 'PARTIAL', 'PAID', 'REFUNDED', 'all']).optional(),
-      sortBy: z.enum(['date', 'amount', 'customer']).optional(),
-      sortDirection: z.enum(['asc', 'desc']).optional(),
-    }).partial()
+      status: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.enum(['DRAFT', 'COMPLETED', 'CANCELLED']).optional()
+      ),
+      paymentStatus: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.enum(['UNPAID', 'PARTIAL', 'PAID', 'REFUNDED', 'all']).optional()
+      ),
+      sortBy: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.enum(['date', 'amount', 'customer']).optional()
+      ),
+      sortDirection: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.enum(['asc', 'desc']).optional()
+      ),
+    })
   ),
 });

@@ -12,6 +12,7 @@ import { ProductSelector } from "./ProductSelector";
 import { CartTable } from "./CartTable";
 import { InvoiceSummary } from "./InvoiceSummary";
 import { PaymentForm } from "./PaymentForm";
+import { OrderService } from "@/services/order.service";
 import { CheckCircle } from "lucide-react";
 
 export function InvoiceForm() {
@@ -77,20 +78,42 @@ export function InvoiceForm() {
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Mock Invoice Saved", {
-      customerId, items, discountPercent, subtotal, gstTotal, grandTotal,
-      payment: { amount: paymentAmount, method: paymentMethod, ref: paymentRef, notes: paymentNotes }
-    });
-    router.push("/invoices");
+    if (items.length === 0) return;
+
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        customerId: customerId !== "walkin" ? parseInt(customerId) : undefined,
+        items: items.map(i => ({
+          productId: i.productId,
+          quantity: i.quantity
+        })),
+        payments: paymentAmount > 0 ? [{
+          method: paymentMethod,
+          amount: Math.round(paymentAmount * 100),
+          reference: paymentRef || undefined
+        }] : undefined
+      };
+
+      const invoice = await OrderService.createOrder("new", payload);
+      router.push(`/orders/${invoice.id}`);
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      // In a real app we'd show a toast error here
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* LEFT COLUMN: Billing / Cart */}
-      <div className="lg:col-span-2 space-y-6">
-        <div className="bg-card rounded-lg border border-border shadow-sm p-6 space-y-4">
+      <div className="lg:col-span-8 space-y-6">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-5 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 space-y-2">
               <label className="text-sm font-medium">Customer</label>
@@ -125,7 +148,7 @@ export function InvoiceForm() {
       </div>
 
       {/* RIGHT COLUMN: Totals & Payment */}
-      <div className="space-y-6">
+      <div className="lg:col-span-4 space-y-6">
         <InvoiceSummary 
           subtotal={subtotal}
           gstTotal={gstTotal}
@@ -133,7 +156,7 @@ export function InvoiceForm() {
           grandTotal={grandTotal}
         />
 
-        <div className="bg-card rounded-lg border border-border shadow-sm p-6 space-y-4">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-5 space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground">Order Discount (%)</label>
             <Input 
@@ -158,10 +181,10 @@ export function InvoiceForm() {
           grandTotal={grandTotal}
         />
 
-        <div className="flex gap-4">
-          <Button type="button" variant="outline" className="w-full" onClick={() => router.back()}>Cancel</Button>
-          <Button type="submit" className="w-full" disabled={items.length === 0}>
-            <CheckCircle className="mr-2 h-4 w-4" />
+        <div className="flex gap-4 pt-2">
+          <Button type="button" variant="outline" size="lg" className="w-1/3" onClick={() => router.back()}>Cancel</Button>
+          <Button type="submit" size="lg" className="w-2/3 text-base shadow-md disabled:opacity-50" disabled={items.length === 0}>
+            <CheckCircle className="mr-2 h-5 w-5" />
             Complete Sale
           </Button>
         </div>

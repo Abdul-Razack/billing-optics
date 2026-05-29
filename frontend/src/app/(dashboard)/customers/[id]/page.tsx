@@ -21,7 +21,9 @@ interface CustomerWithDetails extends ApiCustomer {
 export default function CustomerProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   
-  const { data: response, isLoading, error } = useFetch<{ success: boolean; data: CustomerWithDetails }>(`/customers/${resolvedParams.id}?includePrescriptions=true`);
+  const { data: response, isLoading, error } = useFetch<{ success: boolean; data: CustomerWithDetails }>(
+    resolvedParams.id && resolvedParams.id !== "undefined" ? `/customers/${resolvedParams.id}?includePrescriptions=true` : null
+  );
   const { data: settingsResponse } = useFetch<{ success: boolean; data: ApiSettings }>('/settings');
   
   const customer = response?.data;

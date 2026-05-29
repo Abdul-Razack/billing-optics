@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { CustomerPrescriptionCard } from "@/components/prescriptions/CustomerPrescriptionCard";
@@ -14,18 +14,24 @@ import { Customer } from "@/types/customer";
 import { Prescription } from "@/types/prescription";
 import { toast } from "sonner";
 
-export default function CustomerPrescriptionsHistoryPage({ params }: { params: { id: string } }) {
+export default function CustomerPrescriptionsHistoryPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerHistory, setCustomerHistory] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!resolvedParams.id || resolvedParams.id === "undefined") {
+      setLoading(false);
+      return;
+    }
+
     async function loadData() {
       try {
-        const cust = await CustomerService.getCustomerById(Number(params.id));
+        const cust = await CustomerService.getCustomerById(Number(resolvedParams.id));
         setCustomer(cust);
         
-        const history = await PrescriptionService.getPrescriptionsByCustomerId(params.id);
+        const history = await PrescriptionService.getPrescriptionsByCustomerId(resolvedParams.id);
         setCustomerHistory(history);
       } catch (error) {
         console.error(error);
@@ -35,7 +41,7 @@ export default function CustomerPrescriptionsHistoryPage({ params }: { params: {
       }
     }
     loadData();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   if (loading) {
     return <PageContainer title="Loading..."><div className="p-8">Loading...</div></PageContainer>;

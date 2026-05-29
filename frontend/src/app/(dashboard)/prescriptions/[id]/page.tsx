@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PrescriptionHeader } from "@/components/prescriptions/PrescriptionHeader";
 import { CustomerPrescriptionCard } from "@/components/prescriptions/CustomerPrescriptionCard";
@@ -15,16 +15,22 @@ import { toast } from "sonner";
 import { CustomerService } from "@/services/customer.service";
 import { Customer } from "@/types/customer";
 
-export default function PrescriptionDetailPage({ params }: { params: { id: string } }) {
+export default function PrescriptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const [prescription, setPrescription] = useState<Prescription | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerHistory, setCustomerHistory] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!resolvedParams.id || resolvedParams.id === "undefined") {
+      setLoading(false);
+      return;
+    }
+
     async function loadData() {
       try {
-        const data = await PrescriptionService.getPrescriptionById(params.id);
+        const data = await PrescriptionService.getPrescriptionById(resolvedParams.id);
         setPrescription(data);
         
         if (data && data.customerId) {
@@ -42,7 +48,7 @@ export default function PrescriptionDetailPage({ params }: { params: { id: strin
       }
     }
     loadData();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   if (loading) {
     return <PageContainer title="Loading..."><div className="p-8">Loading...</div></PageContainer>;

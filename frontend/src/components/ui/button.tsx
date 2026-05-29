@@ -41,25 +41,24 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild,
-  children,
-  ...props
-}: any) {
-  const commonProps = {
-    "data-slot": "button",
-    className: cn(buttonVariants({ variant, size, className })),
-    ...props
-  };
+const Button = React.forwardRef<HTMLButtonElement, any>(
+  ({ className, variant = "default", size = "default", asChild, children, ...props }, ref) => {
+    const commonProps = {
+      "data-slot": "button",
+      className: cn(buttonVariants({ variant, size, className })),
+      ...props
+    };
 
-  if (asChild && React.isValidElement(children)) {
-    return <ButtonPrimitive render={children} {...commonProps} />
+    if (asChild && React.isValidElement(children)) {
+      const isNative = typeof children.type === 'string' 
+        ? children.type === 'button' 
+        : (children.type === Button || (children.type as any).displayName === "Button") && !(children.props as any).asChild;
+      return <ButtonPrimitive ref={ref} render={children as React.ReactElement} nativeButton={isNative} {...commonProps} />
+    }
+
+    return <ButtonPrimitive ref={ref} {...commonProps}>{children}</ButtonPrimitive>
   }
-
-  return <ButtonPrimitive {...commonProps}>{children}</ButtonPrimitive>
-}
+)
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

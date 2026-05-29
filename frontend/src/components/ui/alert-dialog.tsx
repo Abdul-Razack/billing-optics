@@ -12,7 +12,10 @@ function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
 
 function AlertDialogTrigger({ asChild, children, ...props }: any) {
   if (asChild && React.isValidElement(children)) {
-    return <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" render={children} {...props} />
+    const isNative = typeof children.type === 'string' 
+      ? children.type === 'button' 
+      : (children.type === Button || (children.type as any).displayName === "Button") && !(children.props as any).asChild;
+    return <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" render={children as React.ReactElement} nativeButton={isNative} {...props} />
   }
   return <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props}>{children}</AlertDialogPrimitive.Trigger>
 }

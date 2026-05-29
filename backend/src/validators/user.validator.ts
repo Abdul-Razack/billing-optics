@@ -27,7 +27,10 @@ export const updateStatusSchema = z.object({
 export const getUsersSchema = z.object({
   query: paginationQuerySchema.merge(
     z.object({
-      role: z.enum(['ADMIN', 'MANAGER', 'CASHIER', 'OPTOMETRIST']).optional(),
-    }).partial()
+      role: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.enum(['ADMIN', 'MANAGER', 'CASHIER', 'OPTOMETRIST']).optional()
+      ),
+    })
   )
 });

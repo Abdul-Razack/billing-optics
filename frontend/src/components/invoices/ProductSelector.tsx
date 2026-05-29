@@ -30,12 +30,12 @@ export function ProductSelector({ onSelect }: ProductSelectorProps) {
   return (
     <div className="space-y-4">
       <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
         <Input 
           placeholder="Search products by name or SKU..." 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-8 bg-background"
+          className="pl-9 h-11 text-base bg-background focus-visible:ring-primary shadow-sm"
         />
       </div>
       
@@ -52,20 +52,20 @@ export function ProductSelector({ onSelect }: ProductSelectorProps) {
             </TableHeader>
             <TableBody>
               {filteredProducts.map(product => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <div className="font-medium text-sm">{product.name}</div>
+                <TableRow key={product.id} className="h-12">
+                  <TableCell className="py-2">
+                    <div className="font-medium text-sm leading-tight">{product.name}</div>
                     <div className="text-xs text-muted-foreground">{product.sku}</div>
                   </TableCell>
-                  <TableCell>${product.sellingPrice.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <span className={product.currentStock > 0 ? "text-green-600" : "text-destructive"}>
+                  <TableCell className="py-2">${product.sellingPrice.toFixed(2)}</TableCell>
+                  <TableCell className="py-2">
+                    <span className={product.currentStock > 0 ? "text-green-600 font-medium" : "text-destructive font-medium"}>
                       {product.currentStock}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right py-2">
                     <Button 
-                      variant="ghost" 
+                      variant="secondary" 
                       size="sm" 
                       onClick={() => {
                         onSelect(product);

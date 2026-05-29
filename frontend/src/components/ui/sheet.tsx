@@ -13,7 +13,10 @@ function Sheet({ ...props }: SheetPrimitive.Root.Props) {
 
 function SheetTrigger({ asChild, children, ...props }: any) {
   if (asChild && React.isValidElement(children)) {
-    return <SheetPrimitive.Trigger data-slot="sheet-trigger" render={children} {...props} />
+    const isNative = typeof children.type === 'string' 
+      ? children.type === 'button' 
+      : (children.type === Button || (children.type as any).displayName === "Button") && !(children.props as any).asChild;
+    return <SheetPrimitive.Trigger data-slot="sheet-trigger" render={children as React.ReactElement} nativeButton={isNative} {...props} />
   }
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props}>{children}</SheetPrimitive.Trigger>
 }
