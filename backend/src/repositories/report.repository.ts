@@ -32,7 +32,7 @@ export class ReportRepository {
       .innerJoin(customers, eq(invoices.customerId, customers.id))
       .where(between(invoices.createdAt, startDate, endDate))
       .groupBy(customers.id)
-      .orderBy(desc(sql`revenue`))
+      .orderBy(desc(sql`SUM(${invoices.grandTotal})`))
       .limit(5);
 
     // Top Products
@@ -49,7 +49,7 @@ export class ReportRepository {
       .innerJoin(products, eq(invoiceItems.productId, products.id))
       .where(between(invoices.createdAt, startDate, endDate))
       .groupBy(products.id)
-      .orderBy(desc(sql`revenue`))
+      .orderBy(desc(sql`SUM(${invoiceItems.lineTotal})`))
       .limit(5);
 
     return {
