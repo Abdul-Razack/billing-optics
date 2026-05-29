@@ -15,6 +15,8 @@ import { SettingsService } from "@/services/settings.service";
 import { CustomerService } from "@/services/customer.service";
 import { exportToCSV } from "@/lib/export";
 import { useRouter } from "next/navigation";
+import Papa from "papaparse";
+import { fetchClient } from "@/lib/api-client";
 
 type ImportWizardStep = "upload" | "map" | "preview" | "importing" | "summary";
 
@@ -83,40 +85,47 @@ export default function CustomerImportPage() {
     });
     const invalidCount = mappedData.length - validRows.length;
 
-    let successCount = 0;
-    const failedRows: { index: number; reason: string }[] = [];
+    try {
+      // 1. Convert valid rows to CSV string matching backend expected headers
+      const csvString = Papa.unparse(validRows);
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const file = new File([blob], 'customers_import.csv', { type: 'text/csv' });
 
-    for (let i = 0; i < validRows.length; i++) {
-      const row = validRows[i];
-      setImportProgress(i + 1);
+      // 2. Prepare FormData
+      const formData = new FormData();
+      formData.append('file', file);
 
-      try {
-        // Construct the payload matching ApiCustomer structure
-        const payload: any = {
-          fullName: row.fullName,
-          phone: row.phone,
-          email: row.email || undefined,
-          address: row.address || undefined,
-          notes: row.notes || undefined,
-          gender: row.gender || undefined,
-          customFields: {}
-        };
+      // 3. Send to bulk endpoint
+      const response = await fetchClient<{ success: boolean; data: { imported: number; skipped: number; errors: string[] } }>("/customers/bulk", {
+        method: "POST",
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
 
-        // Extract custom fields from the row
-        allFields.forEach(f => {
-          if (!SYSTEM_FIELDS.find(sf => sf.id === f.id) && row[f.id] !== undefined && row[f.id] !== null) {
-            payload.customFields[f.id] = row[f.id];
-          }
+      if (response.success) {
+        setImportResult({
+          successCount: response.data.imported,
+          invalidCount: invalidCount + response.data.skipped,
+          failedRows: response.data.errors.map((e, i) => ({ index: i + 1, reason: e }))
         });
-
-        await CustomerService.createCustomer(payload);
-        successCount++;
-      } catch (err: any) {
-        failedRows.push({ index: i + 1, reason: err.message || "Unknown API error" });
+      } else {
+        setImportResult({
+          successCount: 0,
+          invalidCount: mappedData.length,
+          failedRows: [{ index: 0, reason: "Server returned a failed response." }]
+        });
       }
+    } catch (err: any) {
+      console.error("Bulk upload failed", err);
+      setImportResult({
+        successCount: 0,
+        invalidCount: mappedData.length,
+        failedRows: [{ index: 0, reason: err.message || "Network error during upload" }]
+      });
     }
 
-    setImportResult({ successCount, invalidCount, failedRows });
     setCurrentStep("summary");
   };
 

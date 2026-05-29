@@ -80,8 +80,14 @@ export function InvoiceLineItems({ items, onChangeQuantity, onRemove, disabled }
                     variant="outline"
                     size="icon"
                     className="h-7 w-7 rounded-full"
-                    disabled={disabled || quantity <= 1}
-                    onClick={() => onChangeQuantity(product.id, quantity - 1)}
+                    disabled={disabled}
+                    onClick={() => {
+                      if (quantity <= 1) {
+                        onRemove(product.id);
+                      } else {
+                        onChangeQuantity(product.id, quantity - 1);
+                      }
+                    }}
                   >
                     <Minus className="h-3 w-3" />
                   </Button>
@@ -92,8 +98,11 @@ export function InvoiceLineItems({ items, onChangeQuantity, onRemove, disabled }
                     min={1}
                     disabled={disabled}
                     onChange={(e) => {
+                      if (e.target.value === "") return; // Allow intermediate empty state during typing
                       const val = parseInt(e.target.value);
-                      if (!isNaN(val) && val > 0) {
+                      if (val === 0) {
+                        onRemove(product.id);
+                      } else if (!isNaN(val) && val > 0) {
                         onChangeQuantity(product.id, val);
                       }
                     }}

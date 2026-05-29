@@ -22,6 +22,7 @@ export default function OrdersListingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("all");
   
   // Sorting
   const [sortBy, setSortBy] = useState("date");
@@ -44,6 +45,7 @@ export default function OrdersListingPage() {
         search: searchQuery,
         status: statusFilter,
         paymentStatus: paymentStatusFilter,
+        deliveryStatus: deliveryStatusFilter,
         sortBy,
         sortDirection,
       });
@@ -59,7 +61,7 @@ export default function OrdersListingPage() {
   useEffect(() => {
     const timer = setTimeout(fetchOrders, 300);
     return () => clearTimeout(timer);
-  }, [currentPage, pageSize, searchQuery, statusFilter, paymentStatusFilter, sortBy, sortDirection]);
+  }, [currentPage, pageSize, searchQuery, statusFilter, paymentStatusFilter, deliveryStatusFilter, sortBy, sortDirection]);
 
   // Bulk Actions
   const handleSelectToggle = (id: number) => {
@@ -136,10 +138,13 @@ export default function OrdersListingPage() {
           onStatusChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}
           paymentStatusFilter={paymentStatusFilter}
           onPaymentStatusChange={(v) => { setPaymentStatusFilter(v); setCurrentPage(1); }}
+          deliveryStatusFilter={deliveryStatusFilter}
+          onDeliveryStatusChange={(v) => { setDeliveryStatusFilter(v); setCurrentPage(1); }}
           onClearFilters={() => {
             setSearchQuery("");
             setStatusFilter("all");
             setPaymentStatusFilter("all");
+            setDeliveryStatusFilter("all");
             setCurrentPage(1);
           }}
         />
@@ -167,6 +172,14 @@ export default function OrdersListingPage() {
               <OrderTable 
                 orders={orders} 
                 onDelete={handleDeleteSingle}
+                onDeliveryStatusChange={async (id, status) => {
+                  try {
+                    await OrderService.updateDeliveryStatus(id, status);
+                    await fetchOrders();
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
                 selectedIds={selectedIds}
                 onSelectToggle={handleSelectToggle}
                 onSelectAll={handleSelectAll}

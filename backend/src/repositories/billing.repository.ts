@@ -14,11 +14,14 @@ export class BillingRepository {
       params.page ? parseInt(params.page, 10) : undefined,
       params.limit ? parseInt(params.limit, 10) : undefined
     );
-    const { search, status, paymentStatus, sortBy, sortDirection } = params;
+    const { search, status, paymentStatus, deliveryStatus, sortBy, sortDirection } = params;
 
     const conditions = [];
     if (paymentStatus && paymentStatus !== 'all') {
       conditions.push(eq(invoices.paymentStatus, paymentStatus));
+    }
+    if (deliveryStatus && deliveryStatus !== 'all') {
+      conditions.push(eq(invoices.deliveryStatus, deliveryStatus));
     }
 
     if (search) {
@@ -63,6 +66,7 @@ export class BillingRepository {
       grandTotal: invoices.grandTotal,
       amountPaid: invoices.amountPaid,
       paymentStatus: invoices.paymentStatus,
+      deliveryStatus: invoices.deliveryStatus,
       status: sql<string>`'COMPLETED'`.as('status'),
       itemCount: sql<number>`COALESCE(${itemCountsSq.itemCount}, 0)`.as('itemCount'),
       createdAt: invoices.createdAt,
@@ -109,6 +113,15 @@ export class BillingRepository {
     const [result] = await dbClient
       .update(invoices)
       .set({ paymentStatus, amountPaid })
+      .where(eq(invoices.id, id))
+      .returning();
+    return result;
+  }
+
+  static async updateInvoiceDeliveryStatus(id: number, deliveryStatus: any, dbClient: DbOrTx = db) {
+    const [result] = await dbClient
+      .update(invoices)
+      .set({ deliveryStatus })
       .where(eq(invoices.id, id))
       .returning();
     return result;
@@ -186,6 +199,7 @@ export class BillingRepository {
       grandTotal: invoice.grandTotal,
       amountPaid: invoice.amountPaid,
       paymentStatus: invoice.paymentStatus,
+      deliveryStatus: invoice.deliveryStatus,
       status: 'COMPLETED',
       notes: invoice.notes,
       createdAt: invoice.createdAt,

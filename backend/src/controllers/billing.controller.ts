@@ -17,8 +17,11 @@ export class BillingController {
   static async checkout(req: Request, res: Response, next: NextFunction) {
     try {
       const cashierId = req.user!.id;
+      const requestId = req.params.id; // From URL: /invoices/:id/checkout
+
       const payload = {
         ...req.body,
+        requestId,
         createdBy: cashierId
       };
       const result = await billingService.checkout(payload);
@@ -34,6 +37,22 @@ export class BillingController {
       const { amount, paymentMethod, referenceNumber } = req.body;
       const result = await billingService.addPayment(invoiceId, amount, paymentMethod, referenceNumber);
       res.status(201).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateDeliveryStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const invoiceId = parseInt(req.params.id, 10);
+      const { deliveryStatus } = req.body;
+      
+      if (!['PENDING', 'READY', 'DELIVERED'].includes(deliveryStatus)) {
+        throw new ValidationError('Invalid delivery status');
+      }
+
+      const result = await billingService.updateDeliveryStatus(invoiceId, deliveryStatus as any);
+      res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
     }

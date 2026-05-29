@@ -111,9 +111,11 @@ export default function SalesReportPage() {
             <SalesOverviewCards data={{
               totalSales: salesData.kpis.totalSales,
               revenue: salesData.kpis.revenue,
+              totalInvoices: salesData.kpis.totalInvoices,
               ordersCompleted: salesData.kpis.paidInvoices,
+              unpaidInvoices: salesData.kpis.unpaidInvoices,
+              partialInvoices: salesData.kpis.partialInvoices,
               averageOrderValue: salesData.kpis.averageInvoiceValue,
-              growth: 0, // Not explicitly tracked in backend KPI right now
             }} />
             
             <SalesTrendChart data={trendData} groupBy={groupBy} />

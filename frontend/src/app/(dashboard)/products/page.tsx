@@ -40,7 +40,7 @@ export default function ProductsPage() {
   const { state, updateState, clearFilters } = useProductUrlState();
   
   // We fetch ALL products, then filter locally to guarantee advanced filters work if backend lacks support
-  const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiProduct[] }>("/products");
+  const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiProduct[] }>("/products?limit=5000");
   const { data: catResponse } = useFetch<{ success: boolean, data: ApiCategory[] }>("/categories");
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
 
@@ -95,7 +95,7 @@ export default function ProductsPage() {
     // Stock Status
     if (state.stockStatus !== "all") {
       result = result.filter(p => {
-        const { status } = calculateStockStatus((p as any).currentStock, p.minStockAlert);
+        const { status } = calculateStockStatus(p.stock ?? (p as any).currentStock, p.minStockAlert);
         if (state.stockStatus === "in-stock") return status === "IN_STOCK";
         if (state.stockStatus === "low-stock") return status === "LOW_STOCK";
         if (state.stockStatus === "out-of-stock") return status === "OUT_OF_STOCK";
@@ -143,9 +143,9 @@ export default function ProductsPage() {
         case "price-desc":
           return (b.sellingPrice || 0) - (a.sellingPrice || 0);
         case "stock-asc":
-          return ((a as any).currentStock || 0) - ((b as any).currentStock || 0);
+          return ((a.stock ?? (a as any).currentStock) || 0) - ((b.stock ?? (b as any).currentStock) || 0);
         case "stock-desc":
-          return ((b as any).currentStock || 0) - ((a as any).currentStock || 0);
+          return ((b.stock ?? (b as any).currentStock) || 0) - ((a.stock ?? (a as any).currentStock) || 0);
         default:
           return 0;
       }
@@ -155,7 +155,7 @@ export default function ProductsPage() {
   }, [products, state]);
 
   const stockCounts = filteredProducts.reduce((acc, product) => {
-    const { status } = calculateStockStatus((product as any).currentStock, product.minStockAlert);
+    const { status } = calculateStockStatus(product.stock ?? (product as any).currentStock, product.minStockAlert);
     acc.total += 1;
     if (status === "IN_STOCK") acc.healthy += 1;
     if (status === "LOW_STOCK") acc.lowStock += 1;
@@ -278,7 +278,7 @@ export default function ProductsPage() {
 
   const handleQuickStockUpdate = (product: ApiProduct) => {
     setStockUpdateProduct(product);
-    const current = (product as any).currentStock ?? product.minStockAlert ?? 0;
+    const current = product.stock ?? (product as any).currentStock ?? product.minStockAlert ?? 0;
     setNewStockValue(current.toString());
   };
 

@@ -6,8 +6,10 @@ interface SalesOverviewProps {
   totalSales: number;
   revenue: number;
   ordersCompleted: number;
+  unpaidInvoices: number;
+  partialInvoices: number;
+  totalInvoices: number;
   averageOrderValue: number;
-  growth: number;
 }
 
 export function SalesOverviewCards({ data }: { data: SalesOverviewProps }) {
@@ -39,7 +41,10 @@ export function SalesOverviewCards({ data }: { data: SalesOverviewProps }) {
           <ShoppingCart className="h-4 w-4 text-blue-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{data.ordersCompleted}</div>
+          <div className="text-2xl font-bold">{data.totalInvoices}</div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {data.ordersCompleted} Paid Invoices
+          </p>
         </CardContent>
       </Card>
       
@@ -55,11 +60,14 @@ export function SalesOverviewCards({ data }: { data: SalesOverviewProps }) {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Growth</CardTitle>
-          <TrendingUp className="h-4 w-4 text-indigo-600" />
+          <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
+          <TrendingUp className="h-4 w-4 text-orange-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-indigo-600">+{data.growth}%</div>
+          <div className="text-2xl font-bold text-orange-600">{data.unpaidInvoices + data.partialInvoices}</div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {data.unpaidInvoices} Unpaid, {data.partialInvoices} Partial
+          </p>
         </CardContent>
       </Card>
     </div>

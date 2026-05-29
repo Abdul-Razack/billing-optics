@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -18,21 +19,22 @@ import {
 import { cn } from "@/lib/utils";
 
 export const NAV_ITEMS = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Sales / Invoices", href: "/invoices", icon: FileText },
-  { name: "Customers", href: "/customers", icon: Users },
-  { name: "Products", href: "/products", icon: Package },
-  { name: "Inventory", href: "/inventory", icon: Boxes },
-  { name: "Prescriptions", href: "/prescriptions", icon: Stethoscope },
-  { name: "Payments", href: "/payments", icon: CreditCard },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Users", href: "/users", icon: UserCog },
-  { name: "Custom Fields", href: "/custom-fields", icon: FormInput },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Dashboard", href: "/", icon: LayoutDashboard, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+  { name: "Sales / Invoices", href: "/invoices", icon: FileText, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+  { name: "Customers", href: "/customers", icon: Users, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+  { name: "Products", href: "/products", icon: Package, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+  { name: "Inventory", href: "/inventory", icon: Boxes, roles: ["ADMIN", "OPTOMETRIST"] },
+  { name: "Prescriptions", href: "/prescriptions", icon: Stethoscope, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] }, // Note: cashier can view but not create
+  { name: "Payments", href: "/payments", icon: CreditCard, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+  { name: "Reports", href: "/reports", icon: BarChart3, roles: ["ADMIN", "OPTOMETRIST"] },
+  { name: "Users", href: "/users", icon: UserCog, roles: ["ADMIN"] },
+  { name: "Custom Fields", href: "/custom-fields", icon: FormInput, roles: ["ADMIN"] },
+  { name: "Settings", href: "/settings", icon: Settings, roles: ["ADMIN"] },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <aside className="w-56 bg-card border-r border-border min-h-screen flex flex-col transition-all duration-300">
@@ -40,7 +42,7 @@ export function Sidebar() {
         <span className="font-bold text-lg text-primary tracking-tight">Optics ERP</span>
       </div>
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter(item => !user || item.roles.includes(user.role)).map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link

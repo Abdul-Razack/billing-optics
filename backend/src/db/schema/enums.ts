@@ -7,3 +7,4 @@ export const movementTypeEnum = pgEnum('movement_type', ['PURCHASE', 'SALE', 'RE
 export const paymentStatusEnum = pgEnum('payment_status', ['UNPAID', 'PARTIAL', 'PAID', 'REFUNDED']);
 export const referenceTypeEnum = pgEnum('reference_type', ['INVOICE', 'PURCHASE', 'RETURN', 'ADJUSTMENT']);
 export const genderEnum = pgEnum('gender', ['MALE', 'FEMALE', 'OTHER']);
+export const deliveryStatusEnum = pgEnum('delivery_status', ['PENDING', 'READY', 'DELIVERED']);

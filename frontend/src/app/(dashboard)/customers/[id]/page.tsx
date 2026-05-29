@@ -11,7 +11,8 @@ import { ShoppingBag, Calendar, DollarSign, Loader2, FileText } from "lucide-rea
 import { useFetch } from "@/hooks/useApi";
 import { ApiCustomer } from "@/types/customer";
 import { ApiSettings } from "@/services/settings.service";
-import { DataTablePlaceholder } from "@/components/tables/DataTablePlaceholder";
+import { OrderService } from "@/services/order.service";
+import { OrderTable } from "@/components/orders/OrderTable";
 
 interface CustomerWithDetails extends ApiCustomer {
   prescriptions?: any[];
@@ -21,8 +22,9 @@ interface CustomerWithDetails extends ApiCustomer {
 export default function CustomerProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   
-  const { data: response, isLoading, error } = useFetch<{ success: boolean; data: CustomerWithDetails }>(
-    resolvedParams.id && resolvedParams.id !== "undefined" ? `/customers/${resolvedParams.id}?includePrescriptions=true` : null
+  const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean; data: CustomerWithDetails }>(
+    resolvedParams.id && resolvedParams.id !== "undefined" ? `/customers/${resolvedParams.id}?includePrescriptions=true` : "",
+    { enabled: !!(resolvedParams.id && resolvedParams.id !== "undefined") }
   );
   const { data: settingsResponse } = useFetch<{ success: boolean; data: ApiSettings }>('/settings');
   
@@ -169,7 +171,21 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
             title="Purchase History" 
             description="Recent invoices and orders for this customer."
           >
-            <DataTablePlaceholder />
+            <OrderTable 
+              orders={invoices} 
+              sortBy="date"
+              sortDirection="desc"
+              onSort={() => {}}
+              onDeliveryStatusChange={async (id, status) => {
+                try {
+                  await OrderService.updateDeliveryStatus(id, status);
+                  // Refresh data seamlessly
+                  refetch();
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            />
           </CustomerCard>
         </TabsContent>
 

@@ -100,28 +100,42 @@ export function ProductOrderSelector({ onAdd, disabled }: ProductOrderSelectorPr
                 // In a real app we'd fetch live stock here or it would be included in the product response
                 // The current API doesn't return stock in getProducts directly if we rely on inventory module, 
                 // but let's assume `stock` might be passed or we just show the price
+                const stock = product.stock ?? 0;
+                const isOutOfStock = stock <= 0;
+                const isLowStock = stock > 0 && stock <= (product.minStockAlert || 5);
+
                 return (
                   <CommandItem
                     key={product.id}
                     value={product.id.toString()}
-                    onSelect={() => handleSelect(product)}
-                    className="cursor-pointer py-3"
+                    onSelect={() => !isOutOfStock && handleSelect(product)}
+                    className={`py-3 ${isOutOfStock ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                    disabled={isOutOfStock}
                   >
                     <div className="flex flex-col flex-1 gap-1">
                       <div className="flex justify-between items-start">
                         <span className="font-medium text-foreground">{product.name}</span>
                         <span className="font-bold text-primary">{formatCurrency(product.sellingPrice)}</span>
                       </div>
-                      <div className="flex justify-between items-center text-xs">
+                      <div className="flex flex-wrap justify-between items-center text-xs gap-2 mt-1">
                         <span className="text-muted-foreground">SKU: {product.sku}</span>
-                        {product.gstPercent > 0 && (
-                          <Badge variant="outline" className="text-[10px] h-4 py-0 px-1">
-                            +{product.gstPercent}% Tax
-                          </Badge>
-                        )}
+                        <div className="flex gap-2">
+                          {isOutOfStock ? (
+                            <Badge variant="destructive" className="text-[10px] h-4 py-0 px-1">Out of Stock</Badge>
+                          ) : isLowStock ? (
+                            <Badge variant="secondary" className="text-[10px] h-4 py-0 px-1 text-orange-600 bg-orange-100 border-orange-200">Low Stock: {stock}</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] h-4 py-0 px-1 text-emerald-600 bg-emerald-50 border-emerald-200">In Stock: {stock}</Badge>
+                          )}
+                          {product.gstPercent > 0 && (
+                            <Badge variant="outline" className="text-[10px] h-4 py-0 px-1">
+                              +{product.gstPercent}% Tax
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <PlusCircle className="ml-3 h-5 w-5 text-muted-foreground opacity-50 hover:opacity-100 shrink-0" />
+                    {!isOutOfStock && <PlusCircle className="ml-3 h-5 w-5 text-muted-foreground opacity-50 hover:opacity-100 shrink-0" />}
                   </CommandItem>
                 );
               })}

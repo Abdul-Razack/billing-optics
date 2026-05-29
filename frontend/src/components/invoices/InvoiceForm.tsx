@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +17,7 @@ import { CheckCircle } from "lucide-react";
 
 export function InvoiceForm() {
   const router = useRouter();
+  const sessionIdRef = React.useRef<string>(`SESS-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
 
   // POS State
   const [customerId, setCustomerId] = useState<string>("");
@@ -89,7 +90,7 @@ export function InvoiceForm() {
       const payload = {
         customerId: customerId !== "walkin" ? parseInt(customerId) : undefined,
         items: items.map(i => ({
-          productId: i.productId,
+          productId: Number(i.productId),
           quantity: i.quantity
         })),
         payments: paymentAmount > 0 ? [{
@@ -99,8 +100,8 @@ export function InvoiceForm() {
         }] : undefined
       };
 
-      const invoice = await OrderService.createOrder("new", payload);
-      router.push(`/orders/${invoice.id}`);
+      const invoice = await OrderService.createOrder(sessionIdRef.current, payload);
+      router.push(`/orders/${invoice.invoiceId}`);
     } catch (error) {
       console.error("Checkout failed:", error);
       // In a real app we'd show a toast error here
@@ -183,7 +184,7 @@ export function InvoiceForm() {
 
         <div className="flex gap-4 pt-2">
           <Button type="button" variant="outline" size="lg" className="w-1/3" onClick={() => router.back()}>Cancel</Button>
-          <Button type="submit" size="lg" className="w-2/3 text-base shadow-md disabled:opacity-50" disabled={items.length === 0}>
+          <Button type="submit" size="lg" className="w-2/3 text-base shadow-md disabled:opacity-50" disabled={isSubmitting || items.length === 0}>
             <CheckCircle className="mr-2 h-5 w-5" />
             Complete Sale
           </Button>

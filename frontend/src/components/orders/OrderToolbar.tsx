@@ -22,6 +22,8 @@ interface OrderToolbarProps {
   onStatusChange: (value: string) => void;
   paymentStatusFilter: string;
   onPaymentStatusChange: (value: string) => void;
+  deliveryStatusFilter: string;
+  onDeliveryStatusChange: (value: string) => void;
   onClearFilters: () => void;
 }
 
@@ -32,9 +34,11 @@ export function OrderToolbar({
   onStatusChange,
   paymentStatusFilter,
   onPaymentStatusChange,
+  deliveryStatusFilter,
+  onDeliveryStatusChange,
   onClearFilters,
 }: OrderToolbarProps) {
-  const activeFilterCount = (statusFilter !== "all" ? 1 : 0) + (paymentStatusFilter !== "all" ? 1 : 0);
+  const activeFilterCount = (statusFilter !== "all" ? 1 : 0) + (paymentStatusFilter !== "all" ? 1 : 0) + (deliveryStatusFilter !== "all" ? 1 : 0);
 
   return (
     <div className="flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center w-full">
@@ -84,6 +88,21 @@ export function OrderToolbar({
                     <SelectItem value="PAID">Paid</SelectItem>
                     <SelectItem value="UNPAID">Unpaid (Pending)</SelectItem>
                     <SelectItem value="PARTIAL">Partial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm leading-none">Delivery Status</h4>
+                <Select value={deliveryStatusFilter} onValueChange={(v) => { if (v) onDeliveryStatusChange(v); }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Deliveries" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Deliveries</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="READY">Ready for Pickup</SelectItem>
+                    <SelectItem value="DELIVERED">Delivered</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

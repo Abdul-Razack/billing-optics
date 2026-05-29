@@ -38,3 +38,74 @@ export interface Invoice {
   payments: Payment[];
   notes?: string;
 }
+
+export interface ApiInvoice {
+  id: number;
+  invoiceNumber: string;
+  customerId: number;
+  customerName: string;
+  createdBy: number;
+  subtotal: number;
+  taxTotal: number;
+  discountTotal: number;
+  grandTotal: number;
+  amountPaid: number;
+  paymentStatus: string;
+  status: string;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaginatedApiInvoiceResponse {
+  data: ApiInvoice[];
+  meta: {
+    totalRecords: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+  };
+}
+
+export interface ApiInvoiceDetail {
+  id: number;
+  invoiceNumber: string;
+  subtotal: number;
+  taxTotal: number;
+  discountTotal: number;
+  grandTotal: number;
+  amountPaid: number;
+  paymentStatus: string;
+  status: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  customer: {
+    id: number;
+    name: string;
+    phone: string;
+    email: string | null;
+    address: string | null;
+  } | null;
+  items: {
+    productId: number;
+    snapshotSku: string;
+    snapshotName: string;
+    quantity: number;
+    unitPrice: number;
+    gstPercent: number;
+    subtotal: number;
+  }[];
+  payments: {
+    amount: number;
+    paymentMethod: string;
+    referenceNumber: string | null;
+    notes: string | null;
+    createdAt: string;
+  }[];
+  createdBy: {
+    id: number;
+    fullName: string;
+    role: string;
+  };
+}

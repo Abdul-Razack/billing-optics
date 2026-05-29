@@ -46,27 +46,27 @@ export async function fetchClient<T>(endpoint: string, options: FetchOptions = {
     }
   }
 
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
+  const headers: Record<string, string> = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...customHeaders,
+    ...(customHeaders as Record<string, string> || {}),
   };
 
   const config: RequestInit = {
     method: data ? "POST" : "GET",
-    headers,
     ...rest,
   };
 
   if (data) {
+    headers["Content-Type"] = "application/json";
     config.body = JSON.stringify(data);
   }
+
+  config.headers = headers;
 
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   let response: Response;
   try {
-    console.log("FETCHING API:", { url, config });
     response = await fetch(url, config);
   } catch (error: any) {
     if (error.name === "AbortError") {

@@ -9,10 +9,14 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./Sidebar";
 import { useState } from "react";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { Badge } from "@/components/ui/badge";
+import { WifiOff } from "lucide-react";
 
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const isOnline = useNetworkStatus();
 
   return (
     <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 md:px-6 shadow-sm sticky top-0 z-30">
@@ -60,6 +64,12 @@ export function Header() {
         </h2>
       </div>
       <div className="flex items-center space-x-4">
+        {!isOnline && (
+          <Badge variant="destructive" className="hidden sm:flex items-center gap-1">
+            <WifiOff className="h-3 w-3" />
+            Offline Mode
+          </Badge>
+        )}
         <UserMenu />
       </div>
     </header>

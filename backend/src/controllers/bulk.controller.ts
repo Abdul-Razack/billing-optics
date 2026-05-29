@@ -4,6 +4,7 @@ import { products, categories } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { parse } from 'csv-parse';
 import * as fs from 'fs';
+import { customers } from '../db/schema/customers';
 
 import { ValidationError, AppError } from '../utils/errors';
 
@@ -126,6 +127,104 @@ export class BulkController {
         try { fs.unlinkSync(req.file.path); } catch (e) {}
       }
       return next(new AppError(500, 'Failed to process CSV file', error.message));
+    }
+  }
+
+  static async uploadCustomers(req: Request, res: Response, next: NextFunction) {
+    if (!req.file) {
+      return next(new ValidationError('No CSV file provided'));
+    }
+
+    try {
+      const results: any[] = [];
+      const parser = fs.createReadStream(req.file.path).pipe(
+        parse({ columns: true, skip_empty_lines: true, trim: true })
+      );
+
+      for await (const row of parser) {
+        results.push(row);
+      }
+
+      fs.unlinkSync(req.file.path);
+
+      let imported = 0;
+      let skipped = 0;
+      let errors = [];
+
+      // Pre-fetch all phones for fast duplicate checking
+      const allCustomers = await db.select({ phone: customers.phone }).from(customers);
+      const existingPhones = new Set(allCustomers.map(c => c.phone));
+
+      for (const [index, row] of results.entries()) {
+        try {
+          const phone = row.phone || row.Phone;
+          if (!phone) {
+            errors.push(`Row ${index + 1}: Missing Phone number`);
+            skipped++;
+            continue;
+          }
+
+          if (existingPhones.has(phone)) {
+            skipped++; // Skip duplicate phone numbers
+            continue;
+          }
+
+          const fullName = row.fullName || row['Full Name'];
+          if (!fullName) {
+            errors.push(`Row ${index + 1}: Missing Full Name for phone ${phone}`);
+            skipped++;
+            continue;
+          }
+
+          const email = row.email || row.Email || null;
+          const genderRaw = (row.gender || row.Gender || '').toUpperCase();
+          const gender = ['MALE', 'FEMALE', 'OTHER'].includes(genderRaw) ? (genderRaw as 'MALE' | 'FEMALE' | 'OTHER') : null;
+          const address = row.address || row.Address || null;
+          const notes = row.notes || row.Notes || null;
+
+          // Extract dynamic custom fields
+          const standardFields = ['fullName', 'Full Name', 'phone', 'Phone', 'email', 'Email', 'gender', 'Gender', 'address', 'Address', 'notes', 'Notes'];
+          const customFields: Record<string, any> = {};
+          
+          for (const key of Object.keys(row)) {
+            if (!standardFields.includes(key) && row[key]) {
+              customFields[key] = row[key];
+            }
+          }
+
+          await db.insert(customers).values({
+            fullName,
+            phone,
+            email,
+            gender,
+            address,
+            notes,
+            customFields,
+            isActive: true
+          });
+
+          existingPhones.add(phone);
+          imported++;
+        } catch (e: any) {
+          errors.push(`Row ${index + 1}: ${e.message}`);
+          skipped++;
+        }
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          imported,
+          skipped,
+          errors
+        }
+      });
+    } catch (error: any) {
+      console.error('Customer CSV Processing Error:', error);
+      if (req.file) {
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
+      }
+      return next(new AppError(500, 'Failed to process Customer CSV file', error.message));
     }
   }
 }

@@ -26,6 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ApiProduct } from "@/services/product.service";
 import { ApiCategory } from "@/services/category.service";
 import { calculateStockStatus } from "@/lib/stock";
+import { formatCurrency } from "@/lib/utils";
 import { TableSkeleton } from "@/components/shared/LoadingSkeletons";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PackageSearch, X, Filter, LayoutGrid, List, Image as ImageIcon, Search } from "lucide-react";
@@ -141,10 +142,7 @@ export function ProductListTable({
       header: "Price",
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue("sellingPrice"));
-        const formatted = new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-        }).format(amount);
+        const formatted = formatCurrency(amount);
         return <div className="font-medium">{formatted}</div>;
       },
     },
@@ -153,7 +151,7 @@ export function ProductListTable({
       header: "Stock",
       cell: ({ row }) => {
         const { currentStock, status } = calculateStockStatus(
-          (row.original as any).currentStock, 
+          row.original.stock ?? (row.original as any).currentStock, 
           row.original.minStockAlert
         );
         return (
@@ -166,7 +164,7 @@ export function ProductListTable({
       filterFn: (row, id, value) => {
         if (value === "all") return true;
         const { status } = calculateStockStatus(
-          (row.original as any).currentStock, 
+          row.original.stock ?? (row.original as any).currentStock, 
           row.original.minStockAlert
         );
         return status === value;
@@ -307,7 +305,7 @@ export function ProductListTable({
                   {table.getRowModel().rows?.length ? (
                     table.getRowModel().rows.map((row) => {
                       const { status } = calculateStockStatus(
-                        (row.original as any).currentStock, 
+                        row.original.stock ?? (row.original as any).currentStock, 
                         row.original.minStockAlert
                       );
                       const isOutOfStock = status === "OUT_OF_STOCK";

@@ -20,6 +20,7 @@ export class OrderService {
     search?: string;
     status?: string;
     paymentStatus?: string;
+    deliveryStatus?: string;
     sortBy?: string;
     sortDirection?: "asc" | "desc";
   }): Promise<{ data: ApiInvoice[]; total: number }> {
@@ -59,8 +60,8 @@ export class OrderService {
   /**
    * REAL: Checkout creates an invoice
    */
-  static async createOrder(id: string, payload: CheckoutPayload): Promise<ApiInvoice> {
-    const response = await fetchClient<{ success: boolean; data: ApiInvoice; }>(`/invoices/${id}/checkout`, {
+  static async createOrder(id: string, payload: CheckoutPayload): Promise<{ invoiceId: number; idempotent?: boolean }> {
+    const response = await fetchClient<{ success: boolean; data: { invoiceId: number; idempotent?: boolean }; }>(`/invoices/${id}/checkout`, {
       method: "POST",
       data: payload,
     });
@@ -81,6 +82,17 @@ export class OrderService {
         paymentMethod: payload.method,
         referenceNumber: payload.reference,
       },
+    });
+    return response.data;
+  }
+
+  /**
+   * REAL: Update delivery status
+   */
+  static async updateDeliveryStatus(id: number, status: string): Promise<ApiInvoice> {
+    const response = await fetchClient<{ success: boolean; data: ApiInvoice; }>(`/invoices/${id}/delivery-status`, {
+      method: "PUT",
+      data: { deliveryStatus: status },
     });
     return response.data;
   }

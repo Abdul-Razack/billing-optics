@@ -2,9 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
-import { ButtonProps } from "@/components/ui/button";
 
-interface PrintButtonProps extends ButtonProps {
+interface PrintButtonProps extends React.ComponentProps<typeof Button> {
   label?: string;
 }
 

@@ -11,7 +11,14 @@ import {
   getCustomersSchema
 } from '../validators/customer.validator';
 
+import { BulkController } from '../controllers/bulk.controller';
+import multer from 'multer';
+
+const upload = multer({ dest: 'uploads/' });
+
 const router = Router();
+
+router.post('/bulk', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), upload.single('file'), BulkController.uploadCustomers);
 
 router.get('/', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), validate(getCustomersSchema), CustomerController.getAll);
 router.get('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), CustomerController.getById);

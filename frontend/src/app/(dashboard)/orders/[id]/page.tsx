@@ -182,16 +182,6 @@ export default function OrderDetailsPage() {
               />
             </div>
             
-            {/* Screen-reader only off-screen container for PDF export if not printing */}
-            <div className="absolute top-[-9999px] left-[-9999px] print:hidden">
-              <PrintableInvoice 
-                ref={printRef}
-                invoice={invoice} 
-                customer={customer} 
-                lineItems={printableLineItems} 
-              />
-            </div>
-            
             <PaymentEntryModal 
               open={paymentModalOpen} 
               onOpenChange={setPaymentModalOpen} 

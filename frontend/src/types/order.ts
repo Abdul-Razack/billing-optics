@@ -1,6 +1,7 @@
 export type PaymentStatus = "UNPAID" | "PARTIAL" | "PAID";
 export type PaymentMethod = "CASH" | "CARD" | "UPI" | "BANK_TRANSFER";
 export type OrderStatus = "DRAFT" | "COMPLETED" | "CANCELLED" | "REFUNDED";
+export type DeliveryStatus = "PENDING" | "READY" | "DELIVERED";
 
 export interface ApiInvoiceLine {
   id: string;
@@ -34,6 +35,7 @@ export interface ApiInvoice {
   grandTotal: number;
   amountPaid: number;
   paymentStatus: PaymentStatus;
+  deliveryStatus?: DeliveryStatus;
   status?: OrderStatus; // Added by frontend for module completeness
   notes?: string;
   createdAt: string;

@@ -1,11 +1,8 @@
 "use client";
 
-import { useRef } from "react";
-import { useParams } from "next/navigation";
+import { use, useRef } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { InvoiceHeader } from "@/components/invoices/InvoiceHeader";
-import { MOCK_INVOICES } from "@/lib/mock-invoice-data";
-import { MOCK_CUSTOMERS } from "@/lib/mock-customer-data";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvoiceSummary } from "@/components/invoices/InvoiceSummary";
@@ -19,12 +16,22 @@ import {
 } from "@/components/ui/table";
 import { CustomerCard } from "@/components/customers/CustomerCard";
 import { PrintableReceipt } from "@/components/invoices/PrintableReceipt";
+import { useFetch } from "@/hooks/useApi";
+import { ApiInvoiceDetail, Invoice } from "@/types/invoice";
+import { ApiSettings } from "@/services/settings.service";
 
-export default function InvoiceDetailPage() {
-  const params = useParams() as { id: string };
+export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const printRef = useRef<HTMLDivElement>(null);
+
+  const { data: response, isLoading, error } = useFetch<{ success: boolean, data: ApiInvoiceDetail }>(
+    id && id !== "undefined" ? `/invoices/${id}` : "",
+    { enabled: !!(id && id !== "undefined") }
+  );
+
+  const { data: settingsResponse } = useFetch<{ success: boolean, data: ApiSettings }>("/settings", { enabled: true });
   
-  if (!params.id || params.id === "undefined") {
+  if (!id || id === "undefined") {
     return (
       <PageContainer title="Invoices">
         <EmptyState title="Invalid Invoice ID" description="The invoice ID provided is invalid." />
@@ -32,17 +39,69 @@ export default function InvoiceDetailPage() {
     );
   }
 
-  const invoice = MOCK_INVOICES.find(i => i.id === params.id);
-
-  if (!invoice) {
+  if (isLoading) {
     return (
-      <PageContainer title="Invoices">
-        <EmptyState title="Invoice Not Found" description="The invoice you are trying to view does not exist." />
+      <PageContainer title="Invoice Details">
+        <div className="flex items-center justify-center p-12 text-muted-foreground">
+          Loading invoice details...
+        </div>
       </PageContainer>
     );
   }
 
-  const customer = MOCK_CUSTOMERS.find(c => c.id === invoice.customerId);
+  if (error || !response?.data) {
+    return (
+      <PageContainer title="Invoices">
+        <EmptyState title="Invoice Not Found" description="The invoice you are trying to view does not exist or failed to load." />
+      </PageContainer>
+    );
+  }
+
+  const apiData = response.data;
+
+  // Adapter from ApiInvoiceDetail to legacy Invoice interface
+  const invoice: Invoice = {
+    id: String(apiData.id),
+    invoiceNumber: apiData.invoiceNumber,
+    customerId: apiData.customer?.id ? String(apiData.customer.id) : "",
+    date: apiData.createdAt,
+    items: apiData.items.map((item, idx) => ({
+      id: String(idx),
+      productId: String(item.productId),
+      productName: item.snapshotName,
+      sku: item.snapshotSku,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice / 100, // DB stores in cents
+      total: item.subtotal / 100,
+    })),
+    subtotal: apiData.subtotal / 100,
+    gstTotal: apiData.taxTotal / 100,
+    discountTotal: apiData.discountTotal / 100,
+    grandTotal: apiData.grandTotal / 100,
+    amountPaid: apiData.amountPaid / 100,
+    status: apiData.status as "DRAFT" | "COMPLETED" | "CANCELLED",
+    paymentStatus: apiData.paymentStatus as "PENDING" | "PARTIAL" | "PAID",
+    payments: apiData.payments.map((p, idx) => ({
+      id: String(idx),
+      date: p.createdAt,
+      amount: p.amount / 100,
+      method: p.paymentMethod as "CASH" | "CARD" | "UPI" | "BANK_TRANSFER",
+      referenceNumber: p.referenceNumber || undefined,
+      notes: p.notes || undefined,
+    })),
+    notes: apiData.notes || undefined,
+  };
+
+  const customer = apiData.customer ? {
+    id: String(apiData.customer.id),
+    fullName: apiData.customer.name,
+    phone: apiData.customer.phone,
+    email: apiData.customer.email || "",
+    address: apiData.customer.address || "",
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  } : undefined;
 
   return (
     <>
@@ -91,6 +150,7 @@ export default function InvoiceDetailPage() {
                     gstTotal={invoice.gstTotal}
                     discountTotal={invoice.discountTotal}
                     grandTotal={invoice.grandTotal}
+                    amountPaid={invoice.amountPaid}
                   />
                 </div>
               </div>
@@ -173,7 +233,9 @@ export default function InvoiceDetailPage() {
         </PageContainer>
       </div>
 
-      <PrintableReceipt ref={printRef} invoice={invoice} customer={customer} />
+      <div className="hidden">
+        <PrintableReceipt ref={printRef} invoice={invoice} customer={customer} settings={settingsResponse?.data} />
+      </div>
     </>
   );
 }

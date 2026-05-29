@@ -33,6 +33,13 @@ router.post(
   BillingController.addPayment
 );
 
+router.put(
+  '/:id/delivery-status',
+  authenticate,
+  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+  BillingController.updateDeliveryStatus
+);
+
 router.get(
   '/:id',
   authenticate,

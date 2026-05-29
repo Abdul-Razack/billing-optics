@@ -34,9 +34,13 @@ export function PaymentForm() {
     },
   });
 
-  const onSubmit = (values: PaymentValues) => {
-    console.log("Mock Payment Recorded:", values);
-    router.push("/payments");
+  const onSubmit = async (values: PaymentValues) => {
+    try {
+      // API call to record payment would go here
+      router.push("/payments");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (

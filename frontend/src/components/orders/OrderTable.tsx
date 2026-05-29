@@ -2,9 +2,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ApiInvoice } from "@/types/order";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
+import { DeliveryStatusBadge } from "./DeliveryStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MoreHorizontal, Eye, Edit, Trash2, ArrowUpDown, Copy, Printer, Download } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2, ArrowUpDown, Copy, Printer, Download, Truck } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -20,9 +21,10 @@ import { formatCurrency } from "@/lib/utils";
 interface OrderTableProps {
   orders: ApiInvoice[];
   onDelete?: (id: number) => void;
-  selectedIds: number[];
-  onSelectToggle: (id: number) => void;
-  onSelectAll: (checked: boolean) => void;
+  onDeliveryStatusChange?: (id: number, status: "PENDING" | "READY" | "DELIVERED") => void;
+  selectedIds?: number[];
+  onSelectToggle?: (id: number) => void;
+  onSelectAll?: (checked: boolean) => void;
   sortBy: string;
   sortDirection: "asc" | "desc";
   onSort: (column: string) => void;
@@ -31,6 +33,7 @@ interface OrderTableProps {
 export function OrderTable({ 
   orders, 
   onDelete,
+  onDeliveryStatusChange,
   selectedIds,
   onSelectToggle,
   onSelectAll,
@@ -47,8 +50,9 @@ export function OrderTable({
     );
   }
 
-  const allSelected = orders.length > 0 && selectedIds.length === orders.length;
-  const someSelected = selectedIds.length > 0 && selectedIds.length < orders.length;
+  const allSelected = orders.length > 0 && selectedIds && selectedIds.length === orders.length;
+  const someSelected = selectedIds && selectedIds.length > 0 && selectedIds.length < orders.length;
+  const showSelection = !!onSelectToggle && !!selectedIds;
 
   const SortableHeader = ({ column, label, align = "left" }: { column: string, label: string, align?: "left" | "right" }) => (
     <TableHead className={align === "right" ? "text-right" : ""}>
@@ -68,37 +72,42 @@ export function OrderTable({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
-            <TableHead className="w-12">
-              <Checkbox 
-                checked={allSelected}
-                onCheckedChange={(checked) => onSelectAll(!!checked)}
-                aria-label="Select all"
-              />
-            </TableHead>
+            {showSelection && (
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={allSelected}
+                  onCheckedChange={(checked) => onSelectAll?.(!!checked)}
+                  aria-label="Select all"
+                />
+              </TableHead>
+            )}
             <SortableHeader column="date" label="Invoice / Date" />
             <SortableHeader column="customer" label="Customer" />
             <TableHead className="text-center">Items</TableHead>
             <SortableHeader column="amount" label="Total Amount" align="right" />
             <TableHead>Payment</TableHead>
+            <TableHead>Delivery</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {orders.map((order) => {
-            const isSelected = selectedIds.includes(order.id);
+            const isSelected = selectedIds?.includes(order.id) || false;
             return (
               <TableRow 
                 key={order.id} 
                 className={`hover:bg-muted/50 transition-colors ${isSelected ? "bg-primary/5" : ""}`}
               >
-                <TableCell>
-                  <Checkbox 
-                    checked={isSelected}
-                    onCheckedChange={() => onSelectToggle(order.id)}
-                    aria-label={`Select order ${order.invoiceNumber}`}
-                  />
-                </TableCell>
+                {showSelection && (
+                  <TableCell>
+                    <Checkbox 
+                      checked={isSelected}
+                      onCheckedChange={() => onSelectToggle?.(order.id)}
+                      aria-label={`Select order ${order.invoiceNumber}`}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-medium text-foreground">{order.invoiceNumber}</span>
@@ -127,6 +136,9 @@ export function OrderTable({
                 </TableCell>
                 <TableCell>
                   <PaymentStatusBadge status={order.paymentStatus} />
+                </TableCell>
+                <TableCell>
+                  <DeliveryStatusBadge status={order.deliveryStatus} />
                 </TableCell>
                 <TableCell>
                   <OrderStatusBadge status={order.status || "COMPLETED"} />
@@ -164,6 +176,21 @@ export function OrderTable({
                         <DropdownMenuItem onClick={() => {}}>
                           <Download className="mr-2 h-4 w-4" /> Download PDF
                         </DropdownMenuItem>
+
+                        {onDeliveryStatusChange && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => onDeliveryStatusChange(order.id, 'PENDING')}>
+                              <Truck className="mr-2 h-4 w-4" /> Mark as Pending
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onDeliveryStatusChange(order.id, 'READY')}>
+                              <Truck className="mr-2 h-4 w-4 text-blue-500" /> Mark as Ready
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onDeliveryStatusChange(order.id, 'DELIVERED')}>
+                              <Truck className="mr-2 h-4 w-4 text-emerald-500" /> Mark as Delivered
+                            </DropdownMenuItem>
+                          </>
+                        )}
 
                         {onDelete && (
                           <>

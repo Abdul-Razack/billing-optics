@@ -33,7 +33,7 @@ export default function PaymentListPage() {
     <PageContainer title="Payments" description="Manage incoming payments and transaction history.">
       <ProductHeader 
         title="Payment Records" 
-        action={{ label: "Record Payment", href: "/payments/new" }}
+        action={{ label: "Record Payment", href: "/invoices?paymentStatus=UNPAID" }}
       >
         <Button variant="outline" asChild className="mr-2">
           <Link href="/payments/pending">

@@ -18,16 +18,20 @@ import {
 import { CustomerService } from "@/services/customer.service";
 import { ApiCustomer } from "@/types/customer";
 import { useDebounce } from "@/hooks/use-debounce";
+import { CustomerQuickAddModal } from "./CustomerQuickAddModal";
+import { PlusCircle } from "lucide-react";
 
 interface CustomerSelectorProps {
   value: number | undefined;
+  customer?: ApiCustomer | null;
   onChange: (customerId: number | undefined, customer: ApiCustomer | null) => void;
   error?: boolean;
   disabled?: boolean;
 }
 
-export function CustomerSelector({ value, onChange, error, disabled }: CustomerSelectorProps) {
+export function CustomerSelector({ value, customer, onChange, error, disabled }: CustomerSelectorProps) {
   const [open, setOpen] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [customers, setCustomers] = useState<ApiCustomer[]>([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
@@ -52,11 +56,45 @@ export function CustomerSelector({ value, onChange, error, disabled }: CustomerS
     };
   }, [debouncedSearch]);
 
-  const selectedCustomer = customers.find((c) => c.id === value);
-  // Also we might need to fetch the initial selected customer if they are not in the list,
-  // but for create-invoice, it starts empty, so we don't strictly need it.
+  const selectedCustomer = customers.find((c) => c.id === value) || customer;
+  
+  const sortedCustomers = [...customers].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  
+  const RECENT_THRESHOLD = 48 * 60 * 60 * 1000; // 48 hours
+  const now = Date.now();
+  
+  const recentCustomers = sortedCustomers.filter(c => (now - new Date(c.createdAt).getTime()) < RECENT_THRESHOLD);
+  const existingCustomers = sortedCustomers.filter(c => (now - new Date(c.createdAt).getTime()) >= RECENT_THRESHOLD);
+
+  const renderCustomerItem = (c: ApiCustomer) => (
+    <CommandItem
+      key={c.id}
+      value={c.id.toString()}
+      onSelect={() => {
+        onChange(c.id, c);
+        setOpen(false);
+      }}
+      className="cursor-pointer"
+    >
+      <div className="flex flex-col">
+        <span className="font-medium">{c.fullName}</span>
+        <span className="text-xs text-muted-foreground">
+          {c.phone || c.email || "No contact info"}
+        </span>
+      </div>
+      <Check
+        className={cn(
+          "ml-auto h-4 w-4 shrink-0",
+          value === c.id ? "opacity-100" : "opacity-0"
+        )}
+      />
+    </CommandItem>
+  );
 
   return (
+    <>
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
@@ -119,34 +157,47 @@ export function CustomerSelector({ value, onChange, error, disabled }: CustomerS
                   )}
                 />
               </CommandItem>
-              {!isLoading && customers.map((customer) => (
-                <CommandItem
-                  key={customer.id}
-                  value={customer.id.toString()}
-                  onSelect={() => {
-                    onChange(customer.id, customer);
-                    setOpen(false);
-                  }}
-                  className="cursor-pointer"
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium">{customer.fullName}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {customer.phone || customer.email || "No contact info"}
-                    </span>
-                  </div>
-                  <Check
-                    className={cn(
-                      "ml-auto h-4 w-4 shrink-0",
-                      value === customer.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                </CommandItem>
-              ))}
             </CommandGroup>
+            
+            {!isLoading && recentCustomers.length > 0 && (
+              <CommandGroup heading="Recently Added">
+                {recentCustomers.map(renderCustomerItem)}
+              </CommandGroup>
+            )}
+
+            {!isLoading && existingCustomers.length > 0 && (
+              <CommandGroup heading={recentCustomers.length > 0 ? "Existing Customers" : "Customers"}>
+                {existingCustomers.map(renderCustomerItem)}
+              </CommandGroup>
+            )}
           </CommandList>
+          
+          <div className="p-2 border-t border-border">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+              onClick={() => {
+                setOpen(false);
+                setShowAddModal(true);
+              }}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create New Customer
+            </Button>
+          </div>
         </Command>
       </PopoverContent>
     </Popover>
+
+    <CustomerQuickAddModal 
+      open={showAddModal} 
+      onOpenChange={setShowAddModal}
+      onSuccess={(newCustomer) => {
+        // Automatically select the new customer
+        setCustomers(prev => [newCustomer, ...prev]);
+        onChange(newCustomer.id, newCustomer);
+      }}
+    />
+    </>
   );
 }

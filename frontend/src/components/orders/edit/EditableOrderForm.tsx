@@ -63,6 +63,7 @@ export function EditableOrderForm({
             <Label>Customer</Label>
             <CustomerSelector 
               value={customerId} 
+              customer={customer}
               onChange={onCustomerChange} 
               disabled={disabled}
             />

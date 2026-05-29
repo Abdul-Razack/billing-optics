@@ -29,9 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loadSession = () => {
       const storedSession = localStorage.getItem("optics_session");
       if (storedSession) {
-        const parsed = JSON.parse(storedSession);
-        if (parsed.user) {
-          setUser(parsed.user);
+        try {
+          const parsed = JSON.parse(storedSession);
+          if (parsed.user) {
+            setUser(parsed.user);
+          }
+        } catch (error) {
+          console.error("Failed to parse session data", error);
+          localStorage.removeItem("optics_session");
         }
       }
       setIsLoading(false);

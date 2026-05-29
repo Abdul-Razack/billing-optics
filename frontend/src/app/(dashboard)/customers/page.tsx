@@ -30,7 +30,7 @@ export default function CustomersPage() {
 
   // We always fetch all customers or search server-side if backend supports it.
   // Currently backend only supports ?search=
-  const customersUrl = state.q ? `/customers?search=${encodeURIComponent(state.q)}` : "/customers";
+  const customersUrl = state.q ? `/customers?search=${encodeURIComponent(state.q)}&limit=5000` : "/customers?limit=5000";
   const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiCustomer[] }>(customersUrl);
   
   const allCustomers = response?.data || [];

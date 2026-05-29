@@ -28,7 +28,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const productId = isValidId ? parseInt(resolvedParams.id, 10) : NaN;
   
   const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiProduct }>(
-    isValidId && !isNaN(productId) ? `/products/${productId}` : null
+    isValidId && !isNaN(productId) ? `/products/${productId}` : "",
+    { enabled: !!(isValidId && !isNaN(productId)) }
   );
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);

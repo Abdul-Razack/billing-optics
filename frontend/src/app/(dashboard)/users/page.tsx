@@ -7,6 +7,7 @@ import { UserTable } from "@/components/users/UserTable";
 import { UserService, User } from "@/services/user.service";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function UsersListPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -34,19 +35,21 @@ export default function UsersListPage() {
   }, []);
 
   return (
-    <PageContainer title="User Management" description="Manage system access and roles for staff.">
-      <ProductHeader 
-        title="Staff Directory" 
-        action={{ label: "Add New User", href: "/users/new" }}
-      />
-      
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <UserTable data={users} />
-      )}
-    </PageContainer>
+    <ProtectedRoute allowedRoles={["ADMIN"]}>
+      <PageContainer title="User Management" description="Manage system access and roles for staff.">
+        <ProductHeader 
+          title="Staff Directory" 
+          action={{ label: "Add New User", href: "/users/new" }}
+        />
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <UserTable data={users} />
+        )}
+      </PageContainer>
+    </ProtectedRoute>
   );
 }

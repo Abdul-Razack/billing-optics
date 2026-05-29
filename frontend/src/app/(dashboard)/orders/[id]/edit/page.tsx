@@ -52,33 +52,53 @@ export default function EditOrderPage() {
         if (!isMounted) return;
         setOriginalInvoice(invoiceData);
         
-        // Populate local state
-        setCustomerId(invoiceData.customerId);
-        setNotes(invoiceData.notes || "");
-        setDueDate(invoiceData.dueDate || "");
-        setPaymentStatus(invoiceData.paymentStatus);
-
-        // Fetch Customer
-        if (invoiceData.customerId) {
+        // Check for local draft to prevent overwriting
+        const draftJson = localStorage.getItem(`order_edit_draft_${id}`);
+        let hasDraft = false;
+        if (draftJson) {
           try {
-            const customerData = await CustomerService.getCustomerById(invoiceData.customerId);
-            if (isMounted) setCustomer(customerData);
-          } catch (err) {
-            console.error("Failed to fetch customer", err);
-          }
-        }
-        
-        // Fetch Products for lines
-        if (invoiceData.lines && invoiceData.lines.length > 0) {
-          try {
-            const items: InvoiceLineItem[] = [];
-            for (const line of invoiceData.lines) {
-              const pData = await ProductService.getProductById(line.productId);
-              items.push({ product: pData, quantity: line.quantity });
+            const draft = JSON.parse(draftJson);
+            setCustomerId(draft.customerId);
+            setCustomer(draft.customer);
+            setNotes(draft.notes !== undefined ? draft.notes : "");
+            setDueDate(draft.dueDate !== undefined ? draft.dueDate : "");
+            setPaymentStatus(draft.paymentStatus || invoiceData.paymentStatus);
+            if (draft.lineItems) {
+              setLineItems(draft.lineItems);
             }
-            if (isMounted) setLineItems(items);
-          } catch (err) {
-            console.error("Failed to fetch products", err);
+            hasDraft = true;
+          } catch(e) {}
+        }
+
+        if (!hasDraft) {
+          // Populate local state from backend ONLY if no draft exists
+          setCustomerId(invoiceData.customerId);
+          setNotes(invoiceData.notes || "");
+          setDueDate(invoiceData.dueDate || "");
+          setPaymentStatus(invoiceData.paymentStatus);
+
+          // Fetch Customer
+          if (invoiceData.customerId) {
+            try {
+              const customerData = await CustomerService.getCustomerById(invoiceData.customerId);
+              if (isMounted) setCustomer(customerData);
+            } catch (err) {
+              console.error("Failed to fetch customer", err);
+            }
+          }
+          
+          // Fetch Products for lines
+          if (invoiceData.lines && invoiceData.lines.length > 0) {
+            try {
+              const items: InvoiceLineItem[] = [];
+              for (const line of invoiceData.lines) {
+                const pData = await ProductService.getProductById(line.productId);
+                items.push({ product: pData, quantity: line.quantity });
+              }
+              if (isMounted) setLineItems(items);
+            } catch (err) {
+              console.error("Failed to fetch products", err);
+            }
           }
         }
         
@@ -103,8 +123,23 @@ export default function EditOrderPage() {
     const itemsChanged = JSON.stringify(lineItems.map(i => ({ id: i.product.id, qty: i.quantity }))) 
       !== JSON.stringify((originalInvoice.lines || []).map(l => ({ id: l.productId, qty: l.quantity })));
       
-    setIsDirty(notesChanged || dueDateChanged || customerChanged || paymentStatusChanged || itemsChanged);
-  }, [notes, dueDate, customerId, paymentStatus, lineItems, originalInvoice]);
+    const dirty = notesChanged || dueDateChanged || customerChanged || paymentStatusChanged || itemsChanged;
+    setIsDirty(dirty);
+
+    // Save draft if dirty, otherwise clear
+    if (dirty) {
+      localStorage.setItem(`order_edit_draft_${id}`, JSON.stringify({
+        customerId,
+        customer,
+        notes,
+        dueDate,
+        paymentStatus,
+        lineItems
+      }));
+    } else {
+      localStorage.removeItem(`order_edit_draft_${id}`);
+    }
+  }, [notes, dueDate, customerId, paymentStatus, lineItems, originalInvoice, id, customer]);
 
   // Live Math
   const subtotal = useMemo(() => {
@@ -144,6 +179,7 @@ export default function EditOrderPage() {
 
       await OrderService.updateOrder(parseInt(id), payload);
       setIsDirty(false);
+      localStorage.removeItem(`order_edit_draft_${id}`);
       router.push(`/orders/${id}`);
     } catch (err) {
       toast.error("Failed to update order");
@@ -158,6 +194,7 @@ export default function EditOrderPage() {
     setNotes(originalInvoice.notes || "");
     setDueDate(originalInvoice.dueDate || "");
     setPaymentStatus(originalInvoice.paymentStatus);
+    localStorage.removeItem(`order_edit_draft_${id}`);
     // Need to reset line items by fetching products again or caching them.
     // For simplicity, we just reload the page
     window.location.reload();

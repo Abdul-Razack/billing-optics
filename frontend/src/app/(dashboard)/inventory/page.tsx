@@ -11,6 +11,7 @@ import { CategoryService, ApiCategory } from "@/services/category.service";
 import { useFetch } from "@/hooks/useApi";
 import { Package, Boxes, AlertTriangle, XOctagon, DollarSign } from "lucide-react";
 import { calculateStockStatus } from "@/lib/stock";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function InventoryOverviewPage() {
   const { data: response, isLoading: isLoadingProducts, error: productsError } = useFetch<{ success: boolean, data: ApiProduct[] }>("/products");
@@ -58,16 +59,19 @@ export default function InventoryOverviewPage() {
 
   if (productsError) {
     return (
-      <PageContainer title="Inventory Dashboard" description="Overview of your store's inventory and stock levels.">
-        <div className="p-4 rounded bg-destructive/10 text-destructive border border-destructive/20 mt-6">
-          Failed to load inventory data. Please try again.
-        </div>
-      </PageContainer>
+      <ProtectedRoute allowedRoles={["ADMIN", "OPTOMETRIST"]}>
+        <PageContainer title="Inventory Dashboard" description="Overview of your store's inventory and stock levels.">
+          <div className="p-4 rounded bg-destructive/10 text-destructive border border-destructive/20 mt-6">
+            Failed to load inventory data. Please try again.
+          </div>
+        </PageContainer>
+      </ProtectedRoute>
     );
   }
 
   return (
-    <PageContainer title="Inventory Dashboard" description="Overview of your store's inventory and stock levels.">
+    <ProtectedRoute allowedRoles={["ADMIN", "OPTOMETRIST"]}>
+      <PageContainer title="Inventory Dashboard" description="Overview of your store's inventory and stock levels.">
       
       {/* KPI Stats Row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mt-6 mb-8">
@@ -131,5 +135,6 @@ export default function InventoryOverviewPage() {
       </div>
 
     </PageContainer>
+    </ProtectedRoute>
   );
 }

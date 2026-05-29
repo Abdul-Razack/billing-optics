@@ -90,8 +90,3 @@ export const MOCK_PRESCRIPTIONS = [
   { id: "rx_2", customerId: "cust_3", date: "2023-11-20", doctor: "Dr. Jones", od_sph: "-4.50", od_cyl: "-1.00", od_axis: "90", os_sph: "-4.75", os_cyl: "-0.75", os_axis: "85" },
 ];
 
-export const MOCK_INVOICES = [
-  { id: "inv_1", customerId: "cust_1", date: "2023-10-15", total: 350.00, status: "PAID" },
-  { id: "inv_2", customerId: "cust_2", date: "2023-11-02", total: 200.00, status: "PENDING" },
-  { id: "inv_3", customerId: "cust_3", date: "2023-11-20", total: 650.00, status: "PAID" },
-];

@@ -1,6 +1,6 @@
 import { db } from '../config/db';
-import { products } from '../db/schema';
-import { eq, and, or, ilike, desc, sql } from 'drizzle-orm';
+import { products, inventoryLedger } from '../db/schema';
+import { eq, and, or, ilike, desc, sql, getTableColumns } from 'drizzle-orm';
 import { generateSKU } from '../utils/barcode';
 import { AppError } from '../utils/errors';
 import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
@@ -129,9 +129,14 @@ export class ProductService {
       db.select({ count: sql<number>`cast(count(*) as integer)` })
         .from(products)
         .where(baseConditions),
-      db.select()
+      db.select({
+          ...getTableColumns(products),
+          stock: sql<number>`COALESCE(SUM(${inventoryLedger.quantityChange}), 0)`.mapWith(Number)
+        })
         .from(products)
+        .leftJoin(inventoryLedger, eq(products.id, inventoryLedger.productId))
         .where(baseConditions)
+        .groupBy(products.id)
         .orderBy(desc(products.createdAt))
         .limit(limit)
         .offset(offset)

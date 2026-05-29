@@ -2,6 +2,7 @@ import { db } from '../config/db';
 import { invoices, invoiceItems, payments, products, inventoryLedger } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import { InventoryRepository } from '../repositories/inventory.repository';
 
 export interface CheckoutDTO {
   customerId?: number;
@@ -17,7 +18,15 @@ export interface CheckoutDTO {
   }[];
 }
 
-export const processCheckout = async (data: CheckoutDTO) => {
+export const processCheckout = async (data: CheckoutDTO & { requestId?: string }) => {
+  // 0. Check idempotency BEFORE opening a transaction to avoid locking
+  if (data.requestId) {
+    const [existing] = await db.select().from(invoices).where(eq(invoices.requestId, data.requestId));
+    if (existing) {
+      return { success: true, invoiceId: existing.id, idempotent: true };
+    }
+  }
+
   return await db.transaction(async (tx) => {
     // 1. Calculate totals and deduct stock
     let subtotal = 0;
@@ -28,6 +37,12 @@ export const processCheckout = async (data: CheckoutDTO) => {
     for (const item of data.items) {
       const [product] = await tx.select().from(products).where(eq(products.id, item.productId));
       if (!product) throw new NotFoundError(`Product ${item.productId} not found`);
+
+      const inventoryRepo = new InventoryRepository();
+      const currentStock = await inventoryRepo.getCurrentStock(item.productId, tx);
+      if (currentStock < item.quantity) {
+        throw new ValidationError(`Insufficient stock for ${product.name}. Available: ${currentStock}, Requested: ${item.quantity}`);
+      }
 
       const itemTotal = product.sellingPrice * item.quantity;
       const itemTax = Math.round((itemTotal * product.gstPercent) / 100);
@@ -76,6 +91,7 @@ export const processCheckout = async (data: CheckoutDTO) => {
     const invoiceNum = `INV-${Date.now()}-${hex}`;
     
     const [newInvoice] = await tx.insert(invoices).values({
+      requestId: data.requestId,
       invoiceNumber: invoiceNum,
       customerId: data.customerId,
       createdBy: data.createdBy,

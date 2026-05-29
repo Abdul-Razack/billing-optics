@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,12 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
   const [reference, setReference] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isMounted = useRef(true);
+  
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
 
   // Update amount if modal opens with different intent
   useEffect(() => {
@@ -35,6 +41,7 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
       setMethod("CASH");
       setReference("");
       setNotes("");
+      setIsSubmitting(false);
     }
   }, [open, initialIsFull, balanceDue]);
 
@@ -62,19 +69,33 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
       });
       
       toast.success("Payment recorded successfully.");
+      setIsSubmitting(false);
       onPaymentSuccess();
       onOpenChange(false);
     } catch (error) {
       console.error(error);
       toast.error("Failed to record payment.");
-    } finally {
-      setIsSubmitting(false);
+      if (isMounted.current) setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog 
+      open={open} 
+      onOpenChange={(val) => {
+        if (isSubmitting) return;
+        onOpenChange(val);
+      }}
+    >
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        onInteractOutside={(e: any) => {
+          if (isSubmitting) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e: any) => {
+          if (isSubmitting) e.preventDefault();
+        }}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Record Payment</DialogTitle>
@@ -87,7 +108,7 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
             <div className="space-y-2">
               <Label htmlFor="amount">Amount *</Label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-500">$</span>
+                <span className="absolute left-3 top-2.5 text-gray-500">₹</span>
                 <Input 
                   id="amount" 
                   type="number" 

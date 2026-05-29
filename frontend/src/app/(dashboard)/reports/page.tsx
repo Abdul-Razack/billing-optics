@@ -5,10 +5,12 @@ import { ReportCard } from "@/components/reports/ReportCard";
 import { ChartPlaceholder } from "@/components/reports/ChartPlaceholder";
 import { Button } from "@/components/ui/button";
 import { Download, TrendingUp, DollarSign, Package, Users, Receipt } from "lucide-react";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function ReportsDashboardPage() {
   return (
-    <PageContainer title="Reports & Analytics" description="View business performance and generate reports.">
+    <ProtectedRoute allowedRoles={["ADMIN", "OPTOMETRIST"]}>
+      <PageContainer title="Reports & Analytics" description="View business performance and generate reports.">
       <ProductHeader title="Analytics Dashboard">
         <Button variant="outline">
           <Download className="mr-2 h-4 w-4" />
@@ -131,5 +133,6 @@ export default function ReportsDashboardPage() {
         </TabsContent>
       </Tabs>
     </PageContainer>
+    </ProtectedRoute>
   );
 }

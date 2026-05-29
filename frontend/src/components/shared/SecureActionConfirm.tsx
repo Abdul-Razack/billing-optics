@@ -34,14 +34,14 @@ export function SecureActionConfirm({
   // This allows it to work seamlessly for both standard buttons and dropdown menu items
   // without creating nested/duplicated ARIA roles.
   const triggerElement = React.isValidElement(children) ? children : <span>{children}</span>;
-  const trigger = React.cloneElement(triggerElement as React.ReactElement, {
+  const trigger = React.cloneElement(triggerElement as React.ReactElement<any>, {
     onClick: (e: any) => {
-      (triggerElement as React.ReactElement).props.onClick?.(e);
+      (triggerElement as React.ReactElement<any>).props.onClick?.(e);
       setOpen(true);
     },
     onSelect: (e: any) => {
       e.preventDefault();
-      (triggerElement as React.ReactElement).props.onSelect?.(e);
+      (triggerElement as React.ReactElement<any>).props.onSelect?.(e);
       setOpen(true);
     },
   });
@@ -63,7 +63,7 @@ export function SecureActionConfirm({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={(e) => {
+              onClick={(e: any) => {
                 onConfirm();
                 setOpen(false);
               }}

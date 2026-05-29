@@ -71,6 +71,14 @@ export function LoginForm() {
     }
   }, []);
 
+  // Redirect to dashboard if already logged in
+  const { user } = useAuth();
+  useEffect(() => {
+    if (user) {
+      router.push("/");
+    }
+  }, [user, router]);
+
   return (
     <div className="space-y-6">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

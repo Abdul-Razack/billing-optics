@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
@@ -12,6 +12,7 @@ import { InvoiceLineItems, InvoiceLineItem } from "@/components/orders/InvoiceLi
 import { PaymentSection } from "@/components/orders/PaymentSection";
 import { OrderService } from "@/services/order.service";
 import { ApiProduct } from "@/services/product.service";
+import { CustomerService } from "@/services/customer.service";
 import { ApiCustomer } from "@/types/customer";
 import { PaymentMethod } from "@/types/order";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ export default function CreateOrderPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successId, setSuccessId] = useState<number | null>(null);
+  const sessionIdRef = useRef<string>(`SESS-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
 
   // Form State
   const [customerId, setCustomerId] = useState<number | undefined>(undefined);
@@ -34,10 +36,82 @@ export default function CreateOrderPage() {
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
 
-  // Live Math (grandTotal is in cents because product.sellingPrice is in cents)
-  const grandTotal = useMemo(() => {
-    return lineItems.reduce((sum, item) => sum + (item.product.sellingPrice * item.quantity), 0);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("order_cart_draft");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.customerId !== undefined) setCustomerId(parsed.customerId);
+        if (parsed.customer) setCustomer(parsed.customer);
+        if (parsed.lineItems) setLineItems(parsed.lineItems);
+        if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
+        if (parsed.amountPaid) setAmountPaid(parsed.amountPaid);
+        if (parsed.referenceNumber) setReferenceNumber(parsed.referenceNumber);
+      }
+
+      // If customerId is provided in URL, it overrides the draft's customer (e.g. "Create Invoice" from profile)
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryCustomerId = urlParams.get('customerId');
+      if (queryCustomerId) {
+        const id = parseInt(queryCustomerId, 10);
+        if (!isNaN(id)) {
+          setCustomerId(id);
+          CustomerService.getCustomerById(id).then(c => {
+            if (c) setCustomer(c);
+          }).catch(console.error);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load cart draft", e);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save draft to localStorage whenever cart state changes
+  useEffect(() => {
+    if (!isLoaded) return;
+    
+    // Clear draft if cart is completely empty
+    if (lineItems.length === 0 && !customerId && amountPaid === 0) {
+      localStorage.removeItem("order_cart_draft");
+      return;
+    }
+    
+    localStorage.setItem("order_cart_draft", JSON.stringify({
+      customerId,
+      customer,
+      lineItems,
+      paymentMethod,
+      amountPaid,
+      referenceNumber
+    }));
+
+    // Generate a new idempotency key whenever the cart logic actually changes
+    sessionIdRef.current = `SESS-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  }, [isLoaded, customerId, customer, lineItems, paymentMethod, amountPaid, referenceNumber]);
+
+  // Live Math (prices are in cents)
+  const totals = useMemo(() => {
+    let sub = 0;
+    let tax = 0;
+    lineItems.forEach(item => {
+      const itemTotal = item.product.sellingPrice * item.quantity;
+      const itemTax = Math.round((itemTotal * (item.product.gstPercent || 0)) / 100);
+      sub += itemTotal;
+      tax += itemTax;
+    });
+    return {
+      subtotal: sub,
+      taxTotal: tax,
+      grandTotal: sub + tax
+    };
   }, [lineItems]);
+
+  const grandTotal = totals.grandTotal;
 
   const balanceDue = Math.max(0, grandTotal - Math.round(amountPaid * 100));
 
@@ -70,10 +144,19 @@ export default function CreateOrderPage() {
       toast.error("Please add at least one product.");
       return;
     }
+    
+    const amountPaidCents = Math.round(amountPaid * 100);
+    
     if (amountPaid < 0) {
       toast.error("Amount paid cannot be negative.");
       return;
     }
+    if (amountPaidCents > grandTotal) {
+      toast.error(`Amount paid cannot exceed grand total of ${formatCurrency(grandTotal)}.`);
+      return;
+    }
+
+    if (isSubmitting) return; // Prevent duplicate submissions
 
     setIsSubmitting(true);
     try {
@@ -88,14 +171,21 @@ export default function CreateOrderPage() {
         }] : undefined
       };
 
-      // Create a frontend generated session string ID for idempotency/tracking
-      const tempSessionId = `SESS-${Date.now()}`;
-      
-      const newInvoice = await OrderService.createOrder(tempSessionId, payload);
+      // Use the stable idempotency key that is tied to current cart state
+      const newInvoice = await OrderService.createOrder(sessionIdRef.current, payload);
       toast.success("Order created successfully!");
-      setSuccessId(newInvoice.id);
+      // Reset state immediately so useEffect doesn't re-save the draft
+      setLineItems([]);
+      setCustomerId(undefined);
+      setCustomer(null);
+      setAmountPaid(0);
+      setReferenceNumber("");
+      setPaymentMethod("CASH");
+      
+      setSuccessId(newInvoice.invoiceId);
+      localStorage.removeItem("order_cart_draft");
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to create order");
+      toast.error(err.data?.message || err.message || "Failed to create order");
     } finally {
       setIsSubmitting(false);
     }
@@ -120,11 +210,6 @@ export default function CreateOrderPage() {
             </Button>
             <Button onClick={() => {
               setSuccessId(null);
-              setLineItems([]);
-              setCustomerId(undefined);
-              setCustomer(null);
-              setAmountPaid(0);
-              setReferenceNumber("");
             }} size="lg">
               Create Another Order
             </Button>
@@ -154,6 +239,7 @@ export default function CreateOrderPage() {
             <CardContent>
               <CustomerSelector 
                 value={customerId} 
+                customer={customer}
                 onChange={(id, c) => {
                   setCustomerId(id);
                   setCustomer(c);
@@ -236,17 +322,15 @@ export default function CreateOrderPage() {
                 <div className="px-6 py-4 space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Items ({lineItems.length})</span>
-                    <span className="font-medium">{formatCurrency(grandTotal)}</span>
+                    <span className="font-medium">{formatCurrency(totals.subtotal)}</span>
                   </div>
-                  {/* Backend does not natively calculate tax or discount correctly yet from frontend inputs, 
-                      so we only show what backend will process: grandTotal = sum of lines */}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Discount</span>
                     <span className="font-medium">{formatCurrency(0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax</span>
-                    <span className="font-medium text-muted-foreground">Calculated by Backend</span>
+                    <span className="font-medium">{formatCurrency(totals.taxTotal)}</span>
                   </div>
                 </div>
 
@@ -270,7 +354,7 @@ export default function CreateOrderPage() {
                 <Button 
                   className="w-full h-12 text-lg" 
                   size="lg" 
-                  disabled={isSubmitting || lineItems.length === 0}
+                  disabled={isSubmitting || lineItems.length === 0 || Math.round(amountPaid * 100) > grandTotal}
                   onClick={handleSubmit}
                 >
                   {isSubmitting ? (

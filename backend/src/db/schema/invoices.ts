@@ -2,7 +2,7 @@ import { pgTable, bigserial, bigint, varchar, integer, timestamp, check, index }
 import { sql } from 'drizzle-orm';
 import { customers } from './customers';
 import { users } from './users';
-import { paymentStatusEnum } from './enums';
+import { paymentStatusEnum, deliveryStatusEnum } from './enums';
 
 export const invoices = pgTable('invoices', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
@@ -19,6 +19,7 @@ export const invoices = pgTable('invoices', {
   grandTotal: integer('grand_total').notNull().default(0),
   amountPaid: integer('amount_paid').default(0).notNull(),
   paymentStatus: paymentStatusEnum('payment_status').notNull().default('UNPAID'),
+  deliveryStatus: deliveryStatusEnum('delivery_status').notNull().default('PENDING'),
   notes: varchar('notes', { length: 1000 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')

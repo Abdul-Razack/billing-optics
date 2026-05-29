@@ -14,6 +14,16 @@ export class BillingService {
     return await BillingRepository.getInvoices(params);
   }
 
+  async updateDeliveryStatus(invoiceId: number, deliveryStatus: 'PENDING' | 'READY' | 'DELIVERED') {
+    const invoice = await BillingRepository.getInvoiceById(invoiceId);
+    if (!invoice) {
+      throw new NotFoundError(`Invoice with ID ${invoiceId} not found`);
+    }
+    
+    await BillingRepository.updateInvoiceDeliveryStatus(invoiceId, deliveryStatus);
+    return await BillingRepository.getInvoiceById(invoiceId);
+  }
+
   async checkout(data: CheckoutDTO) {
     return await processCheckout(data);
   }

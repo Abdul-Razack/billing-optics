@@ -7,6 +7,7 @@ import { ProductStatusBadge } from "./ProductStatusBadge";
 import { ProductActionsDropdown } from "./ProductActionsDropdown";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Image as ImageIcon } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface ProductGridCardProps {
   product: ApiProduct;
@@ -19,14 +20,11 @@ interface ProductGridCardProps {
 
 export function ProductGridCard({ product, category, onDelete, onQuickStockUpdate, isSelected, onToggleSelection }: ProductGridCardProps) {
   const { currentStock, status: stockStatus } = calculateStockStatus(
-    (product as any).currentStock, 
+    product.stock ?? (product as any).currentStock, 
     product.minStockAlert
   );
 
-  const formattedPrice = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(product.sellingPrice);
+  const formattedPrice = formatCurrency(product.sellingPrice);
 
   return (
     <div className={`group relative flex flex-col rounded-xl border ${isSelected ? 'border-primary ring-1 ring-primary' : 'border-border'} bg-card overflow-hidden shadow-sm hover:shadow-md transition-all ${stockStatus === 'OUT_OF_STOCK' ? 'opacity-80' : ''}`}>

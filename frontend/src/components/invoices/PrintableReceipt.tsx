@@ -1,26 +1,28 @@
 import { forwardRef } from "react";
 import { Invoice } from "@/types/invoice";
 import { Customer } from "@/types/customer";
+import { ApiSettings } from "@/services/settings.service";
 
 export interface PrintableReceiptProps {
   invoice: Invoice;
   customer?: Customer;
+  settings?: ApiSettings;
 }
 
 export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps>(
-  ({ invoice, customer }, ref) => {
+  ({ invoice, customer, settings }, ref) => {
     return (
       <div 
         ref={ref}
-        className="hidden print:block bg-white text-black font-mono w-[80mm] max-w-full mx-auto pb-8"
-        style={{ color: "#000", fontSize: "12px", lineHeight: "1.4" }}
+        className="hidden print:block bg-white text-black font-mono w-[80mm] max-w-[80mm] mx-auto box-border relative print:p-0 print:m-0"
+        style={{ color: "#000", fontSize: "12px", lineHeight: "1.2" }}
       >
         {/* Header */}
         <div className="text-center mb-4 border-b border-black pb-4 border-dashed">
-          <h1 className="text-xl font-bold uppercase mb-1">Billing Optics</h1>
-          <p className="text-xs">123 Optic Way, Vision City</p>
-          <p className="text-xs">Ph: +1 (555) 123-4567</p>
-          <p className="text-xs mt-1">TAX ID: BO-987654321</p>
+          <h1 className="text-xl font-bold uppercase mb-1">{settings?.businessName || "Billing Optics"}</h1>
+          <p className="text-xs whitespace-pre-wrap">{settings?.address || "123 Optic Way, Vision City"}</p>
+          <p className="text-xs">Ph: {settings?.phone || "+1 (555) 123-4567"}</p>
+          <p className="text-xs mt-1">TAX ID: {settings?.gstNumber || "BO-987654321"}</p>
         </div>
 
         {/* Invoice Info */}
@@ -90,6 +92,21 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
             <span>TOTAL:</span>
             <span>${invoice.grandTotal.toFixed(2)}</span>
           </div>
+          <div className="flex justify-between mt-1 text-gray-700">
+            <span>AMOUNT PAID:</span>
+            <span>${(invoice.amountPaid || 0).toFixed(2)}</span>
+          </div>
+          {invoice.payments && invoice.payments.length > 0 && (
+            <div className="text-[9px] text-gray-500 text-right mt-0.5">
+              via {invoice.payments.map(p => p.method).join(", ")}
+            </div>
+          )}
+          {invoice.grandTotal - (invoice.amountPaid || 0) > 0 && (
+            <div className="flex justify-between font-bold mt-1 text-sm">
+              <span>BALANCE DUE:</span>
+              <span>${(invoice.grandTotal - (invoice.amountPaid || 0)).toFixed(2)}</span>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -103,12 +120,14 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
           @media print {
             @page {
               margin: 0;
-              size: 80mm 297mm;
+              size: 80mm auto;
             }
             body {
               margin: 0;
-              padding: 4mm;
+              padding: 0;
               width: 80mm;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
           }
         `}} />
