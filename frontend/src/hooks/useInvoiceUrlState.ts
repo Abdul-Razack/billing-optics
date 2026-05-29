@@ -19,7 +19,7 @@ export function useInvoiceUrlState() {
     q: searchParams.get("q") || "",
     paymentStatus: searchParams.get("paymentStatus") || "all",
     status: searchParams.get("status") || "all",
-    sort: searchParams.get("sort") || "createdAt-desc",
+    sort: searchParams.get("sort") || "date-desc",
     page: parseInt(searchParams.get("page") || "0", 10),
     size: parseInt(searchParams.get("size") || "10", 10),
   };
@@ -33,7 +33,7 @@ export function useInvoiceUrlState() {
         value === "" || 
         (key === 'paymentStatus' && value === 'all') ||
         (key === 'status' && value === 'all') ||
-        (key === 'sort' && value === 'createdAt-desc') ||
+        (key === 'sort' && value === 'date-desc') ||
         (key === 'page' && value === 0) ||
         (key === 'size' && value === 10)
       ) {
