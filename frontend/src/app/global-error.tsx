@@ -1,1 +1,44 @@
-"use client";\n\nimport { useEffect } from "react";\nimport { Button } from "@/components/ui/button";\n\nexport default function GlobalError({\n  error,\n  reset,\n}: {\n  error: Error & { digest?: string };\n  reset: () => void;\n}) {\n  useEffect(() => {\n    console.error(error);\n  }, [error]);\n\n  return (\n    <html>\n      <body>\n        <div className="flex h-screen w-screen flex-col items-center justify-center bg-background">\n          <div className="mx-auto max-w-md space-y-4 text-center">\n            <h2 className="text-2xl font-bold text-destructive">Something went wrong!</h2>\n            <p className="text-muted-foreground">\n              The POS encountered an unexpected error. You can try refreshing or resetting the application state.\n            </p>\n            <div className="flex justify-center gap-4">\n              <Button onClick={() => window.location.reload()}>Refresh Page</Button>\n              <Button \n                variant="destructive"\n                onClick={() => {\n                  localStorage.removeItem("order_cart_draft");\n                  localStorage.clear();\n                  window.location.href = "/";\n                }}\n              >\n                Reset POS State\n              </Button>\n            </div>\n          </div>\n        </div>\n      </body>\n    </html>\n  );\n}
+"use client";
+
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        <div className="flex h-screen w-screen flex-col items-center justify-center bg-background">
+          <div className="mx-auto max-w-md space-y-4 text-center">
+            <h2 className="text-2xl font-bold text-destructive">Something went wrong!</h2>
+            <p className="text-muted-foreground">
+              The POS encountered an unexpected error. You can try refreshing or resetting the application state.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button onClick={() => window.location.reload()}>Refresh Page</Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  localStorage.removeItem("order_cart_draft");
+                  localStorage.clear();
+                  window.location.href = "/";
+                }}
+              >
+                Reset POS State
+              </Button>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  );
+}
