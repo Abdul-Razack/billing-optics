@@ -19,8 +19,8 @@ export function PaymentHistoryList({ payments }: PaymentHistoryListProps) {
 
   return (
     <div className="space-y-3">
-      {payments.map((payment) => (
-        <Card key={payment.id} className="overflow-hidden">
+      {payments.map((payment, index) => (
+        <Card key={`${payment.id}-${payment.createdAt}-${index}`} className="overflow-hidden">
           <div className="flex border-l-4 border-emerald-500">
             <div className="p-4 flex-1">
               <div className="flex justify-between items-start mb-2">

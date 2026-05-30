@@ -87,10 +87,11 @@ export interface ApiInvoiceDetail {
     email: string | null;
     address: string | null;
   } | null;
-  items: {
+  lines: {
+    id: string;
     productId: number;
-    snapshotSku: string;
-    snapshotName: string;
+    productSku: string;
+    productName: string;
     quantity: number;
     unitPrice: number;
     gstPercent: number;

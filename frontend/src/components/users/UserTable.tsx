@@ -27,12 +27,15 @@ import { FilterBar } from "@/components/shared/FilterBar";
 import { RoleBadge } from "./RoleBadge";
 import Link from "next/link";
 import { Eye, Edit } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { handleRowClick } from "@/lib/table-utils";
 
 interface UserTableProps {
   data: User[];
 }
 
 export function UserTable({ data }: UserTableProps) {
+  const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -134,7 +137,10 @@ export function UserTable({ data }: UserTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50"
+                  className="hover:bg-muted/50 cursor-pointer transition-colors"
+                  tabIndex={0}
+                  onClick={(e) => handleRowClick(e, router, `/users/${row.original.id}`)}
+                  onKeyDown={(e) => handleRowClick(e, router, `/users/${row.original.id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

@@ -40,6 +40,8 @@ import {
 import { CustomerUrlState } from "@/hooks/useCustomerUrlState";
 import { SecureActionConfirm } from "@/components/shared/SecureActionConfirm";
 import { RequireRole } from "@/components/auth/RequireRole";
+import { useRouter } from "next/navigation";
+import { handleRowClick } from "@/lib/table-utils";
 
 interface CustomerTableProps {
   data: ApiCustomer[];
@@ -60,6 +62,7 @@ export function CustomerTable({
   rowSelection,
   setRowSelection
 }: CustomerTableProps) {
+  const router = useRouter();
 
   // Parse sort from string "id-desc" to SortingState
   const sorting: SortingState = state.sort ? (() => {
@@ -269,7 +272,10 @@ export function CustomerTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50 transition-colors"
+                  className="hover:bg-muted/50 cursor-pointer transition-colors"
+                  tabIndex={0}
+                  onClick={(e) => handleRowClick(e, router, `/customers/${row.original.id}`)}
+                  onKeyDown={(e) => handleRowClick(e, router, `/customers/${row.original.id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-2">

@@ -27,7 +27,7 @@ export class OrderService {
     const query = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null && value !== "" && value !== "all") {
           query.append(key, value.toString());
         }
       });
@@ -98,23 +98,28 @@ export class OrderService {
   }
 
   /**
-   * MOCKED: Update Order
-   * Backend does not support updating orders after checkout
+   * REAL: Update Order Metadata
    */
   static async updateOrder(id: number, payload: Partial<ApiInvoice>): Promise<ApiInvoice> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast.info("Mock: Order updated successfully (No backend support yet)");
-    return { id, ...payload } as ApiInvoice;
+    const response = await fetchClient<{ success: boolean; data: ApiInvoice; }>(`/invoices/${id}`, {
+      method: "PUT",
+      data: {
+        customerId: payload.customerId,
+        deliveryStatus: payload.deliveryStatus,
+        notes: payload.notes
+      },
+    });
+    return response.data;
   }
 
   /**
-   * MOCKED: Delete/Cancel Order
-   * Backend does not support deleting orders
+   * REAL: Void Order
    */
-  static async deleteOrder(id: number): Promise<boolean> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast.info("Mock: Order deleted successfully (No backend support yet)");
-    return true;
+  static async voidOrder(id: number): Promise<ApiInvoice> {
+    const response = await fetchClient<{ success: boolean; data: ApiInvoice; }>(`/invoices/${id}/void`, {
+      method: "POST",
+    });
+    return response.data;
   }
 
   /**

@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { handleRowClick } from "@/lib/table-utils";
 
 interface OrderTableProps {
   orders: ApiInvoice[];
@@ -41,6 +43,8 @@ export function OrderTable({
   sortDirection,
   onSort
 }: OrderTableProps) {
+  const router = useRouter();
+
   if (orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center border rounded-md bg-card">
@@ -97,7 +101,10 @@ export function OrderTable({
             return (
               <TableRow 
                 key={order.id} 
-                className={`hover:bg-muted/50 transition-colors ${isSelected ? "bg-primary/5" : ""}`}
+                className={`hover:bg-muted/50 cursor-pointer transition-colors ${isSelected ? "bg-primary/5" : ""}`}
+                tabIndex={0}
+                onClick={(e) => handleRowClick(e, router, `/orders/${order.id}`)}
+                onKeyDown={(e) => handleRowClick(e, router, `/orders/${order.id}`)}
               >
                 {showSelection && (
                   <TableCell>

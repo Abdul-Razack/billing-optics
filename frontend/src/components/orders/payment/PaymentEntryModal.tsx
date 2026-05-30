@@ -87,15 +87,7 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
         onOpenChange(val);
       }}
     >
-      <DialogContent 
-        className="sm:max-w-[425px]"
-        onInteractOutside={(e: any) => {
-          if (isSubmitting) e.preventDefault();
-        }}
-        onEscapeKeyDown={(e: any) => {
-          if (isSubmitting) e.preventDefault();
-        }}
-      >
+      <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Record Payment</DialogTitle>

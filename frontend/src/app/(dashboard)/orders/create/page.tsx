@@ -342,19 +342,27 @@ export default function CreateOrderPage() {
                   
                   <div className="flex justify-between items-center text-sm mt-4">
                     <span className="text-muted-foreground">Amount Paid</span>
-                    <span className="font-medium text-emerald-600">{formatCurrency(Math.round(amountPaid * 100))}</span>
+                    <span className={`font-medium ${Math.round(amountPaid * 100) > grandTotal ? 'text-destructive' : 'text-emerald-600'}`}>
+                      {formatCurrency(Math.round(amountPaid * 100))}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-sm mt-2">
                     <span className="text-muted-foreground font-medium">Balance Due</span>
                     <span className="font-semibold">{formatCurrency(balanceDue)}</span>
                   </div>
+                  
+                  {Math.round(amountPaid * 100) > grandTotal && (
+                    <div className="text-xs text-destructive text-right mt-1 font-medium">
+                      Amount exceeds grand total
+                    </div>
+                  )}
                 </div>
               </CardContent>
               <div className="p-6 bg-card rounded-b-lg">
                 <Button 
                   className="w-full h-12 text-lg" 
                   size="lg" 
-                  disabled={isSubmitting || lineItems.length === 0 || Math.round(amountPaid * 100) > grandTotal}
+                  disabled={isSubmitting || lineItems.length === 0}
                   onClick={handleSubmit}
                 >
                   {isSubmitting ? (

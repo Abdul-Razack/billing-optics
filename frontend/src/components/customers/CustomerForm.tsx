@@ -60,10 +60,24 @@ function CustomerFormInner({ initialData, customFields }: CustomerFormInnerProps
     setIsSaving(true);
     setError(null);
     try {
-      const payload = {
-        ...values,
+      const payload: Record<string, any> = {
+        name: values.fullName.trim(),
+        phone: values.phone.trim(),
+        isActive: values.isActive,
         customFields: values.customFields || {},
       };
+
+      if (values.email && values.email.trim() !== "") {
+        payload.email = values.email.trim();
+      }
+      
+      if (values.address && values.address.trim() !== "") {
+        payload.address = values.address.trim();
+      }
+      
+      if (values.notes && values.notes.trim() !== "") {
+        payload.notes = values.notes.trim();
+      }
 
       if (isEditMode && initialData) {
         await CustomerService.updateCustomer(initialData.id, payload);

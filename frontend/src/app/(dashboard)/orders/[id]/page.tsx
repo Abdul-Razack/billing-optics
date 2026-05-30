@@ -6,7 +6,6 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { OrderService } from "@/services/order.service";
 import { CustomerService } from "@/services/customer.service";
-import { ProductService } from "@/services/product.service";
 import { ApiInvoice } from "@/types/order";
 import { ApiCustomer } from "@/types/customer";
 import { Loader2, ArrowLeft } from "lucide-react";
@@ -29,7 +28,6 @@ export default function OrderDetailsPage() {
   const { id } = useParams() as { id: string };
   const [invoice, setInvoice] = useState<ApiInvoice | null>(null);
   const [customer, setCustomer] = useState<ApiCustomer | null>(null);
-  const [productsMap, setProductsMap] = useState<Record<number, { name: string; sku?: string }>>({});
   const printRef = useRef<HTMLDivElement>(null);
   
   const [isLoading, setIsLoading] = useState(true);
@@ -65,28 +63,8 @@ export default function OrderDetailsPage() {
           }
         }
         
-        // 3. Fetch Products for lines
-        if (invoiceData.lines && invoiceData.lines.length > 0) {
-          try {
-            const productIds = Array.from(new Set(invoiceData.lines.map(l => l.productId)));
-            const map: Record<number, { name: string; sku?: string }> = {};
-            
-            await Promise.all(
-              productIds.map(async (pid) => {
-                try {
-                  const pData = await ProductService.getProductById(pid);
-                  map[pid] = { name: pData.name, sku: pData.sku };
-                } catch (e) {
-                  console.error(`Failed to fetch product ${pid}`, e);
-                }
-              })
-            );
-            
-            if (isMounted) setProductsMap(map);
-          } catch (err) {
-            console.error("Failed to fetch products", err);
-          }
-        }
+        // 3. (Removed) We no longer fetch live products for historical invoices
+        // to ensure they remain immutable and do not crash on deleted products.
         
       } catch (err) {
         if (isMounted) setError(true);
@@ -106,13 +84,13 @@ export default function OrderDetailsPage() {
     return invoice.lines.map((line) => ({
       product: {
         id: line.productId,
-        name: productsMap[line.productId]?.name || `Item ${line.productId}`,
-        sku: productsMap[line.productId]?.sku,
+        name: line.productName || `Item ${line.productId}`,
+        sku: line.productSku,
         sellingPrice: line.unitPrice,
       } as any,
       quantity: line.quantity,
     }));
-  }, [invoice, productsMap]);
+  }, [invoice]);
 
   return (
     <PageContainer 
@@ -151,7 +129,7 @@ export default function OrderDetailsPage() {
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                <OrderItemsTable lines={invoice.lines || []} productsMap={productsMap} />
+                <OrderItemsTable lines={invoice.lines || []} />
                 
                 {invoice.notes && (
                   <div className="bg-white p-6 rounded-lg border shadow-sm">

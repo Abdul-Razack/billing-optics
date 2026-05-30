@@ -4,6 +4,7 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
+import { PerformancePatch } from "@/components/PerformancePatch";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body>
+        <PerformancePatch />
         <AuthProvider>{children}</AuthProvider>
         <Toaster />
       </body>

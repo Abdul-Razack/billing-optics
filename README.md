@@ -8,8 +8,6 @@ A production-grade, modular monolith POS architecture for managing inventory, cu
 - `backend/` - Node.js/Express backend with Drizzle ORM, PostgreSQL, and TypeScript.
 - `shared/` - Shared TypeScript schemas, types, and constants.
 - `docs/` - System architecture and user documentation.
-- `docker/` - Docker deployment configurations.
-- `scripts/` - Maintenance and installation scripts.
 
 ## Installation & Setup
 

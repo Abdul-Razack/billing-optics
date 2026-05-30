@@ -6,7 +6,6 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { OrderService } from "@/services/order.service";
 import { CustomerService } from "@/services/customer.service";
-import { ProductService } from "@/services/product.service";
 import { ApiInvoice } from "@/types/order";
 import { ApiCustomer } from "@/types/customer";
 import { Loader2 } from "lucide-react";
@@ -37,7 +36,7 @@ export default function EditOrderPage() {
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState<"PAID" | "PARTIAL" | "UNPAID">("UNPAID");
+  const [deliveryStatus, setDeliveryStatus] = useState<"PENDING" | "READY" | "DELIVERED">("PENDING");
 
   // Track if changes made
   const [isDirty, setIsDirty] = useState(false);
@@ -62,7 +61,7 @@ export default function EditOrderPage() {
             setCustomer(draft.customer);
             setNotes(draft.notes !== undefined ? draft.notes : "");
             setDueDate(draft.dueDate !== undefined ? draft.dueDate : "");
-            setPaymentStatus(draft.paymentStatus || invoiceData.paymentStatus);
+            setDeliveryStatus(draft.deliveryStatus || invoiceData.deliveryStatus || "PENDING");
             if (draft.lineItems) {
               setLineItems(draft.lineItems);
             }
@@ -75,7 +74,7 @@ export default function EditOrderPage() {
           setCustomerId(invoiceData.customerId);
           setNotes(invoiceData.notes || "");
           setDueDate(invoiceData.dueDate || "");
-          setPaymentStatus(invoiceData.paymentStatus);
+          setDeliveryStatus(invoiceData.deliveryStatus || "PENDING");
 
           // Fetch Customer
           if (invoiceData.customerId) {
@@ -87,17 +86,24 @@ export default function EditOrderPage() {
             }
           }
           
-          // Fetch Products for lines
+          // Load items from snapshot data rather than live products
           if (invoiceData.lines && invoiceData.lines.length > 0) {
             try {
               const items: InvoiceLineItem[] = [];
               for (const line of invoiceData.lines) {
-                const pData = await ProductService.getProductById(line.productId);
-                items.push({ product: pData, quantity: line.quantity });
+                items.push({ 
+                  product: {
+                    id: line.productId,
+                    name: line.productName || `Item ${line.productId}`,
+                    sku: line.productSku || "",
+                    sellingPrice: line.unitPrice,
+                  } as any, 
+                  quantity: line.quantity 
+                });
               }
               if (isMounted) setLineItems(items);
             } catch (err) {
-              console.error("Failed to fetch products", err);
+              console.error("Failed to parse invoice lines", err);
             }
           }
         }
@@ -119,11 +125,11 @@ export default function EditOrderPage() {
     const notesChanged = notes !== (originalInvoice.notes || "");
     const dueDateChanged = dueDate !== (originalInvoice.dueDate ? new Date(originalInvoice.dueDate).toISOString().split('T')[0] : "");
     const customerChanged = customerId !== originalInvoice.customerId;
-    const paymentStatusChanged = paymentStatus !== originalInvoice.paymentStatus;
+    const deliveryStatusChanged = deliveryStatus !== (originalInvoice.deliveryStatus || "PENDING");
     const itemsChanged = JSON.stringify(lineItems.map(i => ({ id: i.product.id, qty: i.quantity }))) 
       !== JSON.stringify((originalInvoice.lines || []).map(l => ({ id: l.productId, qty: l.quantity })));
       
-    const dirty = notesChanged || dueDateChanged || customerChanged || paymentStatusChanged || itemsChanged;
+    const dirty = notesChanged || dueDateChanged || customerChanged || deliveryStatusChanged || itemsChanged;
     setIsDirty(dirty);
 
     // Save draft if dirty, otherwise clear
@@ -133,13 +139,13 @@ export default function EditOrderPage() {
         customer,
         notes,
         dueDate,
-        paymentStatus,
+        deliveryStatus,
         lineItems
       }));
     } else {
       localStorage.removeItem(`order_edit_draft_${id}`);
     }
-  }, [notes, dueDate, customerId, paymentStatus, lineItems, originalInvoice, id, customer]);
+  }, [notes, dueDate, customerId, deliveryStatus, lineItems, originalInvoice, id, customer]);
 
   // Live Math
   const subtotal = useMemo(() => {
@@ -165,21 +171,13 @@ export default function EditOrderPage() {
         customerId,
         notes,
         dueDate,
-        paymentStatus,
-        subtotal,
-        grandTotal,
-        lines: lineItems.map(i => ({
-          id: "", // mock id
-          productId: i.product.id,
-          quantity: i.quantity,
-          unitPrice: i.product.sellingPrice,
-          subtotal: i.product.sellingPrice * i.quantity
-        }))
+        deliveryStatus,
       };
 
       await OrderService.updateOrder(parseInt(id), payload);
       setIsDirty(false);
       localStorage.removeItem(`order_edit_draft_${id}`);
+      toast.success("Order updated successfully");
       router.push(`/orders/${id}`);
     } catch (err) {
       toast.error("Failed to update order");
@@ -193,10 +191,8 @@ export default function EditOrderPage() {
     setCustomerId(originalInvoice.customerId);
     setNotes(originalInvoice.notes || "");
     setDueDate(originalInvoice.dueDate || "");
-    setPaymentStatus(originalInvoice.paymentStatus);
+    setDeliveryStatus(originalInvoice.deliveryStatus || "PENDING");
     localStorage.removeItem(`order_edit_draft_${id}`);
-    // Need to reset line items by fetching products again or caching them.
-    // For simplicity, we just reload the page
     window.location.reload();
   };
 
@@ -260,8 +256,8 @@ export default function EditOrderPage() {
               onNotesChange={setNotes}
               dueDate={dueDate}
               onDueDateChange={setDueDate}
-              paymentStatus={paymentStatus}
-              onPaymentStatusChange={setPaymentStatus}
+              deliveryStatus={deliveryStatus}
+              onDeliveryStatusChange={setDeliveryStatus}
               disabled={isSubmitting}
             />
           </div>

@@ -127,6 +127,33 @@ export class BillingRepository {
     return result;
   }
 
+  static async updateInvoiceMetadata(id: number, data: { customerId?: number; deliveryStatus?: any; notes?: string }, dbClient: DbOrTx = db) {
+    const [result] = await dbClient
+      .update(invoices)
+      .set({ 
+        customerId: data.customerId, 
+        deliveryStatus: data.deliveryStatus, 
+        notes: data.notes, 
+        updatedAt: new Date() 
+      })
+      .where(eq(invoices.id, id))
+      .returning();
+    return result;
+  }
+
+  static async updateInvoiceForVoid(id: number, notes: string, paymentStatus: any, dbClient: DbOrTx = db) {
+    const [result] = await dbClient
+      .update(invoices)
+      .set({ 
+        notes, 
+        paymentStatus,
+        updatedAt: new Date()
+      })
+      .where(eq(invoices.id, id))
+      .returning();
+    return result;
+  }
+
   static async getInvoiceWithItemsAndPayments(id: number, dbClient: DbOrTx = db) {
     const [invoice] = await dbClient
       .select()
@@ -173,9 +200,10 @@ export class BillingRepository {
       .where(eq(payments.invoiceId, id));
 
     const formattedLines = items.map(item => ({
+      id: item.id.toString(),
       productId: item.productId,
-      snapshotSku: item.snapshotSku,
-      snapshotName: item.snapshotName,
+      productSku: item.snapshotSku,
+      productName: item.snapshotName,
       quantity: item.quantity,
       unitPrice: item.snapshotPrice,
       gstPercent: item.snapshotTaxPercent,
@@ -183,6 +211,8 @@ export class BillingRepository {
     }));
 
     const formattedPayments = invoicePayments.map(p => ({
+      id: p.id,
+      invoiceId: p.invoiceId,
       amount: p.amount,
       paymentMethod: p.paymentMethod,
       referenceNumber: p.referenceNumber,
@@ -193,6 +223,8 @@ export class BillingRepository {
     return {
       id: invoice.id,
       invoiceNumber: invoice.invoiceNumber,
+      customerId: invoice.customerId,
+      customerName: customer ? customer.name : undefined,
       subtotal: invoice.subtotal,
       taxTotal: invoice.taxTotal,
       discountTotal: invoice.discountTotal,
@@ -205,7 +237,7 @@ export class BillingRepository {
       createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
       customer: customer,
-      items: formattedLines,
+      lines: formattedLines,
       payments: formattedPayments,
       createdBy: creator,
     };

@@ -36,12 +36,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
+import { handleRowClick } from "@/lib/table-utils";
 
 interface PrescriptionTableProps {
   data: Prescription[];
 }
 
 export function PrescriptionTable({ data }: PrescriptionTableProps) {
+  const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -179,7 +182,10 @@ export function PrescriptionTable({ data }: PrescriptionTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50"
+                  className="hover:bg-muted/50 cursor-pointer transition-colors"
+                  tabIndex={0}
+                  onClick={(e) => handleRowClick(e, router, `/prescriptions/${row.original.id}`)}
+                  onKeyDown={(e) => handleRowClick(e, router, `/prescriptions/${row.original.id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

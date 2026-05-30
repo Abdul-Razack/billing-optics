@@ -7,6 +7,8 @@ import { calculateStockStatus } from "@/lib/stock";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StockActionsDropdown } from "./StockActionsDropdown";
 import { EmptyStockState } from "./EmptyStockState";
+import { useRouter } from "next/navigation";
+import { handleRowClick } from "@/lib/table-utils";
 
 interface StockTableProps {
   products: ApiProduct[];
@@ -29,6 +31,7 @@ export function StockTable({
   onSelectAll,
   onSelectRow
 }: StockTableProps) {
+  const router = useRouter();
   
   const isAllSelected = products.length > 0 && products.every(p => selectedIds.has(p.id));
   const isSomeSelected = products.some(p => selectedIds.has(p.id)) && !isAllSelected;
@@ -117,7 +120,13 @@ export function StockTable({
             }
 
             return (
-              <TableRow key={product.id} className="hover:bg-muted/50 transition-colors">
+              <TableRow 
+                key={product.id} 
+                className="hover:bg-muted/50 cursor-pointer transition-colors"
+                tabIndex={0}
+                onClick={(e) => handleRowClick(e, router, `/products/${product.id}`)}
+                onKeyDown={(e) => handleRowClick(e, router, `/products/${product.id}`)}
+              >
                 <TableCell className="px-4">
                   {onSelectRow && (
                     <Checkbox 

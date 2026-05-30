@@ -25,12 +25,15 @@ import { InventoryTransaction } from "@/types/inventory";
 import { MOCK_PRODUCTS } from "@/lib/mock-data";
 import { TransactionTypeBadge } from "./TransactionTypeBadge";
 import { InventoryFilters } from "./InventoryFilters";
+import { useRouter } from "next/navigation";
+import { handleRowClick } from "@/lib/table-utils";
 
 interface InventoryTableProps {
   data: InventoryTransaction[];
 }
 
 export function InventoryTable({ data }: InventoryTableProps) {
+  const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -138,7 +141,10 @@ export function InventoryTable({ data }: InventoryTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50"
+                  className="hover:bg-muted/50 cursor-pointer transition-colors"
+                  tabIndex={0}
+                  onClick={(e) => handleRowClick(e, router, `/products/${row.original.productId}`)}
+                  onKeyDown={(e) => handleRowClick(e, router, `/products/${row.original.productId}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

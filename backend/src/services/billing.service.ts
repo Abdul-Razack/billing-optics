@@ -24,6 +24,49 @@ export class BillingService {
     return await BillingRepository.getInvoiceById(invoiceId);
   }
 
+  async updateInvoiceMetadata(invoiceId: number, payload: { customerId?: number; deliveryStatus?: 'PENDING' | 'READY' | 'DELIVERED'; notes?: string }) {
+    const invoice = await BillingRepository.getInvoiceById(invoiceId);
+    if (!invoice) {
+      throw new NotFoundError(`Invoice with ID ${invoiceId} not found`);
+    }
+    
+    await BillingRepository.updateInvoiceMetadata(invoiceId, payload);
+    return await BillingRepository.getInvoiceWithItemsAndPayments(invoiceId);
+  }
+
+  async voidInvoice(invoiceId: number, userId: number) {
+    return await db.transaction(async (tx: DbOrTx) => {
+      const invoice = await BillingRepository.getInvoiceWithItemsAndPayments(invoiceId, tx);
+      if (!invoice) {
+        throw new NotFoundError(`Invoice with ID ${invoiceId} not found`);
+      }
+
+      if (invoice.paymentStatus === 'REFUNDED' || (invoice.notes && invoice.notes.includes('[VOIDED]'))) {
+        throw new ValidationError(`Invoice ${invoiceId} is already voided.`);
+      }
+
+      // Add RETURN ledger entries for all products
+      if (invoice.lines && invoice.lines.length > 0) {
+        const { inventoryLedger } = require('../db/schema/inventoryLedger');
+        const ledgerEntries = invoice.lines.map((item: any) => ({
+          productId: item.productId,
+          movementType: 'RETURN' as const,
+          quantityChange: item.quantity,
+          referenceType: 'INVOICE' as const,
+          referenceId: invoiceId,
+          notes: 'Restored from voided invoice',
+          createdBy: userId,
+        }));
+        await tx.insert(inventoryLedger).values(ledgerEntries);
+      }
+
+      const newNotes = `[VOIDED] ${invoice.notes || ''}`.trim();
+      await BillingRepository.updateInvoiceForVoid(invoiceId, newNotes, 'REFUNDED', tx);
+
+      return await BillingRepository.getInvoiceWithItemsAndPayments(invoiceId, tx);
+    });
+  }
+
   async checkout(data: CheckoutDTO) {
     return await processCheckout(data);
   }

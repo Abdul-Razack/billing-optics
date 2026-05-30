@@ -5,10 +5,9 @@ import { PackageIcon } from "lucide-react";
 
 interface OrderItemsTableProps {
   lines: ApiInvoiceLine[];
-  productsMap: Record<number, { name: string; sku?: string }>;
 }
 
-export function OrderItemsTable({ lines, productsMap }: OrderItemsTableProps) {
+export function OrderItemsTable({ lines }: OrderItemsTableProps) {
   return (
     <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
       <div className="p-4 border-b bg-gray-50/50">
@@ -38,9 +37,8 @@ export function OrderItemsTable({ lines, productsMap }: OrderItemsTableProps) {
               </TableRow>
             ) : (
               lines.map((line) => {
-                const product = productsMap[line.productId];
-                const productName = line.productName || product?.name || `Product ID: ${line.productId}`;
-                const sku = line.productSku || product?.sku;
+                const productName = line.productName || `Product ID: ${line.productId}`;
+                const sku = line.productSku;
                 
                 return (
                   <TableRow key={line.id}>

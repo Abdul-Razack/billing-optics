@@ -34,6 +34,8 @@ import { ProductStatusBadge } from "./ProductStatusBadge";
 import { ProductActionsDropdown } from "./ProductActionsDropdown";
 import { ProductGridCard } from "./ProductGridCard";
 import { ProductPagination } from "./ProductPagination";
+import { useRouter } from "next/navigation";
+import { handleRowClick } from "@/lib/table-utils";
 
 interface ProductListTableProps {
   data: ApiProduct[];
@@ -68,6 +70,7 @@ export function ProductListTable({
   rowSelection = {},
   onRowSelectionChange
 }: ProductListTableProps) {
+  const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
   // Use internal state only if parent doesn't provide one
   const [internalRowSelection, setInternalRowSelection] = useState({});
@@ -314,7 +317,10 @@ export function ProductListTable({
                         <TableRow
                           key={row.id}
                           data-state={row.getIsSelected() && "selected"}
-                          className={`hover:bg-muted/50 ${isOutOfStock ? "bg-red-50/50 hover:bg-red-50" : ""}`}
+                          className={`hover:bg-muted/50 cursor-pointer transition-colors ${isOutOfStock ? "bg-red-50/50 hover:bg-red-50" : ""}`}
+                          tabIndex={0}
+                          onClick={(e) => handleRowClick(e, router, `/products/${row.original.id}`)}
+                          onKeyDown={(e) => handleRowClick(e, router, `/products/${row.original.id}`)}
                         >
                           {row.getVisibleCells().map((cell) => (
                             <TableCell key={cell.id}>

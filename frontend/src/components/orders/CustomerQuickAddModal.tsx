@@ -31,12 +31,16 @@ export function CustomerQuickAddModal({ open, onOpenChange, onSuccess }: Custome
 
     setIsSubmitting(true);
     try {
-      const newCustomer = await CustomerService.createCustomer({
-        fullName: formData.fullName,
-        phone: formData.phone,
-        email: formData.email || undefined,
-        isActive: true,
-      });
+      const payload: Record<string, any> = {
+        name: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+      };
+      
+      if (formData.email && formData.email.trim() !== "") {
+        payload.email = formData.email.trim();
+      }
+      
+      const newCustomer = await CustomerService.createCustomer(payload);
       
       toast.success("Customer added successfully!");
       setFormData({ fullName: "", phone: "", email: "" });
@@ -44,7 +48,9 @@ export function CustomerQuickAddModal({ open, onOpenChange, onSuccess }: Custome
       onOpenChange(false);
     } catch (error: any) {
       console.error("Failed to create customer", error);
-      toast.error(error.message || "Failed to create customer");
+      // Handle API validation errors which might come as an array or specific message
+      const errorMessage = error.response?.data?.message || error.message || "Failed to create customer. Phone number might already exist.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -58,11 +64,7 @@ export function CustomerQuickAddModal({ open, onOpenChange, onSuccess }: Custome
         onOpenChange(val);
       }}
     >
-      <DialogContent 
-        className="sm:max-w-[425px]"
-        onInteractOutside={(e: any) => { if (isSubmitting) e.preventDefault(); }}
-        onEscapeKeyDown={(e: any) => { if (isSubmitting) e.preventDefault(); }}
-      >
+      <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

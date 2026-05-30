@@ -65,11 +65,11 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     invoiceNumber: apiData.invoiceNumber,
     customerId: apiData.customer?.id ? String(apiData.customer.id) : "",
     date: apiData.createdAt,
-    items: apiData.items.map((item, idx) => ({
-      id: String(idx),
+    items: (apiData.lines || []).map((item, idx) => ({
+      id: item.id || String(idx),
       productId: String(item.productId),
-      productName: item.snapshotName,
-      sku: item.snapshotSku,
+      productName: item.productName,
+      sku: item.productSku,
       quantity: item.quantity,
       unitPrice: item.unitPrice / 100, // DB stores in cents
       total: item.subtotal / 100,

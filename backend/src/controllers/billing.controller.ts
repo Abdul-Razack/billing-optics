@@ -58,6 +58,34 @@ export class BillingController {
     }
   }
 
+  static async updateInvoice(req: Request, res: Response, next: NextFunction) {
+    try {
+      const invoiceId = parseInt(req.params.id, 10);
+      const payload = {
+        customerId: req.body.customerId,
+        deliveryStatus: req.body.deliveryStatus,
+        notes: req.body.notes,
+      };
+
+      const result = await billingService.updateInvoiceMetadata(invoiceId, payload);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async voidInvoice(req: Request, res: Response, next: NextFunction) {
+    try {
+      const invoiceId = parseInt(req.params.id, 10);
+      const userId = req.user!.id;
+
+      const result = await billingService.voidInvoice(invoiceId, userId);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getInvoice(req: Request, res: Response, next: NextFunction) {
     try {
       const invoiceIdParam = req.params.id;

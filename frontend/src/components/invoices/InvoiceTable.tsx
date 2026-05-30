@@ -30,6 +30,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InvoiceUrlState } from "@/hooks/useInvoiceUrlState";
+import { useRouter } from "next/navigation";
+import { handleRowClick } from "@/lib/table-utils";
 
 interface InvoiceTableProps {
   data: ApiInvoice[];
@@ -40,6 +42,7 @@ interface InvoiceTableProps {
 }
 
 export function InvoiceTable({ data, isLoading, totalItems, state, updateState }: InvoiceTableProps) {
+  const router = useRouter();
   
   const handleSort = (field: string) => {
     const currentField = state.sort.split("-")[0];
@@ -200,7 +203,10 @@ export function InvoiceTable({ data, isLoading, totalItems, state, updateState }
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50"
+                  className="hover:bg-muted/50 cursor-pointer transition-colors"
+                  tabIndex={0}
+                  onClick={(e) => handleRowClick(e, router, `/invoices/${row.original.id}`)}
+                  onKeyDown={(e) => handleRowClick(e, router, `/invoices/${row.original.id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

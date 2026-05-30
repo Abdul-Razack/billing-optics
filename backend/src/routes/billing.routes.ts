@@ -47,6 +47,20 @@ router.get(
   BillingController.getInvoice
 );
 
+router.put(
+  '/:id',
+  authenticate,
+  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+  BillingController.updateInvoice
+);
+
+router.post(
+  '/:id/void',
+  authenticate,
+  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+  BillingController.voidInvoice
+);
+
 router.get(
   '/:id/pdf',
   authenticate,

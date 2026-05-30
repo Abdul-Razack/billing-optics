@@ -1,23 +1,42 @@
+"use client";
+
+import { use } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { RoleBadge } from "@/components/users/RoleBadge";
-import { MOCK_USERS } from "@/lib/mock-user-data";
-import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { ArrowLeft, Edit, Mail, Phone, Calendar, Clock, Shield } from "lucide-react";
+import { ArrowLeft, Edit, Mail, Phone, Calendar, Clock, Shield, Loader2 } from "lucide-react";
+import { useFetch } from "@/hooks/useApi";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { User } from "@/services/user.service";
 
-export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params;
+export default function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   
-  if (!resolvedParams.id || resolvedParams.id === "undefined") {
-    notFound();
+  const { data: response, isLoading, error } = useFetch<{ success: boolean; data: User }>(
+    resolvedParams.id && resolvedParams.id !== "undefined" ? `/users/${resolvedParams.id}` : "",
+    { enabled: !!(resolvedParams.id && resolvedParams.id !== "undefined") }
+  );
+
+  if (isLoading) {
+    return (
+      <PageContainer title="User Profile" description="View and manage staff member details.">
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PageContainer>
+    );
   }
 
-  const user = MOCK_USERS.find(u => u.id === resolvedParams.id);
+  const user = response?.data;
   
-  if (!user) {
-    notFound();
+  if (error || !user) {
+    return (
+      <PageContainer title="User Profile" description="View and manage staff member details.">
+        <EmptyState title="User Not Found" description="The user you are trying to view does not exist." />
+      </PageContainer>
+    );
   }
 
   return (
@@ -34,13 +53,13 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 bg-primary/10 text-primary rounded-full flex items-center justify-center text-2xl font-bold uppercase">
-            {user.name.charAt(0)}
+            {(user.fullName || user.name || "U").charAt(0)}
           </div>
           <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-3">
-              {user.name}
-              <Badge variant={user.status === "ACTIVE" ? "default" : "secondary"}>
-                {user.status}
+              <h1 className="text-2xl font-semibold flex items-center gap-3">
+              {user.fullName || user.name}
+              <Badge variant={user.isActive ? "default" : "secondary"}>
+                {user.isActive ? "ACTIVE" : "INACTIVE"}
               </Badge>
             </h1>
             <div className="text-muted-foreground mt-1">
@@ -102,7 +121,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {user.permissions?.length ? (
-                user.permissions.map((perm) => (
+                user.permissions.map((perm: string) => (
                   <div key={perm} className="flex items-center p-3 rounded-md border border-border bg-muted/30">
                     <div className="h-2 w-2 rounded-full bg-primary mr-3" />
                     <span className="text-sm capitalize font-medium">

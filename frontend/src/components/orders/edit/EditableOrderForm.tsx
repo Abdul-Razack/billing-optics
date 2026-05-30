@@ -27,8 +27,8 @@ interface EditableOrderFormProps {
   dueDate: string;
   onDueDateChange: (date: string) => void;
 
-  paymentStatus: PaymentStatus;
-  onPaymentStatusChange: (status: PaymentStatus) => void;
+  deliveryStatus: "PENDING" | "READY" | "DELIVERED" | undefined;
+  onDeliveryStatusChange: (status: "PENDING" | "READY" | "DELIVERED") => void;
   
   disabled?: boolean;
 }
@@ -45,8 +45,8 @@ export function EditableOrderForm({
   onNotesChange,
   dueDate,
   onDueDateChange,
-  paymentStatus,
-  onPaymentStatusChange,
+  deliveryStatus,
+  onDeliveryStatusChange,
   disabled
 }: EditableOrderFormProps) {
   return (
@@ -79,15 +79,15 @@ export function EditableOrderForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>Payment Status</Label>
-              <Select value={paymentStatus} onValueChange={(v) => onPaymentStatusChange(v as PaymentStatus)} disabled={disabled}>
+              <Label>Delivery Status</Label>
+              <Select value={deliveryStatus || "PENDING"} onValueChange={(v: any) => onDeliveryStatusChange(v)} disabled={disabled}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="UNPAID">Unpaid</SelectItem>
-                  <SelectItem value="PARTIAL">Partial</SelectItem>
-                  <SelectItem value="PAID">Paid</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="READY">Ready</SelectItem>
+                  <SelectItem value="DELIVERED">Delivered</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -98,19 +98,17 @@ export function EditableOrderForm({
       <Card>
         <CardHeader className="pb-4 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg">Order Items</CardTitle>
-            <CardDescription>Modify products and quantities.</CardDescription>
+            <CardTitle className="text-lg">Order Items (Locked)</CardTitle>
+            <CardDescription>Items cannot be modified after checkout.</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <ProductOrderSelector onAdd={onAddProduct} disabled={disabled} />
-          
           <div className="pt-2">
             <InvoiceLineItems 
               items={lineItems} 
               onChangeQuantity={onUpdateQuantity}
               onRemove={onRemoveProduct}
-              disabled={disabled}
+              disabled={true}
             />
           </div>
         </CardContent>

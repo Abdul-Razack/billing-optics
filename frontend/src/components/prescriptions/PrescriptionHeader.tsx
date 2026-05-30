@@ -41,7 +41,7 @@ export function PrescriptionHeader({ prescription, children }: PrescriptionHeade
             Edit
           </Link>
         </Button>
-        <Button>
+        <Button onClick={() => window.print()}>
           <Printer className="mr-2 h-4 w-4" />
           Print Rx
         </Button>
