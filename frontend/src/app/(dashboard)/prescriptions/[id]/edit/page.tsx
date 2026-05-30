@@ -12,12 +12,12 @@ import { toast } from "sonner";
 
 export default function EditPrescriptionPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
+  const hasValidId = !!(resolvedParams.id && resolvedParams.id !== "undefined");
   const [prescription, setPrescription] = useState<Prescription | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(hasValidId);
 
   useEffect(() => {
     if (!resolvedParams.id || resolvedParams.id === "undefined") {
-      setLoading(false);
       return;
     }
 

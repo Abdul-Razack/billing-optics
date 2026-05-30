@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,7 +17,14 @@ import { CheckCircle } from "lucide-react";
 
 export function InvoiceForm() {
   const router = useRouter();
-  const sessionIdRef = React.useRef<string>(`SESS-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
+  // Initialised in useEffect to keep impure Date.now()/Math.random() calls
+  // out of the render phase (React Compiler requirement).
+  const sessionIdRef = React.useRef<string | null>(null);
+  useEffect(() => {
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = `SESS-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    }
+  }, []);
 
   // POS State
   const [customerId, setCustomerId] = useState<string>("");
@@ -100,7 +107,7 @@ export function InvoiceForm() {
         }] : undefined
       };
 
-      const invoice = await OrderService.createOrder(sessionIdRef.current, payload);
+      const invoice = await OrderService.createOrder(sessionIdRef.current || "", payload);
       router.push(`/orders/${invoice.invoiceId}`);
     } catch (error) {
       console.error("Checkout failed:", error);

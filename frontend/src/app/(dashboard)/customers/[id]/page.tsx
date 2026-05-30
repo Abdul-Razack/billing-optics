@@ -14,10 +14,12 @@ import { ApiCustomer } from "@/types/customer";
 import { ApiSettings } from "@/services/settings.service";
 import { OrderService } from "@/services/order.service";
 import { OrderTable } from "@/components/orders/OrderTable";
+import { ApiInvoice } from "@/types/order";
+import { Prescription } from "@/types/prescription";
 
 interface CustomerWithDetails extends ApiCustomer {
-  prescriptions?: any[];
-  invoices?: any[];
+  prescriptions?: Prescription[];
+  invoices?: ApiInvoice[];
 }
 
 export default function CustomerProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,7 +54,7 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
 
   const invoices = customer.invoices || [];
   const totalPurchases = invoices.length;
-  const lifetimeValue = invoices.reduce((acc: number, inv: any) => acc + (inv.totalAmount || 0), 0);
+  const lifetimeValue = invoices.reduce((acc: number, inv: ApiInvoice) => acc + (inv.grandTotal || 0), 0);
   const lastVisit = invoices.length > 0 ? new Date(invoices[0].createdAt).toLocaleDateString() : "Never";
 
   return (
@@ -197,7 +199,7 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
           >
             {customer.prescriptionHistory && customer.prescriptionHistory.length > 0 ? (
               <div className="space-y-4">
-                {customer.prescriptionHistory.map((rx: any) => (
+                {customer.prescriptionHistory.map((rx: Prescription) => (
                   <Link
                     key={rx.id}
                     href={`/prescriptions/${rx.id}`}
@@ -210,7 +212,7 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
                       </div>
                       <div className="text-sm text-right">
                         {rx.pd && <p>PD: {rx.pd}</p>}
-                        {rx.addPower && <p>ADD: {rx.addPower}</p>}
+                        {rx.rightEye?.addPower && <p>ADD: {rx.rightEye.addPower}</p>}
                       </div>
                     </div>
                     {rx.notes && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { InvoiceTable } from "@/components/invoices/InvoiceTable";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Filter, X, Search, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useEffect, useState as useLocalState } from "react";
+
 import { useInvoiceUrlState } from "@/hooks/useInvoiceUrlState";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
@@ -33,11 +33,7 @@ export default function InvoicesPage() {
     }
   }, [debouncedSearch, state.q, updateState]);
 
-  useEffect(() => {
-    if (state.q !== localSearch) {
-      setLocalSearch(state.q || "");
-    }
-  }, [state.q]);
+
 
   // Map client 0-indexed page to backend 1-indexed page
   const queryParams = new URLSearchParams({

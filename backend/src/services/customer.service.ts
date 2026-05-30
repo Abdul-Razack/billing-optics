@@ -22,7 +22,7 @@ export class CustomerService {
     return await CustomerRepository.create(dbData);
   }
 
-  async getAll(filters?: { search?: string; page?: number; limit?: number }) {
+  async getAll(filters?: { search?: string; isActive?: boolean; page?: number; limit?: number }) {
     return await CustomerRepository.findAll(filters || {});
   }
 

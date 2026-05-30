@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { ReportService, SalesReportData, RevenueTrendData } from "@/services/report.service";
@@ -23,28 +23,28 @@ export default function SalesReportPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Filters
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [presetRange, setPresetRange] = useState<string>("this_month");
   const [groupBy, setGroupBy] = useState<"daily" | "weekly" | "monthly">("daily");
 
-  useEffect(() => {
-    // Handle presets
+  // Derive dateRange from preset — no useState+useEffect needed
+  const dateRange = useMemo(() => {
     const today = new Date();
-    if (presetRange === "today") {
-      setDateRange({ from: startOfDay(today), to: endOfDay(today) });
-    } else if (presetRange === "this_week") {
-      setDateRange({ from: startOfWeek(today), to: endOfDay(today) });
-    } else if (presetRange === "this_month") {
-      setDateRange({ from: startOfMonth(today), to: endOfDay(today) });
-    }
+    if (presetRange === "today") return { from: startOfDay(today), to: endOfDay(today) };
+    if (presetRange === "this_week") return { from: startOfWeek(today), to: endOfDay(today) };
+    if (presetRange === "this_month") return { from: startOfMonth(today), to: endOfDay(today) };
+    return undefined;
   }, [presetRange]);
+
+  // Allow manual date range override when preset is "custom"
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
+  const effectiveDateRange = presetRange === "custom" ? customDateRange : dateRange;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const start = dateRange?.from ? dateRange.from.toISOString() : undefined;
-        const end = dateRange?.to ? dateRange.to.toISOString() : undefined;
+        const start = effectiveDateRange?.from ? effectiveDateRange.from.toISOString() : undefined;
+        const end = effectiveDateRange?.to ? effectiveDateRange.to.toISOString() : undefined;
 
         // Fetch Real Backend Sales Report
         const fetchedSalesData = await ReportService.getSalesReport(start, end);
@@ -66,12 +66,12 @@ export default function SalesReportPage() {
       fetchData();
     }, 300);
     return () => clearTimeout(timer);
-  }, [dateRange, groupBy]);
+  }, [effectiveDateRange, groupBy]);
 
   const handleExportCsv = async () => {
     try {
-      const start = dateRange?.from ? dateRange.from.toISOString() : undefined;
-      const end = dateRange?.to ? dateRange.to.toISOString() : undefined;
+      const start = effectiveDateRange?.from ? effectiveDateRange.from.toISOString() : undefined;
+      const end = effectiveDateRange?.to ? effectiveDateRange.to.toISOString() : undefined;
       toast.info("Preparing export...");
       await ExportService.exportSalesCsv(start, end, "all");
       toast.success("Export downloaded successfully");
@@ -89,8 +89,8 @@ export default function SalesReportPage() {
       <div className="mt-6 space-y-6 print:m-0 print:space-y-4">
         <div className="print:hidden">
           <SalesReportToolbar 
-            dateRange={dateRange}
-            setDateRange={setDateRange}
+            dateRange={effectiveDateRange}
+            setDateRange={setCustomDateRange}
             presetRange={presetRange}
             setPresetRange={setPresetRange}
             groupBy={groupBy}

@@ -28,10 +28,14 @@ export default function CustomersPage() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  // We always fetch all customers or search server-side if backend supports it.
-  // Currently backend only supports ?search=
-  const customersUrl = state.q ? `/customers?search=${encodeURIComponent(state.q)}&limit=5000` : "/customers?limit=5000";
-  const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiCustomer[] }>(customersUrl);
+  // Build API URL — pass isActive to the backend for server-side filtering
+  const isActiveParam = state.status === "active" ? "true" : state.status === "inactive" ? "false" : undefined;
+  const customersUrl = [
+    state.q ? `search=${encodeURIComponent(state.q)}` : null,
+    isActiveParam !== undefined ? `isActive=${isActiveParam}` : null,
+    "limit=5000"
+  ].filter(Boolean).join("&");
+  const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiCustomer[] }>(`/customers?${customersUrl}`);
   
   const allCustomers = response?.data || [];
   
@@ -98,10 +102,10 @@ export default function CustomersPage() {
   const filteredCustomers = useMemo(() => {
     let result = [...allCustomers];
 
-    // Status filter
+    // Status filter — use Boolean() to handle SQLite 0/1 integers
     if (state.status !== "all") {
       const isActive = state.status === "active";
-      result = result.filter(c => c.isActive === isActive);
+      result = result.filter(c => Boolean(c.isActive) === isActive);
     }
 
     // Has Custom Fields filter

@@ -11,6 +11,7 @@ export interface ApiInvoiceLine {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  gstPercent?: number;
 }
 
 export interface ApiPayment {

@@ -62,7 +62,7 @@ export function InvoicePrintToolbar({ printRef, receiptRef, invoiceNumber, invoi
                 implemented by toggling a state in the parent component. 
                 Wait, let's keep it simple: the parent can just pass the preview content as children 
                 if we use it as a wrapper, or we can just remove the Dialog and let the parent handle preview. */}
-            <p className="text-sm text-gray-500 italic">Preview is available via the browser's native Print dialog.</p>
+            <p className="text-sm text-gray-500 italic">Preview is available via the browser&apos;s native Print dialog.</p>
           </div>
         </DialogContent>
       </Dialog>

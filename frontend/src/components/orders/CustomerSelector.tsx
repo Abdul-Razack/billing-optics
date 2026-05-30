@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Check, ChevronsUpDown, User, Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -63,10 +63,12 @@ export function CustomerSelector({ value, customer, onChange, error, disabled }:
   );
   
   const RECENT_THRESHOLD = 48 * 60 * 60 * 1000; // 48 hours
-  const now = Date.now();
-  
-  const recentCustomers = sortedCustomers.filter(c => (now - new Date(c.createdAt).getTime()) < RECENT_THRESHOLD);
-  const existingCustomers = sortedCustomers.filter(c => (now - new Date(c.createdAt).getTime()) >= RECENT_THRESHOLD);
+  const { recentCustomers, existingCustomers } = useMemo(() => {
+    const now = Date.now();
+    const recent = sortedCustomers.filter(c => (now - new Date(c.createdAt).getTime()) < RECENT_THRESHOLD);
+    const existing = sortedCustomers.filter(c => (now - new Date(c.createdAt).getTime()) >= RECENT_THRESHOLD);
+    return { recentCustomers: recent, existingCustomers: existing };
+  }, [sortedCustomers, RECENT_THRESHOLD]);
 
   const renderCustomerItem = (c: ApiCustomer) => (
     <CommandItem

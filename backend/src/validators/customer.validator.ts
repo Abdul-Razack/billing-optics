@@ -15,7 +15,16 @@ export const updateCustomerSchema = z.object({
 });
 
 export const getCustomersSchema = z.object({
-  query: paginationQuerySchema
+  query: paginationQuerySchema.extend({
+    isActive: z.preprocess(
+      (val) => {
+        if (val === 'true') return true;
+        if (val === 'false') return false;
+        return undefined;
+      },
+      z.boolean().optional()
+    ),
+  }),
 });
 
 export const addPrescriptionSchema = z.object({

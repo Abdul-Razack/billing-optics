@@ -29,26 +29,38 @@ export class CustomerRepository {
     return result;
   }
 
-  static async findAll(filters: { search?: string; page?: number; limit?: number }, dbClient: DbOrTx = db) {
+  static async findAll(filters: { search?: string; isActive?: boolean; page?: number; limit?: number }, dbClient: DbOrTx = db) {
     const { page, limit, offset } = getPaginationParams(filters.page, filters.limit);
-    let baseConditions: any = undefined;
+    const conditions: ReturnType<typeof eq>[] = [];
 
     if (filters.search) {
       const s = `%${filters.search}%`;
-      baseConditions = or(
-        ilike(customers.fullName, s),
-        ilike(customers.phone, s),
-        ilike(customers.email, s)
+      conditions.push(
+        or(
+          ilike(customers.fullName, s),
+          ilike(customers.phone, s),
+          ilike(customers.email, s)
+        ) as ReturnType<typeof eq>
       );
     }
+
+    if (filters.isActive !== undefined) {
+      conditions.push(eq(customers.isActive, filters.isActive));
+    }
+
+    const whereClause = conditions.length === 0
+      ? undefined
+      : conditions.length === 1
+        ? conditions[0]
+        : and(...conditions);
 
     const [countResult, dataResult] = await Promise.all([
       dbClient.select({ count: sql<number>`cast(count(*) as integer)` })
         .from(customers)
-        .where(baseConditions),
+        .where(whereClause),
       dbClient.select()
         .from(customers)
-        .where(baseConditions)
+        .where(whereClause)
         .orderBy(desc(customers.createdAt))
         .limit(limit)
         .offset(offset)

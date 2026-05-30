@@ -17,14 +17,14 @@ import { Customer } from "@/types/customer";
 
 export default function PrescriptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
+  const hasValidId = !!(resolvedParams.id && resolvedParams.id !== "undefined");
   const [prescription, setPrescription] = useState<Prescription | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerHistory, setCustomerHistory] = useState<Prescription[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(hasValidId);
 
   useEffect(() => {
     if (!resolvedParams.id || resolvedParams.id === "undefined") {
-      setLoading(false);
       return;
     }
 

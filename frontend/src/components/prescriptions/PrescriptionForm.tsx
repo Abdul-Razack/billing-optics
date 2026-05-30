@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -112,8 +112,14 @@ export function PrescriptionForm({ initialData }: PrescriptionFormProps) {
     }
   };
 
+  const handleFormSubmit = useCallback(
+    form.handleSubmit(onSubmit),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [form, onSubmit]
+  );
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-4xl mx-auto">
+    <form onSubmit={handleFormSubmit} className="space-y-8 max-w-4xl mx-auto">
       <div className="bg-card rounded-lg border border-border shadow-sm p-6 space-y-4">
         <h3 className="font-medium text-foreground border-b border-border pb-2">Patient Selection</h3>
         <div className="max-w-md space-y-2">

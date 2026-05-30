@@ -38,8 +38,7 @@ export default function EditOrderPage() {
   const [dueDate, setDueDate] = useState("");
   const [deliveryStatus, setDeliveryStatus] = useState<"PENDING" | "READY" | "DELIVERED">("PENDING");
 
-  // Track if changes made
-  const [isDirty, setIsDirty] = useState(false);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -119,21 +118,22 @@ export default function EditOrderPage() {
     return () => { isMounted = false; };
   }, [id]);
 
-  // Dirty state checker
-  useEffect(() => {
-    if (!originalInvoice) return;
+  // Derive dirty state directly — no need for useState + useEffect
+  const isDirty = useMemo(() => {
+    if (!originalInvoice) return false;
     const notesChanged = notes !== (originalInvoice.notes || "");
     const dueDateChanged = dueDate !== (originalInvoice.dueDate ? new Date(originalInvoice.dueDate).toISOString().split('T')[0] : "");
     const customerChanged = customerId !== originalInvoice.customerId;
     const deliveryStatusChanged = deliveryStatus !== (originalInvoice.deliveryStatus || "PENDING");
     const itemsChanged = JSON.stringify(lineItems.map(i => ({ id: i.product.id, qty: i.quantity }))) 
       !== JSON.stringify((originalInvoice.lines || []).map(l => ({ id: l.productId, qty: l.quantity })));
-      
-    const dirty = notesChanged || dueDateChanged || customerChanged || deliveryStatusChanged || itemsChanged;
-    setIsDirty(dirty);
+    return notesChanged || dueDateChanged || customerChanged || deliveryStatusChanged || itemsChanged;
+  }, [notes, dueDate, customerId, deliveryStatus, lineItems, originalInvoice]);
 
-    // Save draft if dirty, otherwise clear
-    if (dirty) {
+  // Save/clear draft whenever dirty state changes
+  useEffect(() => {
+    if (!originalInvoice) return;
+    if (isDirty) {
       localStorage.setItem(`order_edit_draft_${id}`, JSON.stringify({
         customerId,
         customer,
@@ -145,7 +145,7 @@ export default function EditOrderPage() {
     } else {
       localStorage.removeItem(`order_edit_draft_${id}`);
     }
-  }, [notes, dueDate, customerId, deliveryStatus, lineItems, originalInvoice, id, customer]);
+  }, [isDirty, notes, dueDate, customerId, deliveryStatus, lineItems, originalInvoice, id, customer]);
 
   // Live Math
   const subtotal = useMemo(() => {
@@ -175,7 +175,6 @@ export default function EditOrderPage() {
       };
 
       await OrderService.updateOrder(parseInt(id), payload);
-      setIsDirty(false);
       localStorage.removeItem(`order_edit_draft_${id}`);
       toast.success("Order updated successfully");
       router.push(`/orders/${id}`);

@@ -37,11 +37,14 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
   // Update amount if modal opens with different intent
   useEffect(() => {
     if (open) {
-      setAmount(initialIsFull ? (balanceDue / 100).toFixed(2) : "");
-      setMethod("CASH");
-      setReference("");
-      setNotes("");
-      setIsSubmitting(false);
+      // Defer setState calls to avoid synchronous setState in effect body
+      void Promise.resolve().then(() => {
+        setAmount(initialIsFull ? (balanceDue / 100).toFixed(2) : "");
+        setMethod("CASH");
+        setReference("");
+        setNotes("");
+        setIsSubmitting(false);
+      });
     }
   }, [open, initialIsFull, balanceDue]);
 

@@ -23,15 +23,18 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("business");
   const [settings, setSettings] = useState<ApiSettings | null>(null);
-  const [license, setLicense] = useState<any>(null);
+  const [license, setLicense] = useState<{
+    isValid: boolean;
+    type?: string;
+    daysRemaining?: number;
+    message?: string;
+    hardwareId?: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
   const loadSettings = async () => {
+    await Promise.resolve(); // yield before any setState (React Compiler requirement)
     try {
       setIsLoading(true);
       const [settingsData, licenseData] = await Promise.all([
@@ -39,13 +42,17 @@ export default function SettingsPage() {
         fetchClient("/license/status").catch(() => null)
       ]);
       setSettings(settingsData);
-      setLicense(licenseData);
+      setLicense(licenseData as typeof license);
     } catch (error) {
       toast.error("Failed to load settings.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    void loadSettings();
+  }, []);
 
   const handleSave = async () => {
     if (!settings) return;

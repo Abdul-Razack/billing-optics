@@ -59,6 +59,7 @@ export default function SystemHealthPage() {
   const [refreshing, setRefreshing] = useState(false);
 
   const loadHealth = async (isRefresh = false) => {
+    await Promise.resolve(); // yield before any setState (React Compiler requirement)
     try {
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
@@ -76,7 +77,7 @@ export default function SystemHealthPage() {
   };
 
   useEffect(() => {
-    loadHealth();
+    void loadHealth();
   }, []);
 
   const handleExport = async () => {

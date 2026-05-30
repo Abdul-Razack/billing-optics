@@ -77,7 +77,7 @@ export default function DatabaseMaintenancePage() {
   };
 
   useEffect(() => {
-    loadStats();
+    void loadStats();
   }, []);
 
   const handleOptimize = async () => {

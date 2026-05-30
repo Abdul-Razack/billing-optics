@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -14,11 +14,12 @@ interface CustomerSearchProps {
 export function CustomerSearch({ initialValue, onSearch, isSearching = false }: CustomerSearchProps) {
   const [value, setValue] = useState(initialValue);
   const debouncedValue = useDebounce(value, 300);
-
-  // Sync internal state with prop if it changes externally (e.g. clear filters)
-  useEffect(() => {
+  // Track previous initialValue to detect external resets without useEffect+setState
+  const prevInitialRef = useRef(initialValue);
+  if (prevInitialRef.current !== initialValue) {
+    prevInitialRef.current = initialValue;
     setValue(initialValue);
-  }, [initialValue]);
+  }
 
   // Trigger search on debounce
   useEffect(() => {

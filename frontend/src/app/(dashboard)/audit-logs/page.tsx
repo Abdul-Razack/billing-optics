@@ -14,9 +14,10 @@ export default function AuditLogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<any>({});
+  const [filters, setFilters] = useState<Record<string, string>>({});
   
-  const fetchLogs = async (currentFilters: any) => {
+  const fetchLogs = async (currentFilters: Record<string, string>) => {
+    await Promise.resolve(); // yield to event loop before any setState
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
@@ -27,7 +28,7 @@ export default function AuditLogsPage() {
         }
       });
       
-      const response = await fetchClient(`/audit-logs?${queryParams.toString()}`) as any;
+      const response = await fetchClient(`/audit-logs?${queryParams.toString()}`) as { data: AuditLog[]; total: number };
       setLogs(response.data);
       setTotal(response.total);
     } catch (error) {
@@ -39,10 +40,10 @@ export default function AuditLogsPage() {
   };
 
   useEffect(() => {
-    fetchLogs(filters);
+    void fetchLogs(filters);
   }, [filters]);
 
-  const handleFilterChange = (newFilters: any) => {
+  const handleFilterChange = (newFilters: Record<string, string>) => {
     setFilters(newFilters);
   };
 

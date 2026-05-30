@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { ReportExportSelector, ReportType } from "@/components/reports/export/ReportExportSelector";
@@ -17,20 +17,17 @@ export default function UnifiedExportCenterPage() {
   const [formatSelection, setFormatSelection] = useState<string>("csv");
   const [isLoading, setIsLoading] = useState(false);
   
-  // Local state for export history since we don't have a backend endpoint for this
-  const [history, setHistory] = useState<ExportRecord[]>([]);
-
-  useEffect(() => {
-    // Load from local storage on mount
-    const saved = localStorage.getItem("billing_optics_export_history");
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse export history", e);
-      }
+  // Lazy initializer reads localStorage once on mount — no extra render needed
+  const [history, setHistory] = useState<ExportRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem("billing_optics_export_history");
+      return saved ? (JSON.parse(saved) as ExportRecord[]) : [];
+    } catch {
+      return [];
     }
-  }, []);
+  });
+
+
 
   const saveHistory = (newHistory: ExportRecord[]) => {
     setHistory(newHistory);

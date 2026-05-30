@@ -53,11 +53,11 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 bg-primary/10 text-primary rounded-full flex items-center justify-center text-2xl font-bold uppercase">
-            {(user.fullName || user.name || "U").charAt(0)}
+            {(user.fullName || "U").charAt(0)}
           </div>
           <div>
               <h1 className="text-2xl font-semibold flex items-center gap-3">
-              {user.fullName || user.name}
+              {user.fullName}
               <Badge variant={user.isActive ? "default" : "secondary"}>
                 {user.isActive ? "ACTIVE" : "INACTIVE"}
               </Badge>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -98,18 +98,25 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
         router.push("/products");
         router.refresh(); 
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred while saving.");
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "An error occurred while saving.";
+      setError(errMsg);
       toast.error("An error occurred while saving");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleSaveAndAddAnother = () => {
+  const handleSaveAndAddAnother = useCallback(() => {
     nextActionRef.current = "reset";
     form.handleSubmit(onSubmit)();
-  };
+  }, [form, onSubmit]);
+
+  const handleFormSubmit = useCallback(
+    form.handleSubmit(onSubmit),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [form, onSubmit]
+  );
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -125,7 +132,7 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
 
       <FormProvider {...form}>
         <UnsavedChangesGuard isDirty={isDirty} />
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={handleFormSubmit} className="space-y-8">
           
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* Main Form Area */}

@@ -7,6 +7,9 @@ export interface User {
   role: 'ADMIN' | 'CASHIER' | 'OPTOMETRIST';
   isActive: boolean;
   preferences?: Record<string, any>;
+  phone?: string;
+  lastLogin?: string;
+  permissions?: string[];
   createdAt: string;
   updatedAt: string;
 }

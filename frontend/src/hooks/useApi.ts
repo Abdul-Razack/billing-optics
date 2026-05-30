@@ -24,6 +24,7 @@ export function useFetch<T>(endpoint: string, options: UseFetchOptions<T> = {}) 
   }, [onSuccess, onError]);
 
   const fetchData = useCallback(async (abortController?: AbortController) => {
+    await Promise.resolve(); // yield before any setState (React Compiler requirement)
     setIsLoading(true);
     setError(null);
     try {
@@ -34,17 +35,17 @@ export function useFetch<T>(endpoint: string, options: UseFetchOptions<T> = {}) 
       setData(result);
       onSuccessRef.current?.(result);
       setIsLoading(false);
-    } catch (err: any) {
-      if (err.name === "AbortError" || abortController?.signal.aborted) return;
-      setError(err);
-      onErrorRef.current?.(err);
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name === "AbortError" || abortController?.signal.aborted) return;
+      setError(error);
+      onErrorRef.current?.(error);
       setIsLoading(false);
     }
   }, [endpoint]);
 
   useEffect(() => {
     if (!enabled) {
-      setIsLoading(false);
       return;
     }
     const abortController = new AbortController();

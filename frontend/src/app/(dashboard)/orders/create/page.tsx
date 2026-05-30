@@ -24,7 +24,7 @@ export default function CreateOrderPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successId, setSuccessId] = useState<number | null>(null);
-  const sessionIdRef = useRef<string>(`SESS-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
+  const sessionIdRef = useRef<string | null>(null);
 
   // Form State
   const [customerId, setCustomerId] = useState<number | undefined>(undefined);
@@ -40,35 +40,42 @@ export default function CreateOrderPage() {
 
   // Load draft from localStorage on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("order_cart_draft");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.customerId !== undefined) setCustomerId(parsed.customerId);
-        if (parsed.customer) setCustomer(parsed.customer);
-        if (parsed.lineItems) setLineItems(parsed.lineItems);
-        if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
-        if (parsed.amountPaid) setAmountPaid(parsed.amountPaid);
-        if (parsed.referenceNumber) setReferenceNumber(parsed.referenceNumber);
-      }
+    // Initialise the idempotency key outside of render
+    sessionIdRef.current = `SESS-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-      // If customerId is provided in URL, it overrides the draft's customer (e.g. "Create Invoice" from profile)
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryCustomerId = urlParams.get('customerId');
-      if (queryCustomerId) {
-        const id = parseInt(queryCustomerId, 10);
-        if (!isNaN(id)) {
-          setCustomerId(id);
-          CustomerService.getCustomerById(id).then(c => {
-            if (c) setCustomer(c);
-          }).catch(console.error);
+    // Defer all setState calls to the next microtask so they don't run
+    // synchronously within the effect body (React Compiler requirement).
+    void (async () => {
+      try {
+        const saved = localStorage.getItem("order_cart_draft");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.customerId !== undefined) setCustomerId(parsed.customerId);
+          if (parsed.customer) setCustomer(parsed.customer);
+          if (parsed.lineItems) setLineItems(parsed.lineItems);
+          if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
+          if (parsed.amountPaid) setAmountPaid(parsed.amountPaid);
+          if (parsed.referenceNumber) setReferenceNumber(parsed.referenceNumber);
         }
+
+        // If customerId is provided in URL, it overrides the draft's customer (e.g. "Create Invoice" from profile)
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryCustomerId = urlParams.get('customerId');
+        if (queryCustomerId) {
+          const id = parseInt(queryCustomerId, 10);
+          if (!isNaN(id)) {
+            setCustomerId(id);
+            CustomerService.getCustomerById(id).then(c => {
+              if (c) setCustomer(c);
+            }).catch(console.error);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load cart draft", e);
+      } finally {
+        setIsLoaded(true);
       }
-    } catch (e) {
-      console.error("Failed to load cart draft", e);
-    } finally {
-      setIsLoaded(true);
-    }
+    })();
   }, []);
 
   // Save draft to localStorage whenever cart state changes
@@ -172,7 +179,8 @@ export default function CreateOrderPage() {
       };
 
       // Use the stable idempotency key that is tied to current cart state
-      const newInvoice = await OrderService.createOrder(sessionIdRef.current, payload);
+      const idempotencyKey = sessionIdRef.current ?? `SESS-FALLBACK-${Date.now()}`;
+      const newInvoice = await OrderService.createOrder(idempotencyKey, payload);
       toast.success("Order created successfully!");
       // Reset state immediately so useEffect doesn't re-save the draft
       setLineItems([]);
@@ -184,8 +192,10 @@ export default function CreateOrderPage() {
       
       setSuccessId(newInvoice.invoiceId);
       localStorage.removeItem("order_cart_draft");
-    } catch (err: any) {
-      toast.error(err.data?.message || err.message || "Failed to create order");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create order";
+      const data = (err as { data?: { message?: string } })?.data;
+      toast.error(data?.message || message);
     } finally {
       setIsSubmitting(false);
     }

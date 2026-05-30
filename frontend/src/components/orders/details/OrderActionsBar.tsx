@@ -65,7 +65,7 @@ export function OrderActionsBar({ invoice, onRecordPayment }: { invoice: ApiInvo
     router.push(invoice.customerId ? `/orders/create?customerId=${invoice.customerId}` : '/orders/create');
   };
 
-  const isVoided = invoice.paymentStatus === 'REFUNDED' || (invoice.notes && invoice.notes.includes('[VOIDED]'));
+  const isVoided = invoice.status === 'REFUNDED' || (invoice.notes && invoice.notes.includes('[VOIDED]'));
 
   return (
     <div className="flex flex-wrap items-center gap-2 print:hidden">

@@ -22,6 +22,28 @@ import { handleRowClick } from "@/lib/table-utils";
 import { ExportService } from "@/services/export.service";
 import { toast } from "sonner";
 
+interface SortableHeaderProps {
+  column: string;
+  label: string;
+  align?: "left" | "right";
+  onSort: (column: string) => void;
+}
+
+function SortableHeader({ column, label, align = "left", onSort }: SortableHeaderProps) {
+  return (
+    <TableHead className={align === "right" ? "text-right" : ""}>
+      <Button 
+        variant="ghost" 
+        onClick={() => onSort(column)}
+        className={`h-8 px-2 -ml-2 hover:bg-muted/50 ${align === "right" ? "ml-auto" : ""}`}
+      >
+        {label}
+        <ArrowUpDown className="ml-2 h-3 w-3" />
+      </Button>
+    </TableHead>
+  );
+}
+
 interface OrderTableProps {
   orders: ApiInvoice[];
   onDelete?: (id: number) => void;
@@ -70,19 +92,6 @@ export function OrderTable({
   const someSelected = selectedIds && selectedIds.length > 0 && selectedIds.length < orders.length;
   const showSelection = !!onSelectToggle && !!selectedIds;
 
-  const SortableHeader = ({ column, label, align = "left" }: { column: string, label: string, align?: "left" | "right" }) => (
-    <TableHead className={align === "right" ? "text-right" : ""}>
-      <Button 
-        variant="ghost" 
-        onClick={() => onSort(column)}
-        className={`h-8 px-2 -ml-2 hover:bg-muted/50 ${align === "right" ? "ml-auto" : ""}`}
-      >
-        {label}
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    </TableHead>
-  );
-
   return (
     <div className="rounded-md border bg-card overflow-hidden">
       <Table>
@@ -97,10 +106,10 @@ export function OrderTable({
                 />
               </TableHead>
             )}
-            <SortableHeader column="date" label="Invoice / Date" />
-            <SortableHeader column="customer" label="Customer" />
+            <SortableHeader column="date" label="Invoice / Date" onSort={onSort} />
+            <SortableHeader column="customer" label="Customer" onSort={onSort} />
             <TableHead className="text-center">Items</TableHead>
-            <SortableHeader column="amount" label="Total Amount" align="right" />
+            <SortableHeader column="amount" label="Total Amount" align="right" onSort={onSort} />
             <TableHead>Payment</TableHead>
             <TableHead>Delivery</TableHead>
             <TableHead>Status</TableHead>
