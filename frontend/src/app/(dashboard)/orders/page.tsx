@@ -106,7 +106,7 @@ export default function OrdersListingPage() {
   const handleDeleteSingle = async (id: number) => {
     if (!confirm("Are you sure you want to cancel/delete this order?")) return;
     try {
-      await OrderService.deleteOrder(id);
+      await OrderService.voidOrder(id);
       await fetchOrders();
     } catch (e) {}
   };

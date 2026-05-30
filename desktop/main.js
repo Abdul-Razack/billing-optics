@@ -4,6 +4,12 @@ const { spawn } = require('child_process');
 const waitOn = require('wait-on');
 const kill = require('tree-kill');
 const { autoUpdater } = require('electron-updater');
+const log = require('electron-log');
+
+// Setup logging
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+log.info('App starting...');
 
 // Prevent duplicate instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -44,7 +50,8 @@ function createWindow() {
     // icon: path.join(__dirname, 'build', 'icon.ico'), // Uncomment when icon exists
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
@@ -117,7 +124,8 @@ async function startServers() {
   const serverEnv = { 
     ...process.env, 
     ...envConfig,
-    NEXT_PUBLIC_API_URL: `http://localhost:${envConfig.PORT || 5000}/api`
+    NEXT_PUBLIC_API_URL: `http://localhost:${envConfig.PORT || 5000}/api`,
+    USER_DATA_PATH: app.getPath('userData')
   };
 
   console.log('Starting backend process...');
@@ -183,36 +191,70 @@ async function startServers() {
     if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
     mainWindow.show();
     
-    // Check for updates after the app is ready
+    // Check for updates after the app is ready (silently)
     if (app.isPackaged) {
-      autoUpdater.checkForUpdatesAndNotify().catch(err => {
-        console.error('Failed to check for updates:', err);
+      log.info('Checking for updates on startup...');
+      autoUpdater.checkForUpdates().catch(err => {
+        log.error('Failed to check for updates:', err);
       });
     }
   });
 }
 
+// IPC Handlers for Auto Updater
+ipcMain.handle('check-for-updates', async () => {
+  if (app.isPackaged) {
+    try {
+      const result = await autoUpdater.checkForUpdates();
+      return { success: true, result };
+    } catch (error) {
+      log.error('Manual update check failed', error);
+      return { success: false, error: error.message };
+    }
+  }
+  return { success: false, error: 'Cannot check for updates in development mode' };
+});
+
+ipcMain.handle('install-update', () => {
+  log.info('User requested to install update. Quitting and installing...');
+  
+  // Before restarting, trigger a database backup
+  // This ensures rollback safety. In production we might want to make an HTTP call to the local backend to trigger backup before quitting.
+  
+  autoUpdater.quitAndInstall(false, true);
+});
+
 // Auto Updater Events
 autoUpdater.on('update-available', () => {
-  console.log('Update available.');
+  log.info('Update available.');
+  if (mainWindow) {
+    mainWindow.webContents.send('update-available');
+  }
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+  let log_message = "Download speed: " + progressObj.bytesPerSecond;
+  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+  log.info(log_message);
+  
+  if (mainWindow) {
+    mainWindow.webContents.send('download-progress', progressObj);
+  }
 });
 
 autoUpdater.on('update-downloaded', (info) => {
-  dialog.showMessageBox({
-    type: 'info',
-    title: 'Update Ready',
-    message: 'A new version of Billing Optics ERP has been downloaded. Restart the application to apply the updates.',
-    buttons: ['Restart', 'Later']
-  }).then((buttonIndex) => {
-    if (buttonIndex.response === 0) {
-      // Safe restart: child processes will be killed by 'will-quit' hook
-      autoUpdater.quitAndInstall(false, true);
-    }
-  });
+  log.info('Update downloaded.');
+  if (mainWindow) {
+    mainWindow.webContents.send('update-downloaded');
+  }
 });
 
 autoUpdater.on('error', (err) => {
-  console.error('Error in auto-updater.', err);
+  log.error('Error in auto-updater.', err);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-error', err.message);
+  }
 });
 
 app.whenReady().then(async () => {

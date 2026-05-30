@@ -18,6 +18,11 @@ import settingsRoutes from './routes/settings.routes';
 import prescriptionRoutes from './routes/prescription.routes';
 import exportRoutes from './routes/export.routes';
 import backupRoutes from './routes/backup.routes';
+import healthRoutes from './routes/health.routes';
+import maintenanceRoutes from './routes/maintenance.routes';
+import licenseRoutes from './routes/license.routes';
+import auditRoutes from './routes/audit.routes';
+import { requireLicense } from './middleware/license.middleware';
 
 const app = express();
 
@@ -38,6 +43,11 @@ app.use('/api/', globalLimiter);
 // API Routes
 app.use('/api', systemRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/license', licenseRoutes);
+
+// Apply License Protection Middleware to all subsequent routes
+app.use('/api', requireLicense);
+
 app.use('/api/customers', customerRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
@@ -50,6 +60,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/exports', exportRoutes);
 app.use('/api/backups', backupRoutes);
+app.use('/api/system-health', healthRoutes);
+app.use('/api/database-maintenance', maintenanceRoutes);
+app.use('/api/audit-logs', auditRoutes);
 
 // Global Error Handler
 app.use(errorMiddleware);

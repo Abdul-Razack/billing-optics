@@ -234,7 +234,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       </div>
 
       <div className="hidden">
-        <PrintableReceipt ref={printRef} invoice={invoice} customer={customer} settings={settingsResponse?.data} />
+        <PrintableReceipt ref={printRef} invoice={apiData as any} customer={apiData.customer as any} settings={settingsResponse?.data} />
       </div>
     </>
   );

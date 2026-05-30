@@ -174,4 +174,8 @@ function runTests() {
   console.log('==================================');
 }
 
-runTests();
+describe('ledger engine', () => {
+  it('should pass all bank-grade ledger tests', () => {
+    runTests();
+  });
+});

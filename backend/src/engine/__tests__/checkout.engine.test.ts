@@ -2,6 +2,19 @@ import { processCheckout } from '../checkout.engine';
 import { db } from '../../config/db';
 import { AppError } from '../../utils/errors';
 
+jest.mock('../../config/db', () => ({
+  db: {
+    transaction: jest.fn()
+  }
+}));
+
+jest.mock('../../repositories/inventory.repository', () => ({
+  InventoryRepository: jest.fn().mockImplementation(() => ({
+    getCurrentStock: jest.fn().mockResolvedValue(100),
+    logTransaction: jest.fn().mockResolvedValue(true)
+  }))
+}));
+
 describe('checkout.engine', () => {
   beforeEach(() => {
     jest.clearAllMocks();

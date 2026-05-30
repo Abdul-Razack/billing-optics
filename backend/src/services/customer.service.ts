@@ -1,12 +1,13 @@
 import { CustomerRepository } from '../repositories/customer.repository';
 import { InvoiceRepository } from '../repositories/invoice.repository';
 import { db } from '../config/db';
+import { AppError } from '../utils/errors';
 
 export class CustomerService {
   async create(data: any) {
     const existing = await CustomerRepository.findAll({ search: data.phone });
     if (existing.data.some((c: any) => c.phone === data.phone)) {
-      throw { status: 400, message: 'Phone number already exists' };
+      throw new AppError(400, 'Phone number already exists');
     }
     const dbData = {
       fullName: data.fullName || data.name,

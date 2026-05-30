@@ -11,3 +11,4 @@ export * from './payments';
 export * from './settings';
 export * from './relations';
 export * from './ledger';
+export * from './auditLogs';

@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { BackupController } from '../controllers/backup.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { authorizeRoles } from '../middleware/roles.middleware';
-import { ROLES } from '../domain/roles';
+import { authorizeRoles } from '../middleware/role.middleware';
+import { ROLES } from '../constants/roles';
 
 const router = Router();
 

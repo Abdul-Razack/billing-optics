@@ -98,6 +98,13 @@ export async function fetchClient<T>(endpoint: string, options: FetchOptions = {
       }
     }
 
+    // License Required / Expired
+    if (response.status === 402 && typeof window !== "undefined") {
+      if (!window.location.pathname.includes("/activation")) {
+        window.location.href = "/activation";
+      }
+    }
+
     throw new ApiError(response.status, errorData.message || "An API error occurred", errorData);
   }
 

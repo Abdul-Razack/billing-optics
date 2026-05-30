@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import UpdateBanner from "@/components/system/UpdateBanner";
 
 export default function DashboardLayout({
   children,
@@ -8,7 +9,10 @@ export default function DashboardLayout({
 }>) {
   return (
     <ProtectedRoute>
-      <AppShell>{children}</AppShell>
+      <AppShell>
+        {children}
+        <UpdateBanner />
+      </AppShell>
     </ProtectedRoute>
   );
 }

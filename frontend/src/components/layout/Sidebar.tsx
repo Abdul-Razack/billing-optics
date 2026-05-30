@@ -14,7 +14,7 @@ import {
   BarChart3, 
   Settings, 
   UserCog, 
-  FormInput 
+  FormInput
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

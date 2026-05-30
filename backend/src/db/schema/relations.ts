@@ -8,11 +8,13 @@ import { invoices } from './invoices';
 import { invoiceItems } from './invoiceItems';
 import { payments } from './payments';
 import { inventoryLedger } from './inventoryLedger';
+import { auditLogs } from './auditLogs';
 
 export const usersRelations = relations(users, ({ many }) => ({
   invoices: many(invoices),
   prescriptions: many(prescriptions),
   inventoryLedger: many(inventoryLedger),
+  auditLogs: many(auditLogs),
 }));
 
 export const customersRelations = relations(customers, ({ many }) => ({
@@ -82,6 +84,13 @@ export const inventoryLedgerRelations = relations(inventoryLedger, ({ one }) => 
   }),
   creator: one(users, {
     fields: [inventoryLedger.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLogs.userId],
     references: [users.id],
   }),
 }));

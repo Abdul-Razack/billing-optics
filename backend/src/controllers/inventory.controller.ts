@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { inventoryService } from '../services/inventory.service';
 import { InventoryHistoryQuery } from '../repositories/inventory.repository';
+import { AuditService } from '../services/audit.service';
 import { UnauthorizedError, ValidationError } from '../utils/errors';
 
 export class InventoryController {
@@ -32,6 +33,16 @@ export class InventoryController {
       }
 
       const result = await inventoryService.adjustStock(req.body, userId);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'ADJUST_STOCK',
+        module: 'INVENTORY',
+        recordId: result.entry.id.toString(),
+        newValues: req.body,
+        req,
+      });
+
       res.status(200).json({ success: true, data: result });
     } catch (error: any) {
       if (error.message.includes('Insufficient stock') || error.message.includes('Product not found') || error.message.includes('Quantity must be non-zero')) {
@@ -50,6 +61,15 @@ export class InventoryController {
       }
 
       const result = await inventoryService.bulkAdjustStock(req.body, userId);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'BULK_ADJUST_STOCK',
+        module: 'INVENTORY',
+        newValues: { adjustmentsCount: req.body.adjustments?.length, reason: req.body.reason },
+        req,
+      });
+
       res.status(200).json({ success: true, data: result });
     } catch (error: any) {
       if (error.message.includes('Insufficient stock') || error.message.includes('Product with ID') || error.message.includes('Quantity must be non-zero')) {

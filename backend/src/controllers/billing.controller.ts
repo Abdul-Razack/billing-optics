@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { BillingService } from '../services/billing.service';
+import { AuditService } from '../services/audit.service';
 import { NotFoundError, ValidationError } from '../utils/errors';
 
 const billingService = new BillingService();
@@ -25,6 +26,16 @@ export class BillingController {
         createdBy: cashierId
       };
       const result = await billingService.checkout(payload);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'CREATE_INVOICE',
+        module: 'INVOICE',
+        recordId: result.invoiceId.toString(),
+        newValues: { invoiceId: result.invoiceId },
+        req,
+      });
+
       res.status(201).json({ success: true, data: result });
     } catch (error) {
       next(error);
@@ -36,6 +47,16 @@ export class BillingController {
       const invoiceId = parseInt(req.params.id, 10);
       const { amount, paymentMethod, referenceNumber } = req.body;
       const result = await billingService.addPayment(invoiceId, amount, paymentMethod, referenceNumber);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'ADD_PAYMENT',
+        module: 'INVOICE',
+        recordId: invoiceId.toString(),
+        newValues: { paymentId: result.id, amount, paymentMethod },
+        req,
+      });
+
       res.status(201).json({ success: true, data: result });
     } catch (error) {
       next(error);
@@ -51,7 +72,19 @@ export class BillingController {
         throw new ValidationError('Invalid delivery status');
       }
 
+      const original = await billingService.getInvoiceDetails(invoiceId).catch(() => null);
       const result = await billingService.updateDeliveryStatus(invoiceId, deliveryStatus as any);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'UPDATE_DELIVERY_STATUS',
+        module: 'INVOICE',
+        recordId: invoiceId.toString(),
+        oldValues: { deliveryStatus: original?.deliveryStatus },
+        newValues: { deliveryStatus: result?.deliveryStatus },
+        req,
+      });
+
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
@@ -67,7 +100,19 @@ export class BillingController {
         notes: req.body.notes,
       };
 
+      const original = await billingService.getInvoiceDetails(invoiceId).catch(() => null);
       const result = await billingService.updateInvoiceMetadata(invoiceId, payload);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'UPDATE_INVOICE',
+        module: 'INVOICE',
+        recordId: invoiceId.toString(),
+        oldValues: { customerId: original?.customerId, deliveryStatus: original?.deliveryStatus, notes: original?.notes },
+        newValues: { customerId: result?.customerId, deliveryStatus: result?.deliveryStatus, notes: result?.notes },
+        req,
+      });
+
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
@@ -79,7 +124,19 @@ export class BillingController {
       const invoiceId = parseInt(req.params.id, 10);
       const userId = req.user!.id;
 
+      const original = await billingService.getInvoiceDetails(invoiceId).catch(() => null);
       const result = await billingService.voidInvoice(invoiceId, userId);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'VOID_INVOICE',
+        module: 'INVOICE',
+        recordId: invoiceId.toString(),
+        oldValues: { status: original?.status },
+        newValues: { status: result?.status },
+        req,
+      });
+
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);

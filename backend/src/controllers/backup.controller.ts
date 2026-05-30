@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { BackupService } from '../services/backup.service';
-import { AppError } from '../utils/error';
+import { AppError } from '../utils/errors';
 import path from 'path';
 import fs from 'fs';
 

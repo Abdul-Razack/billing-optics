@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { productService } from '../services/product.service';
+import { AuditService } from '../services/audit.service';
 
 export class ProductController {
   static async getAll(req: Request, res: Response, next: NextFunction) {
@@ -25,6 +26,16 @@ export class ProductController {
   static async create(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await productService.createProduct(req.body);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'CREATE_PRODUCT',
+        module: 'PRODUCT',
+        recordId: result.id.toString(),
+        newValues: result,
+        req,
+      });
+
       res.status(201).json({ success: true, data: result });
     } catch (error) {
       next(error);
@@ -34,7 +45,19 @@ export class ProductController {
   static async update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
+      const original = await productService.getAllProducts({ search: id.toString() }).then(res => res.data.find(p => p.id === id) || null).catch(() => null);
       const result = await productService.updateProduct(id, req.body);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'UPDATE_PRODUCT',
+        module: 'PRODUCT',
+        recordId: id.toString(),
+        oldValues: original,
+        newValues: result,
+        req,
+      });
+
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
@@ -44,7 +67,19 @@ export class ProductController {
   static async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
+      const original = await productService.getAllProducts({ search: id.toString() }).then(res => res.data.find(p => p.id === id) || null).catch(() => null);
       const result = await productService.updateProduct(id, { isActive: false });
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'DELETE_PRODUCT',
+        module: 'PRODUCT',
+        recordId: id.toString(),
+        oldValues: original,
+        newValues: result,
+        req,
+      });
+
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
