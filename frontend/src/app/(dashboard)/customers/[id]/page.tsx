@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import Link from "next/link";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { CustomerProfileHeader } from "@/components/customers/CustomerProfileHeader";
 import { CustomerCard } from "@/components/customers/CustomerCard";
@@ -197,7 +198,11 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
             {customer.prescriptionHistory && customer.prescriptionHistory.length > 0 ? (
               <div className="space-y-4">
                 {customer.prescriptionHistory.map((rx: any) => (
-                  <div key={rx.id} className="p-4 border rounded-lg bg-card">
+                  <Link
+                    key={rx.id}
+                    href={`/prescriptions/${rx.id}`}
+                    className="block p-4 border rounded-lg bg-card hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <p className="font-medium">Prescription #{rx.id}</p>
@@ -211,7 +216,7 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
                     {rx.notes && (
                       <p className="text-sm bg-muted/50 p-2 rounded mt-2">{rx.notes}</p>
                     )}
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (

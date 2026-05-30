@@ -1,77 +1,119 @@
 import { forwardRef } from "react";
-import { ApiInvoice } from "@/types/order";
 import { ApiCustomer } from "@/types/customer";
 
+interface ReceiptItem {
+  id?: string | number;
+  productName?: string;
+  name?: string;
+  unitPrice?: number;
+  sellingPrice?: number;
+  quantity: number;
+  total?: number;
+  subtotal?: number;
+  product?: { name: string; sellingPrice: number };
+}
+
+interface ReceiptInvoice {
+  invoiceNumber?: string;
+  createdAt?: string;
+  date?: string;
+  customerName?: string;
+  paymentStatus?: string;
+  lines?: ReceiptItem[];
+  items?: ReceiptItem[];
+  subtotal?: number;
+  gstTotal?: number;
+  taxTotal?: number;
+  discountTotal?: number;
+  grandTotal?: number;
+  amountPaid?: number;
+  payments?: Array<{ method?: string; paymentMethod?: string }>;
+}
+
 export interface PrintableReceiptProps {
-  invoice: ApiInvoice;
+  invoice: ReceiptInvoice;
   customer?: ApiCustomer | null;
-  lineItems?: Array<any>;
+  lineItems?: ReceiptItem[];
   settings?: any;
 }
 
 export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps>(
   ({ invoice, customer, lineItems, settings }, ref) => {
-    const itemsToRender = lineItems || invoice.lines || [];
+    const itemsToRender: ReceiptItem[] = lineItems || invoice.items || invoice.lines || [];
+
+    const fmt = (n: number | undefined | null) => Number(n || 0).toFixed(2);
+
+    const subtotal = invoice.subtotal || 0;
+    const gstTotal = invoice.gstTotal || invoice.taxTotal || 0;
+    const discountTotal = invoice.discountTotal || 0;
+    const grandTotal = invoice.grandTotal || 0;
+    const amountPaid = invoice.amountPaid || 0;
+    const balanceDue = grandTotal - amountPaid;
+
+    const payments = invoice.payments || [];
+
     return (
-      <div 
+      <div
         ref={ref}
-        className="hidden print:block bg-white text-black font-mono w-[80mm] max-w-[80mm] mx-auto box-border relative print:p-0 print:m-0"
-        style={{ color: "#000", fontSize: "12px", lineHeight: "1.2" }}
+        className="hidden print:block bg-white text-black font-mono mx-auto box-border"
+        style={{ color: "#000", fontSize: "11px", lineHeight: "1.4", width: "80mm", maxWidth: "80mm" }}
       >
-        {/* Header */}
-        <div className="text-center mb-4 border-b border-black pb-4 border-dashed">
-          <h1 className="text-xl font-bold uppercase mb-1">{settings?.businessName || "Billing Optics"}</h1>
-          <p className="text-xs whitespace-pre-wrap">{settings?.address || "123 Optic Way, Vision City"}</p>
-          <p className="text-xs">Ph: {settings?.phone || "+1 (555) 123-4567"}</p>
-          <p className="text-xs mt-1">TAX ID: {settings?.gstNumber || "BO-987654321"}</p>
+        {/* ── Header ── */}
+        <div style={{ textAlign: "center", borderBottom: "1px dashed #000", paddingBottom: "8px", marginBottom: "8px" }}>
+          <div style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "2px" }}>
+            {settings?.businessName || "OPTICS POS"}
+          </div>
+          <div>{settings?.address || "123 Optic Way, Vision City"}</div>
+          <div>Ph: {settings?.phone || "+1 (555) 123-4567"}</div>
+          <div>TAX ID: {settings?.gstNumber || "BO-987654321"}</div>
         </div>
 
-        {/* Invoice Info */}
-        <div className="mb-4 text-xs space-y-1 border-b border-black pb-4 border-dashed">
-          <div className="flex justify-between">
-            <span className="font-bold">Receipt #:</span>
-            <span>{invoice.invoiceNumber}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-bold">Date:</span>
-            <span>{new Date(invoice.createdAt || Date.now()).toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-bold">Customer:</span>
-            <span>{customer?.fullName || invoice.customerName || "Walk-in"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-bold">Status:</span>
-            <span className="uppercase">{invoice.paymentStatus}</span>
-          </div>
+        {/* ── Invoice Info ── */}
+        <div style={{ borderBottom: "1px dashed #000", paddingBottom: "8px", marginBottom: "8px" }}>
+          {[
+            ["Receipt #:", invoice.invoiceNumber],
+            ["Date:", new Date(invoice.createdAt || invoice.date || Date.now()).toLocaleString()],
+            ["Customer:", customer?.fullName || invoice.customerName || "Walk-in"],
+            ["Status:", (invoice.paymentStatus || "").toUpperCase()],
+          ].map(([label, value]) => (
+            <div key={label as string} style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+              <span style={{ fontWeight: "bold", whiteSpace: "nowrap" }}>{label}</span>
+              <span style={{ textAlign: "right" }}>{value}</span>
+            </div>
+          ))}
         </div>
 
-        {/* Items */}
-        <div className="mb-4 border-b border-black pb-4 border-dashed">
-          <table className="w-full text-xs">
+        {/* ── Items Table ── */}
+        <div style={{ borderBottom: "1px dashed #000", paddingBottom: "8px", marginBottom: "8px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "55%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "33%" }} />
+            </colgroup>
             <thead>
-              <tr className="border-b border-black/50">
-                <th className="text-left py-1 font-bold">Item</th>
-                <th className="text-right py-1 font-bold">Qty</th>
-                <th className="text-right py-1 font-bold">Total</th>
+              <tr style={{ borderBottom: "1px solid #000" }}>
+                <th style={{ textAlign: "left", padding: "2px 4px 2px 0", fontWeight: "bold" }}>Item</th>
+                <th style={{ textAlign: "right", padding: "2px 4px", fontWeight: "bold" }}>Qty</th>
+                <th style={{ textAlign: "right", padding: "2px 0 2px 4px", fontWeight: "bold" }}>Total</th>
               </tr>
             </thead>
             <tbody>
               {itemsToRender.map((item, idx) => {
-                const isLineItem = !!item.product;
-                const name = isLineItem ? item.product.name : item.productName;
-                const price = isLineItem ? item.product.sellingPrice : item.unitPrice;
-                const qty = item.quantity;
-                const total = isLineItem ? price * qty : item.total;
+                const hasProduct = !!item.product;
+                const name = hasProduct ? item.product!.name : (item.productName || item.name || "—");
+                const price = hasProduct ? item.product!.sellingPrice : (item.unitPrice || item.sellingPrice || 0);
+                const qty = item.quantity || 0;
+                const total = hasProduct ? price * qty : (item.total || item.subtotal || price * qty || 0);
                 return (
-                  <tr key={item.id || idx}>
-                    <td className="py-2 pr-2">
-                      <div className="font-medium line-clamp-2">{name}</div>
-                      <div className="text-[10px] text-gray-600">@ ${Number(price).toFixed(2)}</div>
+                  <tr key={item.id ?? idx}>
+                    <td style={{ padding: "4px 4px 4px 0", verticalAlign: "top" }}>
+                      <div style={{ fontWeight: "500", wordBreak: "break-word" }}>{name}</div>
+                      <div style={{ fontSize: "9px", color: "#555" }}>@ ${fmt(price)}</div>
                     </td>
-                    <td className="py-2 text-right align-top">{qty}</td>
-                    <td className="py-2 text-right align-top font-medium">
-                      ${Number(total).toFixed(2)}
+                    <td style={{ textAlign: "right", padding: "4px", verticalAlign: "top" }}>{qty}</td>
+                    <td style={{ textAlign: "right", padding: "4px 0 4px 4px", verticalAlign: "top", fontWeight: "500" }}>
+                      ${fmt(total)}
                     </td>
                   </tr>
                 );
@@ -80,50 +122,53 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
           </table>
         </div>
 
-        {/* Totals */}
-        <div className="mb-6 space-y-1 text-xs border-b border-black pb-4 border-dashed">
-          <div className="flex justify-between">
-            <span>Subtotal:</span>
-            <span>${invoice.subtotal.toFixed(2)}</span>
-          </div>
-          {invoice.discountTotal > 0 && (
-            <div className="flex justify-between">
-              <span>Discount:</span>
-              <span>-${invoice.discountTotal.toFixed(2)}</span>
+        {/* ── Totals ── */}
+        <div style={{ borderBottom: "1px dashed #000", paddingBottom: "8px", marginBottom: "8px" }}>
+          {[
+            ["Subtotal:", `$${fmt(subtotal)}`],
+            ...(discountTotal > 0 ? [["Discount:", `-$${fmt(discountTotal)}`]] : []),
+            ["Tax (GST):", `$${fmt(gstTotal)}`],
+          ].map(([label, value]) => (
+            <div key={label as string} style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>{label}</span>
+              <span>{value}</span>
             </div>
-          )}
-          <div className="flex justify-between">
-            <span>Tax (GST):</span>
-            <span>${invoice.gstTotal.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-sm font-bold mt-2 pt-2 border-t border-black/50">
+          ))}
+
+          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", fontSize: "13px", borderTop: "1px solid #000", marginTop: "4px", paddingTop: "4px" }}>
             <span>TOTAL:</span>
-            <span>${invoice.grandTotal.toFixed(2)}</span>
+            <span>${fmt(grandTotal)}</span>
           </div>
-          <div className="flex justify-between mt-1 text-gray-700">
+
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
             <span>AMOUNT PAID:</span>
-            <span>${(invoice.amountPaid || 0).toFixed(2)}</span>
+            <span>${fmt(amountPaid)}</span>
           </div>
-          {invoice.payments && invoice.payments.length > 0 && (
-            <div className="text-[9px] text-gray-500 text-right mt-0.5">
-              via {invoice.payments.map(p => p.method).join(", ")}
+
+          {payments.length > 0 && (
+            <div style={{ fontSize: "9px", color: "#666", textAlign: "right" }}>
+              via {payments.map(p => p.method || p.paymentMethod || "").join(", ")}
             </div>
           )}
-          {invoice.grandTotal - (invoice.amountPaid || 0) > 0 && (
-            <div className="flex justify-between font-bold mt-1 text-sm">
+
+          {balanceDue > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", fontSize: "13px", marginTop: "4px" }}>
               <span>BALANCE DUE:</span>
-              <span>${(invoice.grandTotal - (invoice.amountPaid || 0)).toFixed(2)}</span>
+              <span>${fmt(balanceDue)}</span>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="text-center text-xs space-y-2">
-          <p className="font-bold uppercase">Thank you for your business!</p>
-          <p className="text-[10px] text-gray-500">Please retain this receipt for your records. Returns accepted within 15 days.</p>
+        {/* ── Footer ── */}
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontWeight: "bold", textTransform: "uppercase", marginBottom: "4px" }}>
+            Thank you for your business!
+          </div>
+          <div style={{ fontSize: "9px", color: "#666" }}>
+            Please retain this receipt for your records.{"\n"}Returns accepted within 15 days.
+          </div>
         </div>
-        
-        {/* Style tag for print specific rules */}
+
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page {
