@@ -16,8 +16,8 @@ import systemRoutes from './routes/system.routes';
 import userRoutes from './routes/user.routes';
 import settingsRoutes from './routes/settings.routes';
 import prescriptionRoutes from './routes/prescription.routes';
-
 import exportRoutes from './routes/export.routes';
+import backupRoutes from './routes/backup.routes';
 
 const app = express();
 
@@ -49,6 +49,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/exports', exportRoutes);
+app.use('/api/backups', backupRoutes);
 
 // Global Error Handler
 app.use(errorMiddleware);

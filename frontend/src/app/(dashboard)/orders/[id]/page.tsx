@@ -20,6 +20,7 @@ import { PaymentTimeline } from "@/components/orders/details/PaymentTimeline";
 import { OrderActionsBar } from "@/components/orders/details/OrderActionsBar";
 import { PrintableInvoice } from "@/components/orders/print/PrintableInvoice";
 import { InvoicePrintToolbar } from "@/components/orders/print/InvoicePrintToolbar";
+import { PrintableReceipt } from "@/components/invoices/PrintableReceipt";
 import { PaymentSummaryCard } from "@/components/orders/payment/PaymentSummaryCard";
 import { PaymentHistoryList } from "@/components/orders/payment/PaymentHistoryList";
 import { PaymentEntryModal } from "@/components/orders/payment/PaymentEntryModal";
@@ -29,6 +30,7 @@ export default function OrderDetailsPage() {
   const [invoice, setInvoice] = useState<ApiInvoice | null>(null);
   const [customer, setCustomer] = useState<ApiCustomer | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -104,7 +106,7 @@ export default function OrderDetailsPage() {
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Orders
             </Link>
           </Button>
-          {invoice && <InvoicePrintToolbar printRef={printRef} invoiceNumber={invoice.invoiceNumber || String(invoice.id)} invoiceId={invoice.id} />}
+          {invoice && <InvoicePrintToolbar printRef={printRef} receiptRef={receiptRef} invoiceNumber={invoice.invoiceNumber || String(invoice.id)} invoiceId={invoice.id} />}
           {invoice && <OrderActionsBar invoice={invoice} onRecordPayment={() => handleRecordPayment(true)} />}
         </div>
       </ProductHeader>
@@ -157,6 +159,13 @@ export default function OrderDetailsPage() {
                 invoice={invoice} 
                 customer={customer} 
                 lineItems={printableLineItems} 
+              />
+              <div className="page-break" style={{ pageBreakBefore: 'always' }} />
+              <PrintableReceipt
+                ref={receiptRef}
+                invoice={invoice}
+                customer={customer}
+                lineItems={printableLineItems}
               />
             </div>
             

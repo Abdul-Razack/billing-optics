@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing Optics - Starting</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0f172a; /* Slate 900 */
+      color: #f8fafc; /* Slate 50 */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-user-select: none;
+      -webkit-app-region: drag;
+    }
+    
+    .logo-container {
+      margin-bottom: 2rem;
+    }
+    
+    /* Simple dynamic logo/loader */
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      border-top-color: #3b82f6; /* Blue 500 */
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.5px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #94a3b8; /* Slate 400 */
+      margin: 0;
+      max-width: 80%;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    .progress-bar {
+      width: 200px;
+      height: 4px;
+      background-color: #1e293b;
+      border-radius: 2px;
+      margin-top: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 30%;
+      background-color: #3b82f6;
+      border-radius: 2px;
+      animation: progress 2s infinite ease-in-out;
+    }
+
+    @keyframes progress {
+      0% { left: -30%; width: 30%; }
+      50% { left: 30%; width: 70%; }
+      100% { left: 100%; width: 30%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <div class="spinner"></div>
+  </div>
+  <h1>Billing Optics</h1>
+  <p id="status-text">Starting ERP Servers...</p>
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const statusText = document.getElementById('status-text');
+
+    ipcRenderer.on('setup-progress', (event, message) => {
+      statusText.innerText = message;
+    });
+  </script>
+</body>
+</html>

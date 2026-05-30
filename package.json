@@ -6,7 +6,8 @@
   "workspaces": [
     "shared",
     "backend",
-    "frontend"
+    "frontend",
+    "desktop"
   ],
   "scripts": {
     "dev:backend": "npm run dev -w backend",
@@ -15,6 +16,8 @@
     "build:frontend": "npm run build -w frontend",
     "db:generate": "npm run db:generate -w backend",
     "db:push": "npm run db:push -w backend",
-    "db:studio": "npm run db:studio -w backend"
+    "db:studio": "npm run db:studio -w backend",
+    "dev:desktop": "npm run dev -w desktop",
+    "build:desktop": "npm run build -w desktop"
   }
 }

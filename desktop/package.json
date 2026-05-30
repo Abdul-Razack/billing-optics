@@ -1,0 +1,61 @@
+{
+  "name": "desktop",
+  "version": "1.0.0",
+  "description": "Billing Optics ERP Desktop Application",
+  "author": "Billing Optics",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "build": "electron-builder --windows"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3",
+    "tree-kill": "^1.2.2",
+    "wait-on": "^7.2.0"
+  },
+  "devDependencies": {
+    "electron": "31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.optics.pos",
+    "productName": "Billing Optics ERP",
+    "asar": false,
+    "directories": {
+      "output": "dist"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Abdul-Razack",
+        "repo": "billing-optics"
+      }
+    ],
+    "files": [
+      "main.js",
+      "splash.html",
+      "config.html",
+      "config.js",
+      "package.json",
+      "../backend/dist/**/*",
+      "../backend/package.json",
+      "../frontend/.next/**/*",
+      "../frontend/package.json",
+      "../frontend/public/**/*",
+      "../node_modules/**/*",
+      "../shared/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "uninstallDisplayName": "Billing Optics ERP"
+    }
+  }
+}

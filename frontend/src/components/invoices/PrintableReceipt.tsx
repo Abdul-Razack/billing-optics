@@ -1,16 +1,17 @@
 import { forwardRef } from "react";
-import { Invoice } from "@/types/invoice";
-import { Customer } from "@/types/customer";
-import { ApiSettings } from "@/services/settings.service";
+import { ApiInvoice } from "@/types/order";
+import { ApiCustomer } from "@/types/customer";
 
 export interface PrintableReceiptProps {
-  invoice: Invoice;
-  customer?: Customer;
-  settings?: ApiSettings;
+  invoice: ApiInvoice;
+  customer?: ApiCustomer | null;
+  lineItems?: Array<any>;
+  settings?: any;
 }
 
 export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps>(
-  ({ invoice, customer, settings }, ref) => {
+  ({ invoice, customer, lineItems, settings }, ref) => {
+    const itemsToRender = lineItems || invoice.lines || [];
     return (
       <div 
         ref={ref}
@@ -33,11 +34,11 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
           </div>
           <div className="flex justify-between">
             <span className="font-bold">Date:</span>
-            <span>{new Date(invoice.date).toLocaleString()}</span>
+            <span>{new Date(invoice.createdAt || Date.now()).toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="font-bold">Customer:</span>
-            <span>{customer?.fullName || "Walk-in"}</span>
+            <span>{customer?.fullName || invoice.customerName || "Walk-in"}</span>
           </div>
           <div className="flex justify-between">
             <span className="font-bold">Status:</span>
@@ -56,18 +57,25 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
               </tr>
             </thead>
             <tbody>
-              {invoice.items.map((item) => (
-                <tr key={item.id}>
-                  <td className="py-2 pr-2">
-                    <div className="font-medium line-clamp-2">{item.productName}</div>
-                    <div className="text-[10px] text-gray-600">@ ${item.unitPrice.toFixed(2)}</div>
-                  </td>
-                  <td className="py-2 text-right align-top">{item.quantity}</td>
-                  <td className="py-2 text-right align-top font-medium">
-                    ${item.total.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
+              {itemsToRender.map((item, idx) => {
+                const isLineItem = !!item.product;
+                const name = isLineItem ? item.product.name : item.productName;
+                const price = isLineItem ? item.product.sellingPrice : item.unitPrice;
+                const qty = item.quantity;
+                const total = isLineItem ? price * qty : item.total;
+                return (
+                  <tr key={item.id || idx}>
+                    <td className="py-2 pr-2">
+                      <div className="font-medium line-clamp-2">{name}</div>
+                      <div className="text-[10px] text-gray-600">@ ${Number(price).toFixed(2)}</div>
+                    </td>
+                    <td className="py-2 text-right align-top">{qty}</td>
+                    <td className="py-2 text-right align-top font-medium">
+                      ${Number(total).toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -1,28 +1,42 @@
 import { RefObject } from "react";
 import { Button } from "@/components/ui/button";
-import { Printer, Eye } from "lucide-react";
+import { Printer, Eye, FileText, ReceiptText } from "lucide-react";
 import { InvoicePdfExport } from "./InvoicePdfExport";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useReactToPrint } from "react-to-print";
 
 interface InvoicePrintToolbarProps {
   printRef: RefObject<HTMLDivElement | null>;
+  receiptRef?: RefObject<HTMLDivElement | null>;
   invoiceNumber: string;
   invoiceId: string | number;
 }
 
-export function InvoicePrintToolbar({ printRef, invoiceNumber, invoiceId }: InvoicePrintToolbarProps) {
-  const handlePrint = () => {
-    window.print();
-  };
+export function InvoicePrintToolbar({ printRef, receiptRef, invoiceNumber, invoiceId }: InvoicePrintToolbarProps) {
+  const handlePrintInvoice = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Invoice_${invoiceNumber}`
+  });
+
+  const handlePrintReceipt = useReactToPrint({
+    contentRef: receiptRef,
+    documentTitle: `Receipt_${invoiceNumber}`
+  });
 
   const filename = `invoice-${invoiceNumber}.pdf`;
 
   return (
     <div className="flex items-center gap-2 print:hidden">
-      {/* Print Action */}
-      <Button variant="outline" onClick={handlePrint}>
-        <Printer className="mr-2 h-4 w-4" /> Print Invoice
+      {/* Print Actions */}
+      <Button variant="outline" onClick={() => handlePrintInvoice()}>
+        <FileText className="mr-2 h-4 w-4" /> Print A4
       </Button>
+      
+      {receiptRef && (
+        <Button variant="outline" onClick={() => handlePrintReceipt()}>
+          <ReceiptText className="mr-2 h-4 w-4" /> Print Receipt
+        </Button>
+      )}
 
       {/* PDF Export Action */}
       <InvoicePdfExport invoiceId={invoiceId} filename={filename} />

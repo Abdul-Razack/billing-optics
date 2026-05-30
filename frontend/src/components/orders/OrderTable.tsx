@@ -19,6 +19,8 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { handleRowClick } from "@/lib/table-utils";
+import { ExportService } from "@/services/export.service";
+import { toast } from "sonner";
 
 interface OrderTableProps {
   orders: ApiInvoice[];
@@ -44,6 +46,16 @@ export function OrderTable({
   onSort
 }: OrderTableProps) {
   const router = useRouter();
+
+  const handleDownloadPdf = async (invoiceId: string | number) => {
+    const toastId = toast.loading("Generating PDF from server...");
+    try {
+      await ExportService.exportInvoicePdf(invoiceId);
+      toast.success("PDF downloaded successfully", { id: toastId });
+    } catch (error) {
+      toast.error("Failed to generate PDF. Please try again.", { id: toastId });
+    }
+  };
 
   if (orders.length === 0) {
     return (
@@ -174,13 +186,15 @@ export function OrderTable({
                         
                         <DropdownMenuSeparator />
                         
-                        <DropdownMenuItem onClick={() => {}}>
-                          <Copy className="mr-2 h-4 w-4" /> Duplicate
+                        <DropdownMenuItem asChild>
+                          <Link href={`/orders/${order.id}`}>
+                            <Printer className="mr-2 h-4 w-4" /> Print
+                          </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {}}>
-                          <Printer className="mr-2 h-4 w-4" /> Print
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {}}>
+                        <DropdownMenuItem onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          handleDownloadPdf(order.id);
+                        }}>
                           <Download className="mr-2 h-4 w-4" /> Download PDF
                         </DropdownMenuItem>
 
