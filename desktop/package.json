@@ -2,7 +2,8 @@
   "name": "desktop",
   "version": "1.0.0",
   "description": "Billing Optics ERP Desktop Application",
-  "author": "Billing Optics",
+  "author": "Billing Optics <support@billingoptics.com>",
+  "homepage": "https://github.com/Abdul-Razack/billing-optics",
   "private": true,
   "main": "main.js",
   "scripts": {
@@ -64,7 +65,8 @@
         "AppImage",
         "deb"
       ],
-      "category": "Office"
+      "category": "Office",
+      "maintainer": "Billing Optics <support@billingoptics.com>"
     },
     "deb": {
       "depends": [
