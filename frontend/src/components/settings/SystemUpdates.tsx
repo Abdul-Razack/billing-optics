@@ -11,12 +11,55 @@ export function SystemUpdates() {
   const [progress, setProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const isDesktop = typeof window !== "undefined" && (window as any).electron?.updater;
+  // Determine if we are in desktop or need to use a mock for the web browser demo
+  const isActualDesktop = typeof window !== "undefined" && !!(window as any).electron?.updater;
+  const isDesktop = typeof window !== "undefined"; // Allow it to run in browser via mock
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Inject a mock updater if we're in the browser to demo the functionality
+    if (!isActualDesktop && !(window as any).electron) {
+      const mockUpdater = {
+        listeners: {} as Record<string, any>,
+        onUpdateAvailable: (cb: any) => { mockUpdater.listeners.available = cb; },
+        onUpdateNotAvailable: (cb: any) => { mockUpdater.listeners.notAvailable = cb; },
+        onDownloadProgress: (cb: any) => { mockUpdater.listeners.progress = cb; },
+        onUpdateDownloaded: (cb: any) => { mockUpdater.listeners.downloaded = cb; },
+        onError: (cb: any) => { mockUpdater.listeners.error = cb; },
+        removeAllListeners: () => { mockUpdater.listeners = {}; },
+        checkForUpdates: async () => {
+          setTimeout(() => {
+            if (mockUpdater.listeners.available) mockUpdater.listeners.available({ version: "1.1.0" });
+          }, 2000);
+        },
+        downloadUpdate: () => {
+          let p = 0;
+          const int = setInterval(() => {
+            p += 10;
+            if (mockUpdater.listeners.progress) mockUpdater.listeners.progress({ percent: p });
+            if (p >= 100) {
+              clearInterval(int);
+              setTimeout(() => {
+                if (mockUpdater.listeners.downloaded) mockUpdater.listeners.downloaded();
+              }, 500);
+            }
+          }, 300);
+        },
+        installUpdateAndRestart: () => {
+          toast.success("Mock: Restarting application...");
+          setTimeout(() => window.location.reload(), 1500);
+        }
+      };
+      (window as any).electron = { updater: mockUpdater };
+    }
+  }, [isActualDesktop]);
 
   useEffect(() => {
     if (!isDesktop) return;
 
-    const updater = (window as any).electron.updater;
+    const updater = (window as any).electron?.updater;
+    if (!updater) return;
 
     const handleAvailable = (info: any) => {
       setStatus("available");
