@@ -8,8 +8,8 @@ const MOCK_LATEST_RELEASE = {
   name: 'v1.0.0 Stable Production Launch',
   assets: [
     {
-      name: 'Billing.Optics.ERP.Setup.1.0.0.exe',
-      browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing.Optics.ERP.Setup.1.0.0.exe',
+      name: 'Billing Optics ERP Setup 1.0.0.exe',
+      browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP%20Setup%201.0.0.exe',
       size: 88290234
     },
     {

@@ -30,7 +30,8 @@
       {
         "provider": "github",
         "owner": "Abdul-Razack",
-        "repo": "billing-optics"
+        "repo": "billing-optics",
+        "releaseType": "release"
       }
     ],
     "files": [

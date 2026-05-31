@@ -47,8 +47,8 @@ This pre-release introduces minor performance adjustments and structural alignme
 - **Printer Width Margins**: Rectified thermal receipt padding overflows on older ESC/POS hardware models.
 - **Form Submission Lock**: Resolved a rare locking error when modifying product details while scanning barcodes.`,
     windowsAsset: {
-      name: 'Billing.Optics.ERP.Setup.1.0.1-beta.exe',
-      url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.1-beta/Billing.Optics.ERP.Setup.1.0.1-beta.exe',
+      name: 'Billing Optics ERP Setup 1.0.1-beta.exe',
+      url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.1-beta/Billing%20Optics%20ERP%20Setup%201.0.1-beta.exe',
       size: '84.5 MB',
     },
     // No Linux asset in beta to demonstrate dynamic conditional rendering
@@ -80,8 +80,8 @@ We are thrilled to present the initial production stable launch of the **Billing
 - **Unified Auth Protocol**: Robust, token-based role permission checking (Admin, Billing Staff, Optometrist).
 - **Desktop Companion App**: Electron-based client wrapper providing instant launch and desktop shortcuts.`,
     windowsAsset: {
-      name: 'Billing.Optics.ERP.Setup.1.0.0.exe',
-      url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing.Optics.ERP.Setup.1.0.0.exe',
+      name: 'Billing Optics ERP Setup 1.0.0.exe',
+      url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP%20Setup%201.0.0.exe',
       size: '84.2 MB',
     },
     linuxAssetDeb: {

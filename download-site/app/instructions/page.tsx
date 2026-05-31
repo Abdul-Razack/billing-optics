@@ -99,7 +99,7 @@ export default function SetupInstructions() {
                 <div className="pl-7 space-y-3">
                   <div>
                     <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest">Windows Launch:</h4>
-                    <p className="mt-0.5">Double-click the downloaded setup package `Billing.Optics.ERP.Setup.exe`. If asked by User Account Control (UAC), approve the prompt. The package installs desktop shortcuts and launches instantly.</p>
+                    <p className="mt-0.5">Double-click the downloaded setup package `Billing Optics ERP Setup.exe`. If asked by User Account Control (UAC), approve the prompt. The package installs desktop shortcuts and launches instantly.</p>
                   </div>
                   <div>
                     <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest">Linux AppImage Launch:</h4>
