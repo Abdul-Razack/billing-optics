@@ -93,7 +93,7 @@ jobs:
           fi
         working-directory: desktop
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -191,7 +191,7 @@ jobs:
           fi
         working-directory: desktop
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
