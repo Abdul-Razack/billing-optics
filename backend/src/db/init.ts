@@ -1,11 +1,9 @@
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { db, pool } from '../config/db';
-import { users } from './schema';
+import { settings, users } from './schema';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import { sql } from 'drizzle-orm';
-import { settings, users } from './schema';
-
 export async function initializeDatabase() {
   try {
     console.log('[INIT] Checking database status...');
