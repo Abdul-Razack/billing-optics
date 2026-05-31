@@ -5,50 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1779556033036,
-      "tag": "0000_eager_squadron_supreme",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1779556972620,
-      "tag": "0001_bent_quasar",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1779558136852,
-      "tag": "0002_equal_midnight",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1779571969389,
-      "tag": "0003_watery_starfox",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1779618077068,
-      "tag": "0004_open_lethal_legion",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1779903690588,
-      "tag": "0005_military_zemo",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1779904184853,
-      "tag": "0006_young_blue_marvel",
+      "when": 1780252758589,
+      "tag": "0000_many_micromax",
       "breakpoints": true
     }
   ]

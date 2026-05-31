@@ -11,19 +11,16 @@ async function startServer() {
   try {
     // 1. Validate Database Connection
     console.log('[INIT] Starting Services');
-    console.log('Validating PostgreSQL connection...');
     await pool.query('SELECT 1');
-    console.log('[INIT] Connecting Database');
-    console.log('PostgreSQL connection established successfully.');
+    console.log('✓ PostgreSQL Connected');
 
     // 2. Run First-Time Setup
     await initializeDatabase();
-    console.log('[INIT] Loading Workspace');
+    console.log('✓ Database Ready');
 
     // 3. Start HTTP Server
     const server = app.listen(port, '0.0.0.0', () => {
-      console.log(`Server running in ${env.NODE_ENV} mode on port ${port} (bound to 0.0.0.0)`);
-      console.log('[INIT] Ready');
+      console.log('✓ Backend Running');
     });
 
     // 4. Initialize Scheduled Jobs
@@ -44,9 +41,23 @@ async function startServer() {
         pool.end();
       });
     });
-  } catch (error) {
-    console.error('Failed to start backend: Database connection error.', error);
-    process.exit(1); // Exit with failure code so desktop wrapper catches it
+  } catch (error: any) {
+    console.error('\n================ DATABASE CONNECTION FAILED ================');
+    
+    // Attempt to parse connection string for diagnostics (safely hiding password)
+    try {
+      const dbUrl = new URL(env.DATABASE_URL);
+      console.error(`* Database Host: ${dbUrl.hostname}:${dbUrl.port}`);
+      console.error(`* Database Name: ${dbUrl.pathname.replace('/', '')}`);
+      console.error(`* Username:      ${dbUrl.username}`);
+    } catch (parseError) {
+      console.error('* Configuration: Invalid DATABASE_URL format.');
+    }
+    
+    console.error(`* Exact Reason:  ${error.message}`);
+    console.error('============================================================\n');
+    
+    process.exit(1);
   }
 }
 
