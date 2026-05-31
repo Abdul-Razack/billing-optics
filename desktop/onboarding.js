@@ -60,12 +60,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById(`text-${taskNum}`).classList.replace('text-gray-700', 'text-green-700');
     };
 
-    // Task 1: Preparing Application (Immediate)
+    // Task 1: Checking Database Engine (Immediate)
     setTaskActive(1);
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 600));
     setTaskComplete(1);
 
-    // Task 2: Configuring Database (Trigger IPC to save default .env and start servers)
+    // Task 2: Preparing Database
     setTaskActive(2);
     ipcRenderer.send('start-setup', companyData);
 
@@ -73,25 +73,32 @@ document.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.on('setup-progress', (event, stage) => {
       if (stage === 'database-ready') {
         setTaskComplete(2);
-        setTaskActive(3);
+        setTaskActive(3); // Running Migrations
       } else if (stage === 'workspace-ready') {
         setTaskComplete(3);
-        setTaskActive(4);
+        setTaskActive(4); // Saving Configuration
       } else if (stage === 'all-ready') {
         setTaskComplete(4);
+        setTaskActive(5); // Setup Complete
+        
+        setTimeout(() => {
+          setTaskComplete(5);
+        }, 400);
+
         setTimeout(() => {
           document.getElementById('success-company-name').innerText = companyData.companyName || 'Your Workspace';
           step3.classList.remove('active');
           step4.classList.add('active');
-        }, 600);
+        }, 1000);
       }
     });
 
     ipcRenderer.on('setup-error', (event, msg, logDetail) => {
       document.getElementById('setup-tasks').classList.add('hidden');
-      document.getElementById('setup-title').innerText = 'Setup Interrupted';
-      document.getElementById('setup-subtitle').innerText = 'We encountered a problem while provisioning your environment.';
+      document.getElementById('setup-title').innerText = 'Database Engine Required';
+      document.getElementById('setup-subtitle').innerText = 'PostgreSQL is not installed or the service is not running.';
       document.getElementById('setup-error-container').classList.remove('hidden');
+      document.getElementById('setup-error-summary').innerText = 'Please install PostgreSQL manually for now. Automatic installation is coming soon.';
       if (logDetail) {
         document.getElementById('diagnostics-log').value = logDetail;
       }
@@ -110,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('diagnostics-container').classList.add('hidden');
       
       // Reset tasks
-      for(let i=2; i<=4; i++) {
+      for(let i=2; i<=5; i++) {
         document.getElementById(`task-${i}`).classList.add('opacity-50');
         document.getElementById(`icon-${i}`).className = 'w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0';
         document.getElementById(`icon-${i}`).innerHTML = '';
