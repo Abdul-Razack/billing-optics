@@ -24,7 +24,7 @@
   },
   "build": {
     "appId": "com.optics.pos",
-    "productName": "Billing Optics ERP",
+    "productName": "BillingOpticsERP",
     "asar": false,
     "directories": {
       "output": "dist"
@@ -60,6 +60,7 @@
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
+      "shortcutName": "Billing Optics ERP",
       "uninstallDisplayName": "Billing Optics ERP"
     },
     "linux": {
