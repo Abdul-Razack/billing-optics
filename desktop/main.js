@@ -47,7 +47,7 @@ function createWindow() {
     height: 800,
     show: false, // Don't show immediately, wait for splash screen to close
     title: "Billing Optics ERP",
-    // icon: path.join(__dirname, 'build', 'icon.ico'), // Uncomment when icon exists
+    icon: path.join(__dirname, 'build', 'icon.ico'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
