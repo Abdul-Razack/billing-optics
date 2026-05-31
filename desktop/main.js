@@ -166,7 +166,7 @@ ipcMain.on('start-setup', async (event, companyData) => {
     await startServers(true); // onboarding mode
   } catch (err) {
     console.error('Auto-provisioning failed:', err.message);
-    if (onboardingWindow) onboardingWindow.webContents.send('setup-error', 'Local database service not found or access denied.');
+    if (onboardingWindow) onboardingWindow.webContents.send('setup-error', 'Local database service not found or access denied.', err.stack || err.message);
   }
 });
 

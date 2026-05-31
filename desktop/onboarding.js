@@ -80,17 +80,25 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (stage === 'all-ready') {
         setTaskComplete(4);
         setTimeout(() => {
+          document.getElementById('success-company-name').innerText = companyData.companyName || 'Your Workspace';
           step3.classList.remove('active');
           step4.classList.add('active');
         }, 600);
       }
     });
 
-    ipcRenderer.on('setup-error', (event, msg) => {
+    ipcRenderer.on('setup-error', (event, msg, logDetail) => {
       document.getElementById('setup-tasks').classList.add('hidden');
       document.getElementById('setup-title').innerText = 'Setup Interrupted';
       document.getElementById('setup-subtitle').innerText = 'We encountered a problem while provisioning your environment.';
       document.getElementById('setup-error-container').classList.remove('hidden');
+      if (logDetail) {
+        document.getElementById('diagnostics-log').value = logDetail;
+      }
+    });
+
+    document.getElementById('showDiagnosticsBtn').addEventListener('click', () => {
+      document.getElementById('diagnostics-container').classList.remove('hidden');
     });
 
     document.getElementById('retrySetupBtn').addEventListener('click', () => {
@@ -99,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('setup-title').innerText = 'Setting up your workspace';
       document.getElementById('setup-subtitle').innerText = 'This will only take a moment.';
       document.getElementById('setup-error-container').classList.add('hidden');
+      document.getElementById('diagnostics-container').classList.add('hidden');
       
       // Reset tasks
       for(let i=2; i<=4; i++) {
