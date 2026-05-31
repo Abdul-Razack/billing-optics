@@ -80,13 +80,20 @@ jobs:
       - name: Build Desktop Installer
         shell: bash
         run: |
+          success=false
           for i in 1 2 3; do
-            npx electron-builder --win --publish never && break || {
+            npx electron-builder --win --publish never && { success=true; break; } || {
               echo "Build failed with exit code $?. Retrying in 15 seconds..."
               sleep 15
             }
           done
+          if [ "$success" = false ]; then
+            echo "All retries failed."
+            exit 1
+          fi
         working-directory: desktop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -171,13 +178,20 @@ jobs:
       - name: Build Linux Installers
         shell: bash
         run: |
+          success=false
           for i in 1 2 3; do
-            npx electron-builder --linux --publish never && break || {
+            npx electron-builder --linux --publish never && { success=true; break; } || {
               echo "Build failed with exit code $?. Retrying in 15 seconds..."
               sleep 15
             }
           done
+          if [ "$success" = false ]; then
+            echo "All retries failed."
+            exit 1
+          fi
         working-directory: desktop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
