@@ -29,13 +29,30 @@ export default function DownloadButton({
       const res = await fetch(`/api/download?platform=${platform}`);
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || `Server returned ${res.status}`);
+        let errorMessage = `Server returned ${res.status}`;
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          try {
+            const errorText = await res.text();
+            if (errorText) {
+              // Limit length to avoid giant HTML dumps in UI
+              errorMessage = errorText.length > 60 ? errorText.substring(0, 60) + '...' : errorText;
+            }
+          } catch {}
+        }
+        throw new Error(errorMessage);
       }
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (err) {
+        throw new Error('Server returned an invalid non-JSON response.');
+      }
 
-      if (!data.url) {
+      if (!data || !data.url) {
         throw new Error('No download URL returned from resolver.');
       }
 
