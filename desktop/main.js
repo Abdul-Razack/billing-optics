@@ -126,8 +126,8 @@ ipcMain.on('start-setup', async (event, companyData) => {
       host: 'localhost',
       port: 5432,
       user: 'postgres',
-      // Assuming peer auth or trust for local setup, or empty password.
-      password: '', 
+      // Try common local default password to avoid SCRAM empty-string crash
+      password: 'postgres', 
     });
 
     await superuserClient.connect();
