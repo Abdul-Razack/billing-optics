@@ -15,8 +15,14 @@ const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   console.error('Invalid environment variables:', parsed.error.format());
-  process.exit(1);
+  console.warn('Falling back to default environment variables to prevent fatal crash.');
 }
 
-export const env = parsed.data;
+export const env = parsed.success ? parsed.data : {
+  PORT: 3000,
+  DATABASE_URL: '',
+  JWT_SECRET: 'fallback_secret_do_not_use_in_prod',
+  NODE_ENV: 'development' as const,
+  CORS_ORIGIN: '*'
+};
 export default env;

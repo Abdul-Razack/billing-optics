@@ -6,28 +6,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const step3 = document.getElementById('step-3');
   const step4 = document.getElementById('step-4');
 
-  // Step 1 -> 2
-  document.getElementById('nextToStep2').addEventListener('click', () => {
-    step1.classList.remove('active');
-    step2.classList.add('active');
-  });
+  let companyData = {};
+  let dbStatus = null; // 'installed' | 'not_installed'
 
   document.getElementById('quitBtn').addEventListener('click', () => {
     ipcRenderer.send('quit-app');
   });
 
-  // Step 2 -> 1
-  document.getElementById('backToStep1').addEventListener('click', () => {
-    step2.classList.remove('active');
-    step1.classList.add('active');
-  });
-
-  // Step 2 -> 3
-  document.getElementById('companyForm').addEventListener('submit', (e) => {
+  // Step 1 -> 2
+  document.getElementById('companyForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    // Collect data
-    const companyData = {
+    companyData = {
       companyName: document.getElementById('companyName').value,
       ownerName: document.getElementById('ownerName').value,
       phone: document.getElementById('phone').value,
@@ -35,11 +24,141 @@ document.addEventListener('DOMContentLoaded', () => {
       address: document.getElementById('address').value
     };
 
+    step1.classList.remove('active');
+    step2.classList.add('active');
+
+    // Check Postgres status
+    document.getElementById('db-detecting').classList.remove('hidden');
+    document.getElementById('db-not-installed').classList.add('hidden');
+    document.getElementById('db-config-form').classList.add('hidden');
+
+    try {
+      const isInstalled = await ipcRenderer.invoke('check-postgres');
+      document.getElementById('db-detecting').classList.add('hidden');
+      
+      if (isInstalled) {
+        dbStatus = 'installed';
+        document.getElementById('db-config-form').classList.remove('hidden');
+      } else {
+        dbStatus = 'not_installed';
+        document.getElementById('db-not-installed').classList.remove('hidden');
+      }
+    } catch (err) {
+      console.error(err);
+      // Fallback to auto-install
+      document.getElementById('db-detecting').classList.add('hidden');
+      document.getElementById('db-not-installed').classList.remove('hidden');
+      dbStatus = 'not_installed';
+    }
+  });
+
+  // Back from Step 2 Not Installed
+  document.getElementById('backToStep1').addEventListener('click', () => {
+    step2.classList.remove('active');
+    step1.classList.add('active');
+  });
+
+  // Back from Step 2 Config
+  document.getElementById('backToStep1FromConfig').addEventListener('click', () => {
+    step2.classList.remove('active');
+    step1.classList.add('active');
+  });
+
+  // Advanced Mode Toggle
+  const advancedToggle = document.getElementById('advancedModeToggle');
+  advancedToggle.addEventListener('change', (e) => {
+    const isAdvanced = e.target.checked;
+    if (isAdvanced) {
+      document.getElementById('standardFields').classList.add('hidden');
+      document.getElementById('advancedFields').classList.remove('hidden');
+    } else {
+      document.getElementById('standardFields').classList.remove('hidden');
+      document.getElementById('advancedFields').classList.add('hidden');
+    }
+    document.getElementById('continueToStep3').disabled = true;
+    document.getElementById('continueToStep3').classList.add('bg-gray-300', 'cursor-not-allowed');
+    document.getElementById('continueToStep3').classList.remove('bg-blue-600', 'hover:bg-blue-700');
+    document.getElementById('db-success').classList.add('hidden');
+    document.getElementById('db-error').classList.add('hidden');
+  });
+
+  // Test Connection
+  document.getElementById('testConnBtn').addEventListener('click', async () => {
+    const isAdvanced = advancedToggle.checked;
+    const dbConfig = {
+      isAdvanced,
+      host: document.getElementById('dbHost').value,
+      port: document.getElementById('dbPort').value,
+      adminUser: document.getElementById('adminUser').value,
+      adminPass: document.getElementById('adminPass').value,
+      dbName: document.getElementById('dbName').value,
+      appUser: document.getElementById('appUser').value,
+      appPass: document.getElementById('appPass').value
+    };
+
+    const btnText = document.getElementById('testConnText');
+    const btnSpinner = document.getElementById('testConnSpinner');
+    btnText.innerText = 'Testing...';
+    btnSpinner.classList.remove('hidden');
+    document.getElementById('db-error').classList.add('hidden');
+    document.getElementById('db-success').classList.add('hidden');
+    document.getElementById('continueToStep3').disabled = true;
+    document.getElementById('continueToStep3').classList.add('bg-gray-300', 'cursor-not-allowed');
+    document.getElementById('continueToStep3').classList.remove('bg-blue-600', 'hover:bg-blue-700');
+
+    try {
+      const res = await ipcRenderer.invoke('test-db-connection', dbConfig);
+      if (res.success) {
+        document.getElementById('db-success').classList.remove('hidden');
+        document.getElementById('continueToStep3').disabled = false;
+        document.getElementById('continueToStep3').classList.remove('bg-gray-300', 'cursor-not-allowed');
+        document.getElementById('continueToStep3').classList.add('bg-blue-600', 'hover:bg-blue-700');
+      } else {
+        document.getElementById('db-error').classList.remove('hidden');
+        document.getElementById('db-error-text').innerText = res.error || 'Connection failed';
+      }
+    } catch (err) {
+      document.getElementById('db-error').classList.remove('hidden');
+      document.getElementById('db-error-text').innerText = err.message;
+    } finally {
+      btnText.innerText = 'Test Connection';
+      btnSpinner.classList.add('hidden');
+    }
+  });
+
+  // Step 2 Form Submit (Scenario 2/3)
+  document.getElementById('dbForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (document.getElementById('continueToStep3').disabled) return;
+    
+    const dbConfig = {
+      isAutoInstall: false,
+      isAdvanced: advancedToggle.checked,
+      host: document.getElementById('dbHost').value,
+      port: document.getElementById('dbPort').value,
+      adminUser: document.getElementById('adminUser').value,
+      adminPass: document.getElementById('adminPass').value,
+      dbName: document.getElementById('dbName').value,
+      appUser: document.getElementById('appUser').value,
+      appPass: document.getElementById('appPass').value
+    };
+
     step2.classList.remove('active');
     step3.classList.add('active');
+    runSetupTasks(companyData, dbConfig);
+  });
 
-    // Start setup process
-    runSetupTasks(companyData);
+  // Step 2 Auto Install (Scenario 1)
+  document.getElementById('startAutoInstall').addEventListener('click', () => {
+    const randomPass = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+    const dbConfig = { 
+      isAutoInstall: true,
+      adminUser: 'postgres',
+      adminPass: randomPass
+    };
+    step2.classList.remove('active');
+    step3.classList.add('active');
+    runSetupTasks(companyData, dbConfig);
   });
 
   // Step 4 -> Launch
@@ -47,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('launch-app');
   });
 
-  async function runSetupTasks(companyData) {
+  async function runSetupTasks(companyData, dbConfig) {
     const setTaskActive = (taskNum) => {
       document.getElementById(`task-${taskNum}`).classList.remove('opacity-50');
       document.getElementById(`icon-${taskNum}`).className = 'w-6 h-6 rounded-full border-2 border-blue-600 border-t-transparent animate-spin flex-shrink-0';
@@ -60,21 +179,18 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById(`text-${taskNum}`).classList.replace('text-gray-700', 'text-green-700');
     };
 
-    // Task 1: Checking Database Engine (Immediate)
-    setTaskActive(1);
-    await new Promise(r => setTimeout(r, 600));
-    setTaskComplete(1);
+    if (dbConfig.isAutoInstall) {
+      document.getElementById('task-installing').classList.replace('hidden', 'flex');
+    } else {
+      setTaskActive(2);
+    }
+    
+    ipcRenderer.send('start-setup', companyData, dbConfig);
 
-    // Task 2: Preparing Database
-    setTaskActive(2);
-    ipcRenderer.send('start-setup', companyData);
-
-    // Listen for progress from main process
+    // Listen for progress
     ipcRenderer.on('setup-progress', (event, stage) => {
       if (stage === 'installing-database') {
-        // Show the hidden installing row
         document.getElementById('task-installing').classList.replace('hidden', 'flex');
-        setTaskComplete(1); // Checking is complete
       } else if (stage.startsWith('installing-progress:')) {
         const percent = stage.split(':')[1];
         if (percent === '100') {
@@ -84,22 +200,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else if (stage === 'database-ready') {
         if (!document.getElementById('task-installing').classList.contains('hidden')) {
-          // If we went through installation, mark it complete
           document.getElementById(`icon-installing`).className = 'w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 text-white';
           document.getElementById(`icon-installing`).innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
           document.getElementById(`text-installing`).classList.replace('text-gray-700', 'text-green-700');
           document.getElementById('text-installing-sub').innerText = 'Installation successful';
-        } else {
-          setTaskComplete(1); // Normal flow
         }
         setTaskComplete(2);
-        setTaskActive(3); // Running Migrations
+        setTaskActive(3); // Migrations
       } else if (stage === 'workspace-ready') {
         setTaskComplete(3);
-        setTaskActive(4); // Saving Configuration
+        setTaskActive(4); // Config
       } else if (stage === 'all-ready') {
         setTaskComplete(4);
-        setTaskActive(5); // Setup Complete
+        setTaskActive(5); // Complete
         
         setTimeout(() => {
           setTaskComplete(5);
@@ -113,12 +226,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    ipcRenderer.on('setup-error', (event, msg, logDetail) => {
+    ipcRenderer.on('setup-error', (event, summary, logDetail) => {
       document.getElementById('setup-tasks').classList.add('hidden');
-      document.getElementById('setup-title').innerText = 'Database Engine Required';
-      document.getElementById('setup-subtitle').innerText = 'PostgreSQL is not installed or the service is not running.';
+      document.getElementById('setup-title').innerText = 'Setup Failed';
+      document.getElementById('setup-subtitle').innerText = 'An error occurred while provisioning.';
       document.getElementById('setup-error-container').classList.remove('hidden');
-      document.getElementById('setup-error-summary').innerText = 'Please install PostgreSQL manually for now. Automatic installation is coming soon.';
+      document.getElementById('setup-error-summary').innerText = summary;
       if (logDetail) {
         document.getElementById('diagnostics-log').value = logDetail;
       }
@@ -129,24 +242,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('retrySetupBtn').addEventListener('click', () => {
-      // Reset UI and retry
       document.getElementById('setup-tasks').classList.remove('hidden');
       document.getElementById('setup-title').innerText = 'Setting up your workspace';
       document.getElementById('setup-subtitle').innerText = 'This will only take a moment.';
       document.getElementById('setup-error-container').classList.add('hidden');
       document.getElementById('diagnostics-container').classList.add('hidden');
       
-      // Reset tasks
-      for(let i=2; i<=5; i++) {
-        document.getElementById(`task-${i}`).classList.add('opacity-50');
-        document.getElementById(`icon-${i}`).className = 'w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0';
-        document.getElementById(`icon-${i}`).innerHTML = '';
-        document.getElementById(`text-${i}`).classList.replace('text-green-700', 'text-gray-500');
-        document.getElementById(`text-${i}`).classList.replace('text-gray-700', 'text-gray-500');
-      }
-
-      setTaskActive(2);
-      ipcRenderer.send('start-setup', companyData);
+      // Go back to step 2 instead of blindly retrying setup tasks
+      step3.classList.remove('active');
+      step2.classList.add('active');
     });
   }
 });

@@ -1,0 +1,58 @@
+name: Ubuntu Validation E2E
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test-ubuntu-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql postgresql-contrib
+          sudo systemctl start postgresql
+          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+
+      - name: Build the .deb Package
+        run: |
+          chmod +x ./build_local.sh
+          ./build_local.sh
+
+      - name: Install the .deb Package
+        run: |
+          # Install the local built deb package
+          sudo dpkg -i desktop/dist/*.deb || sudo apt-get install -f -y
+
+      - name: Setup Playwright for E2E
+        run: |
+          cd e2e-tests
+          npm ci || npm install
+          npx playwright install --with-deps
+
+      - name: Run Playwright Tests (xvfb)
+        run: |
+          cd e2e-tests
+          xvfb-run -a npx playwright test tests/ubuntu-deb.spec.js
+
+      - name: Upload Logs and Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-validation-evidence
+          path: |
+            e2e-tests/screenshots/
+            e2e-tests/playwright-report/

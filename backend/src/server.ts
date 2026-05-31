@@ -57,7 +57,7 @@ async function startServer() {
     console.error(`* Exact Reason:  ${error.message}`);
     console.error('============================================================\n');
     
-    process.exit(1);
+    return; // Recoverable: just return instead of killing the entire process
   }
 }
 

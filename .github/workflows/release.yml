@@ -126,6 +126,38 @@ jobs:
           NODE_ENV: production
           NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
+      - name: Prepare Backend Runtime Bundle
+        run: |
+          # Install only production deps for backend (resolves full transitive tree)
+          mkdir -p backend/bundle
+          node -e "
+            const pkg = JSON.parse(require('fs').readFileSync('backend/package.json','utf-8'));
+            delete pkg.devDependencies; delete pkg.scripts;
+            delete pkg.dependencies.shared;
+            require('fs').writeFileSync('backend/bundle/package.json', JSON.stringify(pkg,null,2));
+          "
+          cd backend/bundle && npm install --omit=dev --ignore-scripts
+          cd ../..
+          # Copy shared workspace package into the bundle
+          cp -r shared backend/bundle/node_modules/shared
+          echo "Backend bundle size: $(du -sh backend/bundle/node_modules | cut -f1)"
+
+      - name: Prepare Frontend Runtime Bundle
+        run: |
+          # Install only next + react + react-dom (runtime deps for 'next start')
+          mkdir -p frontend/bundle
+          node -e "
+            const pkg = JSON.parse(require('fs').readFileSync('frontend/package.json','utf-8'));
+            const keep = ['next','react','react-dom'];
+            const deps = {};
+            keep.forEach(k => { if(pkg.dependencies[k]) deps[k]=pkg.dependencies[k]; });
+            pkg.dependencies = deps;
+            delete pkg.devDependencies; delete pkg.scripts;
+            require('fs').writeFileSync('frontend/bundle/package.json', JSON.stringify(pkg,null,2));
+          "
+          cd frontend/bundle && npm install --omit=dev --ignore-scripts
+          echo "Frontend bundle size: $(du -sh node_modules | cut -f1)"
+
       - name: Build and Publish Linux Installer
         shell: bash
         run: |

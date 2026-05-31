@@ -76,7 +76,8 @@ function loadEnv() {
     content.split('\n').forEach(line => {
       const parts = line.split('=');
       const key = parts[0]?.trim();
-      const val = parts.slice(1).join('=')?.trim();
+      // Strip all whitespace/newlines from value (handles wrapped base64)
+      const val = parts.slice(1).join('=')?.replace(/\s/g, '');
       if (key && val) envConfig[key] = val;
     });
 
@@ -87,11 +88,25 @@ function loadEnv() {
           const buffer = Buffer.from(envConfig['DATABASE_URL_ENCRYPTED'], 'base64');
           envConfig.DATABASE_URL = safeStorage.decryptString(buffer);
         } else {
+          // safeStorage unavailable — stored as plain base64 fallback
           envConfig.DATABASE_URL = Buffer.from(envConfig['DATABASE_URL_ENCRYPTED'], 'base64').toString('utf-8');
         }
       } catch (err) {
-        console.error('Failed to decrypt database URL:', err);
+        log.error('Failed to decrypt database URL (config may be corrupt):', err.message);
+        // Return 'corrupted' so app.whenReady can redirect to onboarding
+        return 'corrupted';
       }
+    }
+
+    // JWT_SECRET stored as plain base64
+    if (envConfig['JWT_SECRET_ENCODED']) {
+      envConfig.JWT_SECRET = Buffer.from(envConfig['JWT_SECRET_ENCODED'], 'base64').toString('utf-8');
+    }
+
+    // .env exists but DATABASE_URL still missing → config incomplete
+    if (!envConfig.DATABASE_URL) {
+      log.warn('loadEnv: .env found but DATABASE_URL could not be resolved. Redirecting to onboarding.');
+      return 'corrupted';
     }
 
     return true;
@@ -120,63 +135,130 @@ ipcMain.on('retry-startup', () => {
   app.quit();
 });
 
-ipcMain.on('start-setup', async (event, companyData) => {
+ipcMain.handle('check-postgres', async () => {
+  const { execSync } = require('child_process');
+  const os = require('os');
+  try {
+    if (os.platform() === 'win32') {
+      execSync('sc query postgresql-x64-16', { stdio: 'ignore' });
+      return true;
+    } else {
+      execSync('which psql', { stdio: 'ignore' });
+      return true;
+    }
+  } catch (err) {
+    return false;
+  }
+});
+
+ipcMain.handle('test-db-connection', async (event, config) => {
+  const { Client } = require('pg');
+  try {
+    const user = config.isAdvanced ? config.appUser : config.adminUser;
+    const password = config.isAdvanced ? config.appPass : config.adminPass;
+    const database = config.isAdvanced ? config.dbName : undefined;
+    
+    const client = new Client({
+      host: config.host || 'localhost',
+      port: config.port || 5432,
+      user: user,
+      password: password,
+      database: database
+    });
+    
+    await client.connect();
+    await client.end();
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
   try {
     const { Client } = require('pg');
     const crypto = require('crypto');
     const { safeStorage } = require('electron');
     const { ensurePostgresInstalled } = require('./pg-installer');
 
-    const appPassword = crypto.randomBytes(24).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
-    
-    // Connect to PostgreSQL as superuser
-    const superuserClient = new Client({
-      host: 'localhost',
-      port: 5432,
-      user: 'postgres',
-      // Try common local default password to avoid SCRAM empty-string crash
-      password: 'postgres', 
-    });
+    let secureDbUrl = '';
+    const defaultPort = '5000';
 
-    try {
-      await superuserClient.connect();
-    } catch (err) {
-      if (err.code === 'ECONNREFUSED') {
+    if (dbConfig && dbConfig.isAdvanced) {
+      // Scenario 3: Advanced Mode
+      secureDbUrl = `postgresql://${dbConfig.appUser}:${dbConfig.appPass}@${dbConfig.host}:${dbConfig.port}/${dbConfig.dbName}`;
+    } else {
+      const appPassword = crypto.randomBytes(24).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
+      let superuserClient;
+
+      if (dbConfig && dbConfig.isAutoInstall) {
+        // Scenario 1: Auto Install
         onboardingWindow.webContents.send('setup-progress', 'installing-database');
-        
         await ensurePostgresInstalled(
+          dbConfig.adminPass,
           (percent) => onboardingWindow.webContents.send('setup-progress', `installing-progress:${percent}`),
           (logMsg) => console.log('Installer:', logMsg)
         );
-        
-        // Retry connection after successful installation
+        // Retry connection after install
         await new Promise(r => setTimeout(r, 3000));
-        await superuserClient.connect();
-      } else {
-        // If authentication failed on an existing service, bubble up
-        throw err;
+        superuserClient = new Client({
+          host: 'localhost',
+          port: 5432,
+          user: dbConfig.adminUser,
+          password: dbConfig.adminPass
+        });
+      } else if (dbConfig && !dbConfig.isAutoInstall) {
+        // Scenario 2: Admin provided credentials
+        superuserClient = new Client({
+          host: dbConfig.host,
+          port: dbConfig.port,
+          user: dbConfig.adminUser,
+          password: dbConfig.adminPass
+        });
       }
+
+      await superuserClient.connect();
+
+      // Create Database
+      const dbRes = await superuserClient.query(`SELECT datname FROM pg_catalog.pg_database WHERE datname = 'billing_optics_prod'`);
+      if (dbRes.rows.length === 0) {
+        await superuserClient.query(`CREATE DATABASE billing_optics_prod`);
+      }
+
+      // Create User
+      const roleRes = await superuserClient.query(`SELECT rolname FROM pg_roles WHERE rolname = 'billing_app'`);
+      if (roleRes.rows.length === 0) {
+        await superuserClient.query(`CREATE USER billing_app WITH ENCRYPTED PASSWORD '${appPassword}'`);
+      } else {
+        await superuserClient.query(`ALTER USER billing_app WITH ENCRYPTED PASSWORD '${appPassword}'`);
+      }
+
+      await superuserClient.query(`GRANT ALL PRIVILEGES ON DATABASE billing_optics_prod TO billing_app`);
+      await superuserClient.end();
+
+      // Grant on schema public by connecting to the new DB
+      const host = dbConfig.isAutoInstall ? 'localhost' : dbConfig.host;
+      const port = dbConfig.isAutoInstall ? 5432 : dbConfig.port;
+      const user = dbConfig.adminUser;
+      const pass = dbConfig.adminPass;
+
+      const dbClient = new Client({
+        host: host,
+        port: port,
+        user: user,
+        password: pass,
+        database: 'billing_optics_prod'
+      });
+      await dbClient.connect();
+      await dbClient.query(`GRANT ALL ON SCHEMA public TO billing_app`);
+      await dbClient.end();
+
+      secureDbUrl = `postgresql://billing_app:${appPassword}@${host}:${port}/billing_optics_prod`;
     }
 
-    // Create Database
-    const dbRes = await superuserClient.query(`SELECT datname FROM pg_catalog.pg_database WHERE datname = 'billing_optics_prod'`);
-    if (dbRes.rows.length === 0) {
-      await superuserClient.query(`CREATE DATABASE billing_optics_prod`);
-    }
-
-    // Create User
-    const roleRes = await superuserClient.query(`SELECT rolname FROM pg_roles WHERE rolname = 'billing_app'`);
-    if (roleRes.rows.length === 0) {
-      await superuserClient.query(`CREATE USER billing_app WITH ENCRYPTED PASSWORD '${appPassword}'`);
-    } else {
-      await superuserClient.query(`ALTER USER billing_app WITH ENCRYPTED PASSWORD '${appPassword}'`);
-    }
-
-    await superuserClient.query(`GRANT ALL PRIVILEGES ON DATABASE billing_optics_prod TO billing_app`);
-    await superuserClient.end();
-
-    const secureDbUrl = `postgresql://billing_app:${appPassword}@localhost:5432/billing_optics_prod`;
-    const defaultPort = '5000';
+    // Generate a stable JWT secret for this installation
+    const jwtSecret = crypto.randomBytes(48).toString('hex');
+    const jwtSecretEncoded = Buffer.from(jwtSecret).toString('base64');
 
     // Store securely
     let encryptedUrl = Buffer.from(secureDbUrl).toString('base64');
@@ -184,15 +266,15 @@ ipcMain.on('start-setup', async (event, companyData) => {
       encryptedUrl = safeStorage.encryptString(secureDbUrl).toString('base64');
     }
 
-    const envContent = `DATABASE_URL_ENCRYPTED=${encryptedUrl}\nPORT=${defaultPort}\nNODE_ENV=production\n`;
+    const envContent = `DATABASE_URL_ENCRYPTED=${encryptedUrl}\nJWT_SECRET_ENCODED=${jwtSecretEncoded}\nPORT=${defaultPort}\nNODE_ENV=production\n`;
     fs.writeFileSync(envPath, envContent);
 
-    envConfig = { DATABASE_URL: secureDbUrl, PORT: defaultPort, NODE_ENV: 'production' };
+    envConfig = { DATABASE_URL: secureDbUrl, JWT_SECRET: jwtSecret, PORT: defaultPort, NODE_ENV: 'production' };
     
     await startServers(true); // onboarding mode
   } catch (err) {
     console.error('Auto-provisioning failed:', err.message);
-    if (onboardingWindow) onboardingWindow.webContents.send('setup-error', 'Local database service not found or access denied.', err.stack || err.message);
+    if (onboardingWindow) onboardingWindow.webContents.send('setup-error', 'Database provisioning failed.', err.stack || err.message);
   }
 });
 
@@ -218,6 +300,16 @@ ipcMain.on('quit-app', () => {
 async function startServers(isOnboarding = false) {
   const rootPath = isDev ? path.resolve(__dirname, '..') : app.getAppPath();
   
+  if (!isDev) {
+    log.info(`[Startup] isPackaged: ${app.isPackaged}`);
+    log.info(`[Startup] app.getAppPath(): ${app.getAppPath()}`);
+    log.info(`[Startup] process.resourcesPath: ${process.resourcesPath}`);
+    log.info(`[Startup] rootPath: ${rootPath}`);
+    log.info(`[Startup] DATABASE_URL present? ${!!envConfig.DATABASE_URL}`);
+    log.info(`[Startup] JWT_SECRET present? ${!!envConfig.JWT_SECRET}`);
+    log.info(`[Startup] PORT: ${envConfig.PORT || 5000}`);
+  }
+
   const serverEnv = { 
     ...process.env, 
     ...envConfig,
@@ -225,52 +317,39 @@ async function startServers(isOnboarding = false) {
     USER_DATA_PATH: app.getPath('userData')
   };
 
-  console.log('Starting backend process...');
-  if (isDev) {
-    const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-    backendProcess = spawn(npmCmd, ['run', 'dev:backend'], { cwd: rootPath, env: serverEnv });
-  } else {
-    const { fork } = require('child_process');
-    const backendScript = path.join(rootPath, 'backend', 'dist', 'server.js');
-    backendProcess = fork(backendScript, [], { cwd: path.join(rootPath, 'backend'), env: serverEnv, stdio: 'pipe' });
-  }
+  console.log('Starting backend and frontend in-process...');
   
-  backendProcess.stdout?.on('data', (data) => {
-    const output = data.toString();
-    console.log(`[Backend]: ${output.trim()}`);
-    if (output.includes('[INIT]') && splashWindow) {
-      const match = output.match(/\[INIT\] (.*)/);
-      if (match && match[1]) splashWindow.webContents.send('setup-progress', match[1]);
+  if (!isDev) {
+    // Production: Require the backend directly
+    try {
+      const backendScript = path.join(rootPath, 'backend', 'dist', 'server.js');
+      require(backendScript);
+      console.log('[Backend] Started successfully in-process');
+    } catch (err) {
+      console.error('[Backend ERR] Failed to start backend:', err);
     }
-  });
-  
-  backendProcess.stderr?.on('data', (data) => console.error(`[Backend ERR]: ${data}`));
-  
-  let isBackendHealthy = false;
-  backendProcess.on('exit', (code) => {
-    if (!isBackendHealthy && code !== 0) {
-      console.error(`Backend process exited prematurely with code ${code}`);
-      if (splashWindow && !splashWindow.isDestroyed()) {
-        splashWindow.loadFile(path.join(__dirname, 'error.html'), { query: { type: 'database' } });
-      } else {
-        dialog.showErrorBox('Database Connection Error', 'The ERP Backend failed to connect to PostgreSQL.');
-        app.quit();
-      }
-    }
-  });
 
-  console.log('Starting frontend process...');
-  if (isDev) {
-    const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-    frontendProcess = spawn(npmCmd, ['run', 'dev:frontend'], { cwd: rootPath, env: serverEnv });
+    // Production: Start Next.js programmatically
+    try {
+      const next = require(path.join(rootPath, 'frontend', 'node_modules', 'next'));
+      const http = require('http');
+      
+      const nextApp = next({ dev: false, dir: path.join(rootPath, 'frontend') });
+      await nextApp.prepare();
+      const handle = nextApp.getRequestHandler();
+      
+      http.createServer((req, res) => {
+        handle(req, res);
+      }).listen(3000, () => {
+        console.log('[Frontend] Started successfully on port 3000');
+      });
+    } catch (err) {
+      console.error('[Frontend ERR] Failed to start frontend:', err);
+    }
   } else {
-    const { fork } = require('child_process');
-    const nextBin = path.join(rootPath, 'node_modules', 'next', 'dist', 'bin', 'next');
-    frontendProcess = fork(nextBin, ['start', '-p', '3000'], { cwd: path.join(rootPath, 'frontend'), env: serverEnv, stdio: 'pipe' });
+    // Development: Run manually outside electron or use dynamic imports
+    console.log('In DEV mode: Please run frontend and backend manually using npm run dev.');
   }
-  
-  frontendProcess.stdout?.on('data', (data) => console.log(`[Frontend]: ${data}`));
-  frontendProcess.stderr?.on('data', (data) => console.error(`[Frontend ERR]: ${data}`));
 
   console.log('Waiting for Backend and Frontend...');
   await waitOn({
@@ -370,7 +449,19 @@ autoUpdater.on('error', (err) => {
 });
 
 app.whenReady().then(async () => {
-  if (loadEnv()) {
+  const envStatus = loadEnv();
+
+  if (envStatus === 'corrupted') {
+    // .env exists but DB credentials are corrupt/unreadable — show onboarding
+    log.warn('Database config appears corrupt. Showing onboarding to reconfigure.');
+    createOnboardingWindow();
+    // Notify the onboarding window once it loads
+    setTimeout(() => {
+      if (onboardingWindow && !onboardingWindow.isDestroyed()) {
+        onboardingWindow.webContents.send('setup-error', 'Your database configuration appears to be corrupted or from a different installation. Please reconfigure.', '');
+      }
+    }, 2000);
+  } else if (envStatus === true) {
     createSplashWindow();
     try {
       await startServers();
@@ -381,7 +472,7 @@ app.whenReady().then(async () => {
       app.quit();
     }
   } else {
-    // Missing config, show setup window
+    // No .env at all — fresh install, show setup
     createOnboardingWindow();
   }
 

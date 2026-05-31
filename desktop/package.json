@@ -41,18 +41,49 @@
       }
     ],
     "files": [
-      "main.js",
-      "splash.html",
-      "config.html",
-      "config.js",
+      "*.js",
+      "*.html",
       "package.json",
-      "../backend/dist/**/*",
-      "../backend/package.json",
-      "../frontend/.next/**/*",
-      "../frontend/package.json",
-      "../frontend/public/**/*",
-      "../node_modules/**/*",
-      "../shared/**/*"
+      {
+        "from": "../backend/dist",
+        "to": "backend/dist",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../backend",
+        "to": "backend",
+        "filter": ["package.json"]
+      },
+      {
+        "from": "../backend/bundle/node_modules",
+        "to": "node_modules",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../frontend/.next",
+        "to": "frontend/.next",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../frontend",
+        "to": "frontend",
+        "filter": ["package.json"]
+      },
+      {
+        "from": "../frontend/public",
+        "to": "frontend/public",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../frontend/bundle/node_modules",
+        "to": "frontend/node_modules",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../shared",
+        "to": "shared",
+        "filter": ["**/*"]
+      }
     ],
     "win": {
       "target": "nsis"
@@ -80,14 +111,7 @@
       "category": "Office",
       "maintainer": "Billing Optics <support@billingoptics.com>",
       "executableName": "billing-optics-erp",
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "desktop": {
-        "Name": "Billing Optics ERP",
-        "Comment": "Billing Optics ERP Desktop Application",
-        "Terminal": "false",
-        "Type": "Application",
-        "Categories": "Office;"
-      }
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "deb": {
       "depends": [
