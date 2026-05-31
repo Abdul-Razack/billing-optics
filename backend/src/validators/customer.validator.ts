@@ -4,7 +4,7 @@ import { paginationQuerySchema } from './common.validator';
 export const createCustomerSchema = z.object({
   body: z.object({
     name: z.string().trim().min(2).max(100),
-    phone: z.string().trim().min(6).max(20),
+    phone: z.string().trim().min(3).max(20),
     email: z.string().trim().email().optional().or(z.literal('')),
     address: z.string().trim().max(500).optional().or(z.literal('')),
   })

@@ -48,8 +48,17 @@ export function CustomerQuickAddModal({ open, onOpenChange, onSuccess }: Custome
       onOpenChange(false);
     } catch (error: any) {
       console.error("Failed to create customer", error);
-      // Handle API validation errors which might come as an array or specific message
-      const errorMessage = error.response?.data?.message || error.message || "Failed to create customer. Phone number might already exist.";
+      
+      let errorMessage = "Failed to create customer. Phone number might already exist.";
+      
+      if (error.data?.details && Array.isArray(error.data.details)) {
+        errorMessage = error.data.details.map((d: any) => `${d.path.replace('body.', '')}: ${d.message}`).join(', ');
+      } else if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
