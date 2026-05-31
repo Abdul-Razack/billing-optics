@@ -79,8 +79,13 @@ test.describe('Ubuntu .deb Validation', () => {
     // Step 2: Database Setup
     // It should detect the PostgreSQL we installed in GitHub Actions
     await window.waitForSelector('#db-config-form:not(.hidden)');
-    await window.fill('#adminUser', 'postgres');
-    await window.fill('#adminPass', 'postgres');
+    const testUser = process.env.TEST_PG_USER;
+    const testPass = process.env.TEST_PG_PASS;
+    if (!testUser || !testPass) {
+      throw new Error("TEST_PG_USER and TEST_PG_PASS environment variables must be set.");
+    }
+    await window.fill('#adminUser', testUser);
+    await window.fill('#adminPass', testPass);
     
     await window.click('#testConnBtn');
     await window.waitForSelector('#db-success:not(.hidden)', { timeout: 10000 });

@@ -1,8 +1,6 @@
 const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process');
 const waitOn = require('wait-on');
-const kill = require('tree-kill');
 const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
 
@@ -20,8 +18,6 @@ if (!gotTheLock) {
 
 let mainWindow;
 let splashWindow;
-let backendProcess;
-let frontendProcess;
 
 const isDev = !app.isPackaged;
 
@@ -498,10 +494,5 @@ app.on('window-all-closed', () => {
 });
 
 app.on('will-quit', () => {
-  if (backendProcess && backendProcess.pid) {
-    kill(backendProcess.pid);
-  }
-  if (frontendProcess && frontendProcess.pid) {
-    kill(frontendProcess.pid);
-  }
+  // Processes are run in-process now, so no external PIDs to kill
 });

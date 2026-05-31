@@ -1,6 +1,7 @@
 import { Client } from 'pg';
 import dotenv from 'dotenv';
-dotenv.config({ path: '/home/abdul-razack-a/Personal/Freelance/billing-optics/backend/.env' });
+import path from 'path';
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 async function run() {
   const client = new Client({

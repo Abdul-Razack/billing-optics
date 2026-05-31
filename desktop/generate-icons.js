@@ -4,9 +4,14 @@ const fs = require('fs');
 const path = require('path');
 
 async function generateAssets() {
-  const sourceImage = '/home/abdul-razack-a/.gemini/antigravity-ide/brain/5044533f-3b12-4285-8f91-1d34f9c8f165/billing_optics_logo_1780244970561.png';
+  const sourceImage = path.join(__dirname, 'assets', 'logo.png');
   const buildDir = path.join(__dirname, 'build');
   
+  if (!fs.existsSync(sourceImage)) {
+    console.warn(`Source image ${sourceImage} not found. Skipping icon generation.`);
+    return;
+  }
+
   if (!fs.existsSync(buildDir)) {
     fs.mkdirSync(buildDir, { recursive: true });
   }

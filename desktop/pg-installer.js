@@ -52,10 +52,8 @@ async function installPostgresWindows(adminPass, onProgress, onLog) {
   onLog('Executing silent installation (requires elevated privileges)...');
   
   return new Promise((resolve, reject) => {
-    // Unattended mode with provided password
-    const installCmd = `"${installerPath}" --mode unattended --superpassword ${adminPass} --serverport 5432`;
-    
-    exec(installCmd, (error, stdout, stderr) => {
+    const { execFile } = require('child_process');
+    execFile(installerPath, ['--mode', 'unattended', '--superpassword', adminPass, '--serverport', '5432'], (error, stdout, stderr) => {
       if (error) {
         onLog(`Installer failed: ${error.message}`);
         return reject(error);
@@ -70,13 +68,15 @@ async function installPostgresWindows(adminPass, onProgress, onLog) {
 async function installPostgresLinux(adminPass, onProgress, onLog) {
   onLog('Executing apt-get installation for PostgreSQL (requires pkexec)...');
   
-  // Prompt user for auth and run install commands. It sets 'postgres' user password to adminPass
+  // Prompt user for auth and run install commands. It sets 'postgres' user password to adminPass.
+  // Escaping single quotes in password for safe bash injection.
+  const escapedPass = adminPass.replace(/'/g, "'\\''");
   const bashScript = `
     apt-get update -y &&
     apt-get install -y postgresql postgresql-contrib &&
     systemctl enable postgresql &&
     systemctl start postgresql &&
-    su - postgres -c "psql -c \\"ALTER ROLE postgres WITH PASSWORD '${adminPass}';\\""
+    su - postgres -c "psql -c \\"ALTER ROLE postgres WITH PASSWORD '${escapedPass}';\\""
   `;
 
   return new Promise((resolve, reject) => {
@@ -85,11 +85,11 @@ async function installPostgresLinux(adminPass, onProgress, onLog) {
     fs.writeFileSync(scriptPath, bashScript);
     
     // pkexec provides a graphical prompt if in GUI, or terminal prompt if not
-    const installCmd = `pkexec bash ${scriptPath}`;
+    const { execFile } = require('child_process');
     
     if (onProgress) onProgress(100); // UI visual feedback
 
-    exec(installCmd, (error, stdout, stderr) => {
+    execFile('pkexec', ['bash', scriptPath], (error, stdout, stderr) => {
       if (error) {
         onLog(`Linux Installer failed: ${error.message}. Stderr: ${stderr}`);
         return reject(error);
