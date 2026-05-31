@@ -1,8 +1,9 @@
 {
   "name": "billing-optics-erp",
+  "productName": "Billing Optics ERP",
   "version": "1.0.0",
-  "description": "Billing Optics ERP Desktop Application",
-  "author": "Billing Optics <support@billingoptics.com>",
+  "description": "Enterprise Resource Planning for Optical Stores",
+  "author": "Billing Optics",
   "homepage": "https://github.com/Abdul-Razack/billing-optics",
   "private": true,
   "main": "main.js",
@@ -24,9 +25,9 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.optics.pos",
+    "appId": "com.billingoptics.erp",
     "copyright": "Copyright © 2026 Billing Optics",
-    "productName": "BillingOpticsERP",
+    "productName": "Billing Optics ERP",
     "asar": false,
     "directories": {
       "output": "dist"

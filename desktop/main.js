@@ -32,6 +32,7 @@ function createSplashWindow() {
     transparent: true,
     frame: false,
     alwaysOnTop: true,
+    icon: path.join(__dirname, 'build', 'icon.ico'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -104,6 +105,7 @@ function createOnboardingWindow() {
     height: 550,
     frame: true,
     title: "Billing Optics ERP - Setup",
+    icon: path.join(__dirname, 'build', 'icon.ico'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
