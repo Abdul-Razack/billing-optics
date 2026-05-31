@@ -57,6 +57,26 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "uninstallDisplayName": "Billing Optics ERP"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office"
+    },
+    "deb": {
+      "depends": [
+        "gconf2",
+        "gconf-service",
+        "libnotify4",
+        "libnss3",
+        "libxtst6",
+        "libuuid1",
+        "libxss1",
+        "libasound2",
+        "libc6"
+      ]
     }
   }
 }

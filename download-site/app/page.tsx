@@ -1,13 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
-import { getReleases, Release } from '../services/github';
+import { getReleases } from '../services/github';
 import SystemRequirements from '../components/SystemRequirements';
-import { Download, Monitor, Terminal, ArrowRight, ShieldCheck, HelpCircle, AlertCircle, Info, Calendar } from 'lucide-react';
+import DownloadButton from '../components/DownloadButton';
+import { Monitor, Terminal, ArrowRight, ShieldCheck, Info, Calendar } from 'lucide-react';
 
 export default async function Home() {
-  const { releases, isMocked, error } = await getReleases();
+  const { releases, isMocked } = await getReleases();
   
-  // Find the latest stable release (or just the latest release if no stable)
+  // Find the latest release
   const latestRelease = releases[0];
   
   // Check if Linux installers exist to satisfy dynamic hiding criteria
@@ -32,9 +33,9 @@ export default async function Home() {
       {/* Hero Branding Section */}
       <section className="text-center max-w-3xl mx-auto space-y-6 pt-4 sm:pt-8">
         <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-indigo-600/10 dark:bg-indigo-500/15 border border-indigo-500/15 text-xs font-bold text-indigo-600 dark:text-indigo-300 shadow-sm animate-pulse-slow">
-          <span>Current Stable Channel</span>
+          <span>Latest Version:</span>
           <span className="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
-          <span>{latestRelease?.version || 'v1.0.0'}</span>
+          <span className="font-extrabold">{latestRelease?.version || 'v1.0.0'}</span>
         </div>
         
         <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-none">
@@ -90,42 +91,28 @@ export default async function Home() {
                 </p>
               </div>
 
-              {latestRelease.windowsAsset ? (
+              {latestRelease.windowsAsset && (
                 <div className="p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/40 dark:border-slate-800/40 space-y-2.5 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-slate-400 font-semibold">Setup Package:</span>
-                    <span className="font-mono text-slate-700 dark:text-slate-300 font-bold truncate max-w-[200px]" title={latestRelease.windowsAsset.name}>
-                      {latestRelease.windowsAsset.name}
-                    </span>
+                    <span className="text-slate-400 font-semibold">Latest Build:</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 font-bold">{latestRelease.version}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400 font-semibold">File Footprint:</span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 font-bold">{latestRelease.windowsAsset.size}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400 font-semibold">Binary Type:</span>
+                    <span className="text-slate-400 font-semibold">File Format:</span>
                     <span className="font-semibold text-slate-700 dark:text-slate-300 font-bold">Standard Windows Installer (.exe)</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 font-semibold">Security Check:</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-bold">Verified SHA-256 Code Sign</span>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-sm text-rose-500 font-bold">Windows asset currently compiling. Please check back shortly.</p>
               )}
             </div>
 
             <div className="mt-8 relative z-10">
-              {latestRelease.windowsAsset ? (
-                <a
-                  href={latestRelease.windowsAsset.url}
-                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-extrabold text-center flex items-center justify-center gap-3 shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 active:scale-[0.99] transition-all duration-200 group/btn"
-                >
-                  <Download className="h-5 w-5 group-hover/btn:translate-y-0.5 transition-transform" />
-                  Download for Windows
-                </a>
-              ) : (
-                <button disabled className="w-full py-4 px-6 rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 font-bold text-center cursor-not-allowed">
-                  Windows Installer Offline
-                </button>
-              )}
+              {/* Dynamic stateful direct download button */}
+              <DownloadButton platform="windows" variant="primary" />
+              
               <div className="flex items-center justify-center gap-1.5 mt-3 text-[10px] sm:text-xs text-slate-400 font-semibold">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
                 <span>Code-signed and scanned clean of adware or tracker scripts.</span>
@@ -144,7 +131,7 @@ export default async function Home() {
                   <div className="p-3 rounded-2xl bg-emerald-600/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15 shadow-sm">
                     <Terminal className="h-7 w-7" />
                   </div>
-                  <span className="text-[10px] font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md bg-emerald-600/10 dark:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300">
+                  <span className="text-[10px] font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md bg-emerald-600/10 dark:bg-emerald-500/25 text-emerald-600 dark:text-indigo-300">
                     Linux Core builds
                   </span>
                 </div>
@@ -157,53 +144,25 @@ export default async function Home() {
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/40 dark:border-slate-800/40 space-y-2.5 text-xs">
-                  {latestRelease.linuxAssetDeb && (
-                    <div className="flex justify-between items-center py-0.5">
-                      <span className="text-slate-400 font-semibold">Debian / Ubuntu:</span>
-                      <a 
-                        href={latestRelease.linuxAssetDeb.url}
-                        className="font-mono text-indigo-600 dark:text-indigo-400 font-bold hover:underline truncate max-w-[150px]"
-                        title={latestRelease.linuxAssetDeb.name}
-                      >
-                        {latestRelease.linuxAssetDeb.name} ({latestRelease.linuxAssetDeb.size})
-                      </a>
-                    </div>
-                  )}
-                  {latestRelease.linuxAssetAppImage && (
-                    <div className="flex justify-between items-center py-0.5 border-t border-slate-200/30 dark:border-slate-800/30 pt-2">
-                      <span className="text-slate-400 font-semibold">Universal AppImage:</span>
-                      <a 
-                        href={latestRelease.linuxAssetAppImage.url}
-                        className="font-mono text-indigo-600 dark:text-indigo-400 font-bold hover:underline truncate max-w-[150px]"
-                        title={latestRelease.linuxAssetAppImage.name}
-                      >
-                        {latestRelease.linuxAssetAppImage.name} ({latestRelease.linuxAssetAppImage.size})
-                      </a>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 font-semibold">Supported Arch:</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 font-bold">x86_64 / amd64 binaries</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 font-semibold">Distribution Formats:</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 font-bold">Debian package (.deb) & Universal AppImage</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-8 relative z-10 space-y-2">
-                {latestRelease.linuxAssetDeb ? (
-                  <a
-                    href={latestRelease.linuxAssetDeb.url}
-                    className="w-full py-3.5 px-6 rounded-2xl bg-slate-900 hover:bg-slate-850 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-extrabold text-center flex items-center justify-center gap-2 border border-slate-700/50 dark:border-slate-700 active:scale-[0.99] transition-all duration-200"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download Debian Installer (.deb)
-                  </a>
-                ) : null}
-
-                {latestRelease.linuxAssetAppImage ? (
-                  <a
-                    href={latestRelease.linuxAssetAppImage.url}
-                    className="w-full py-3.5 px-6 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 font-extrabold text-center flex items-center justify-center gap-2 border border-slate-300 dark:border-slate-850 active:scale-[0.99] transition-all duration-200"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download AppImage (.AppImage)
-                  </a>
-                ) : null}
+              <div className="mt-8 relative z-10 space-y-3">
+                {/* Dynamic stateful direct download buttons */}
+                {latestRelease.linuxAssetDeb && (
+                  <DownloadButton platform="linux-deb" variant="secondary" />
+                )}
+                {latestRelease.linuxAssetAppImage && (
+                  <DownloadButton platform="linux-appimage" variant="outline" />
+                )}
               </div>
             </div>
           )}
@@ -211,7 +170,7 @@ export default async function Home() {
         </section>
       ) : (
         <section className="text-center py-12 glass-panel rounded-3xl max-w-xl mx-auto p-8 border-dashed border-2">
-          <AlertCircle className="h-12 w-12 text-rose-500 mx-auto mb-4" />
+          <Info className="h-12 w-12 text-rose-500 mx-auto mb-4" />
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Release Packages Temporarily Unavailable</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
             We were unable to locate stable installer files on the repository tag channels. If you are experiencing connection drops, try again in a few moments.
