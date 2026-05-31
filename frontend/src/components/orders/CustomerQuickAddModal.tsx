@@ -47,8 +47,6 @@ export function CustomerQuickAddModal({ open, onOpenChange, onSuccess }: Custome
       onSuccess(newCustomer);
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Failed to create customer", error);
-      
       let errorMessage = "Failed to create customer. Phone number might already exist.";
       
       if (error.data?.details && Array.isArray(error.data.details)) {
