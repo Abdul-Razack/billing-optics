@@ -66,7 +66,8 @@
         "deb"
       ],
       "category": "Office",
-      "maintainer": "Billing Optics <support@billingoptics.com>"
+      "maintainer": "Billing Optics <support@billingoptics.com>",
+      "executableName": "billing-optics-erp"
     },
     "deb": {
       "depends": [
