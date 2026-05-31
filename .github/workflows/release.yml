@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.tag_version.outputs.new_version }}
+      new_tag: ${{ steps.tag_version.outputs.new_tag }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -76,16 +77,25 @@ jobs:
           NODE_ENV: production
           NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
-      - name: Build and Publish Desktop Installer
+      - name: Build Desktop Installer
         shell: bash
         run: |
           for i in 1 2 3; do
-            npx electron-builder --win --publish always && break || {
+            npx electron-builder --win && break || {
               echo "Build failed with exit code $?. Retrying in 15 seconds..."
               sleep 15
             }
           done
         working-directory: desktop
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.new_tag }}
+          files: |
+            desktop/dist/*.exe
+            desktop/dist/*.exe.blockmap
+            desktop/dist/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -158,16 +168,25 @@ jobs:
           cd frontend/bundle && npm install --omit=dev --ignore-scripts
           echo "Frontend bundle size: $(du -sh node_modules | cut -f1)"
 
-      - name: Build and Publish Linux Installer
+      - name: Build Linux Installers
         shell: bash
         run: |
           for i in 1 2 3; do
-            npx electron-builder --linux --publish always && break || {
+            npx electron-builder --linux && break || {
               echo "Build failed with exit code $?. Retrying in 15 seconds..."
               sleep 15
             }
           done
         working-directory: desktop
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.new_tag }}
+          files: |
+            desktop/dist/*.deb
+            desktop/dist/*.AppImage
+            desktop/dist/latest-linux.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -13,14 +13,24 @@ const MOCK_LATEST_RELEASE = {
       size: 88290234
     },
     {
-      name: 'billing-optics-erp_1.0.0_amd64.deb',
-      browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/billing-optics-erp_1.0.0_amd64.deb',
+      name: 'Billing Optics ERP-1.0.0-amd64.deb',
+      browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP-1.0.0-amd64.deb',
       size: 71722421
     },
     {
-      name: 'Billing_Optics_ERP-1.0.0.AppImage',
-      browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing_Optics_ERP-1.0.0.AppImage',
+      name: 'Billing Optics ERP-1.0.0-x86_64.AppImage',
+      browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP-1.0.0-x86_64.AppImage',
       size: 75602931
+    },
+    {
+      name: 'Billing Optics ERP-1.0.0-mac.dmg',
+      browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP-1.0.0-mac.dmg',
+      size: 80102931
+    },
+    {
+      name: 'Billing Optics ERP-1.0.0-mac.zip',
+      browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP-1.0.0-mac.zip',
+      size: 78102931
     }
   ]
 };
@@ -82,6 +92,12 @@ export async function GET(request: NextRequest) {
     } else if (platform === 'linux-appimage') {
       // Match universal standalone Linux binaries (.AppImage)
       matchedAsset = assets.find((asset: any) => asset.name.endsWith('.AppImage'));
+    } else if (platform === 'macos-dmg') {
+      // Match macOS disk image (.dmg)
+      matchedAsset = assets.find((asset: any) => asset.name.endsWith('.dmg'));
+    } else if (platform === 'macos-zip') {
+      // Match macOS archive (.zip)
+      matchedAsset = assets.find((asset: any) => asset.name.endsWith('.zip'));
     }
 
     if (!matchedAsset) {
@@ -115,6 +131,10 @@ export async function GET(request: NextRequest) {
       fallbackAsset = MOCK_LATEST_RELEASE.assets.find(a => a.name.endsWith('.deb'));
     } else if (platform === 'linux-appimage') {
       fallbackAsset = MOCK_LATEST_RELEASE.assets.find(a => a.name.endsWith('.AppImage'));
+    } else if (platform === 'macos-dmg') {
+      fallbackAsset = MOCK_LATEST_RELEASE.assets.find(a => a.name.endsWith('.dmg'));
+    } else if (platform === 'macos-zip') {
+      fallbackAsset = MOCK_LATEST_RELEASE.assets.find(a => a.name.endsWith('.zip'));
     }
 
     if (fallbackAsset) {

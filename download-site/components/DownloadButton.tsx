@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Download, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface DownloadButtonProps {
-  platform: 'windows' | 'linux-deb' | 'linux-appimage';
+  platform: 'windows' | 'linux-deb' | 'linux-appimage' | 'macos-dmg' | 'macos-zip';
   variant?: 'primary' | 'secondary' | 'outline';
   className?: string;
 }
@@ -98,6 +98,12 @@ export default function DownloadButton({
     }
     if (platform === 'linux-deb') {
       return { text: 'Download Debian Installer (.deb)', icon: Download };
+    }
+    if (platform === 'macos-dmg') {
+      return { text: 'Download for macOS (.dmg)', icon: Download };
+    }
+    if (platform === 'macos-zip') {
+      return { text: 'Download for macOS (.zip)', icon: Download };
     }
     return { text: 'Download AppImage (.AppImage)', icon: Download };
   };
