@@ -4,6 +4,7 @@ import { users } from './schema';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import { sql } from 'drizzle-orm';
+import { settings, users } from './schema';
 
 export async function initializeDatabase() {
   try {
@@ -49,6 +50,15 @@ export async function initializeDatabase() {
     });
     
     console.log('[INIT] Administrator account created (admin@example.com / admin).');
+
+    // 3. Seed default settings (Activates Trial)
+    console.log('[INIT] Initializing application settings...');
+    await db.insert(settings).values({
+      businessName: 'My Business',
+      currency: 'INR',
+      timezone: 'Asia/Kolkata'
+    });
+
     console.log('[INIT] Database initialization completed successfully!');
 
   } catch (error) {
