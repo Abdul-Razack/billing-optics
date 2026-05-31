@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export function InventoryQuickActions() {
   return (
-    <Card>
+    <Card className="shrink-0">
       <CardHeader>
         <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
       </CardHeader>

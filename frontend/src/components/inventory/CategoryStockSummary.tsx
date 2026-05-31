@@ -27,7 +27,7 @@ export function CategoryStockSummary({ products, categories, isLoading }: Catego
   const totalGlobalStock = categoryStats.reduce((sum, cat) => sum + cat.totalStock, 0);
 
   return (
-    <Card className="h-full">
+    <Card className="flex-1">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <PieChart className="h-5 w-5 text-muted-foreground" />
