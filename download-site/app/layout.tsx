@@ -57,7 +57,7 @@ export default function RootLayout({
           <div className="fixed inset-0 pointer-events-none radial-glow z-0" />
           
           <Navbar />
-          <main className="flex-1 relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <main className="flex-1 relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             {children}
           </main>
           <Footer />

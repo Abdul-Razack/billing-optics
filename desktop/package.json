@@ -70,14 +70,13 @@
     },
     "deb": {
       "depends": [
-        "gconf2",
-        "gconf-service",
         "libnotify4",
         "libnss3",
         "libxtst6",
-        "libuuid1",
         "libxss1",
         "libasound2",
+        "libatk-bridge2.0-0",
+        "libgtk-3-0",
         "libc6"
       ]
     }
