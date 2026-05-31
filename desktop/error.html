@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing Optics ERP - Startup Failed</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0f172a; /* Slate 900 */
+      color: #f8fafc;
+      -webkit-user-select: none;
+      -webkit-app-region: drag;
+      overflow: hidden;
+    }
+    
+    .no-drag {
+      -webkit-app-region: no-drag;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-center items-center p-10 bg-slate-900 border border-slate-700 shadow-2xl relative overflow-hidden">
+  
+  <!-- Ambient background glow (Red for error) -->
+  <div class="absolute -top-24 -right-24 w-64 h-64 bg-red-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+  <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-orange-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+
+  <div class="z-10 bg-slate-800/80 backdrop-blur-md border border-slate-700 rounded-2xl p-8 max-w-sm w-full text-center shadow-xl">
+    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-500/20 mb-6">
+      <svg class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    </div>
+    
+    <h2 id="error-title" class="text-xl font-bold text-white mb-2">Startup Failed</h2>
+    <p id="error-desc" class="text-sm text-slate-400 mb-6 leading-relaxed">
+      A critical service failed to launch. Please restart the application or contact support.
+    </p>
+
+    <div class="flex justify-center gap-4 no-drag">
+      <button onclick="require('electron').ipcRenderer.send('quit-app')" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm border border-slate-600">
+        Exit ERP
+      </button>
+      <button onclick="require('electron').ipcRenderer.send('retry-startup')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+        Restart
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type');
+
+    const titleEl = document.getElementById('error-title');
+    const descEl = document.getElementById('error-desc');
+
+    switch(type) {
+      case 'database':
+        titleEl.innerText = 'Database Unavailable';
+        descEl.innerText = 'The ERP Backend failed to connect to PostgreSQL. Please ensure the database engine is running on your computer.';
+        break;
+      case 'migration':
+        titleEl.innerText = 'Migration Failure';
+        descEl.innerText = 'Failed to apply the latest database schemas. Your workspace could not be safely initialized.';
+        break;
+      case 'service':
+        titleEl.innerText = 'Service Failure';
+        descEl.innerText = 'The local ERP microservices crashed during initialization. Please check system resources.';
+        break;
+      default:
+        titleEl.innerText = 'System Startup Error';
+        descEl.innerText = 'An unexpected error prevented Billing Optics ERP from launching successfully.';
+        break;
+    }
+  </script>
+</body>
+</html>

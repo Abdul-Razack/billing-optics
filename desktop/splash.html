@@ -3,103 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Billing Optics - Starting</title>
+  <title>Billing Optics ERP - Starting</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      margin: 0;
-      padding: 0;
       background-color: #0f172a; /* Slate 900 */
-      color: #f8fafc; /* Slate 50 */
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
+      color: #f8fafc;
       -webkit-user-select: none;
       -webkit-app-region: drag;
-    }
-    
-    .logo-container {
-      margin-bottom: 2rem;
-    }
-    
-    /* Simple dynamic logo/loader */
-    .spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-      border-top-color: #3b82f6; /* Blue 500 */
-      animation: spin 1s ease-in-out infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 600;
-      margin: 0 0 8px 0;
-      letter-spacing: -0.5px;
-    }
-
-    p {
-      font-size: 14px;
-      color: #94a3b8; /* Slate 400 */
-      margin: 0;
-      max-width: 80%;
-      text-align: center;
-      min-height: 20px;
-    }
-
-    .progress-bar {
-      width: 200px;
-      height: 4px;
-      background-color: #1e293b;
-      border-radius: 2px;
-      margin-top: 24px;
       overflow: hidden;
-      position: relative;
+    }
+    
+    /* Ensure only non-interactive areas are draggable */
+    .no-drag {
+      -webkit-app-region: no-drag;
     }
 
-    .progress-fill {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 30%;
-      background-color: #3b82f6;
-      border-radius: 2px;
-      animation: progress 2s infinite ease-in-out;
+    .pulse-ring {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
-
-    @keyframes progress {
-      0% { left: -30%; width: 30%; }
-      50% { left: 30%; width: 70%; }
-      100% { left: 100%; width: 30%; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(1.05); }
     }
   </style>
 </head>
-<body>
-  <div class="logo-container">
-    <div class="spinner"></div>
+<body class="h-screen w-screen flex flex-col justify-between p-10 bg-slate-900 border border-slate-700 shadow-2xl relative overflow-hidden">
+  
+  <!-- Ambient background glow -->
+  <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+  <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+
+  <!-- Header: Logo & Title -->
+  <div class="flex flex-col items-center justify-center mt-12 z-10">
+    <div class="relative w-24 h-24 mb-6">
+      <div class="absolute inset-0 bg-blue-500 rounded-2xl blur-lg opacity-40 pulse-ring"></div>
+      <img src="icon.png" alt="Logo" class="relative z-10 w-full h-full object-contain drop-shadow-xl rounded-2xl bg-white p-2">
+    </div>
+    <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300 tracking-tight">
+      Billing Optics ERP
+    </h1>
+    <p class="text-slate-400 mt-2 text-sm font-medium tracking-wide">Premium Business Platform</p>
   </div>
-  <h1>Billing Optics</h1>
-  <p id="status-text">Starting ERP Servers...</p>
-  <div class="progress-bar">
-    <div class="progress-fill"></div>
+
+  <!-- Loading State & Progress -->
+  <div class="flex flex-col items-center justify-center mb-8 z-10 w-full max-w-sm mx-auto">
+    <div class="w-full bg-slate-800 rounded-full h-1.5 mb-6 overflow-hidden relative">
+      <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-500 h-1.5 rounded-full transition-all duration-500 ease-out w-1/4"></div>
+    </div>
+    
+    <div class="flex items-center space-x-3 bg-slate-800/50 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-slate-700/50 w-full justify-center">
+      <div class="w-4 h-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+      <span id="status-text" class="text-sm font-semibold text-slate-300 animate-pulse">Initializing Application...</span>
+    </div>
+  </div>
+
+  <!-- Footer Version -->
+  <div class="absolute bottom-6 left-0 right-0 flex justify-center z-10">
+    <span class="text-xs text-slate-600 font-mono">v1.0.0-beta • initializing framework</span>
   </div>
 
   <script>
     const { ipcRenderer } = require('electron');
     const statusText = document.getElementById('status-text');
+    const progressBar = document.getElementById('progress-bar');
+    
+    const steps = [
+      'Initializing Application',
+      'Starting Services',
+      'Connecting Database',
+      'Loading Workspace',
+      'Ready'
+    ];
 
     ipcRenderer.on('setup-progress', (event, message) => {
-      statusText.innerText = message;
+      // Update text
+      statusText.innerText = message + '...';
+      statusText.classList.remove('animate-pulse');
+      
+      // Briefly trigger animation reflow
+      void statusText.offsetWidth; 
+      statusText.classList.add('animate-pulse');
+
+      // Update progress bar width based on known stages
+      const stepIndex = steps.findIndex(s => message.includes(s));
+      if (stepIndex !== -1) {
+        const percent = Math.max(25, ((stepIndex + 1) / steps.length) * 100);
+        progressBar.style.width = `${percent}%`;
+      } else {
+        // If unknown message, randomly bump it slightly to show activity
+        let currentWidth = parseInt(progressBar.style.width) || 25;
+        if (currentWidth < 90) progressBar.style.width = `${currentWidth + 5}%`;
+      }
     });
   </script>
 </body>

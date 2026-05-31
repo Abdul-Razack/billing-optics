@@ -10,16 +10,20 @@ const port = env.PORT;
 async function startServer() {
   try {
     // 1. Validate Database Connection
+    console.log('[INIT] Starting Services');
     console.log('Validating PostgreSQL connection...');
     await pool.query('SELECT 1');
+    console.log('[INIT] Connecting Database');
     console.log('PostgreSQL connection established successfully.');
 
     // 2. Run First-Time Setup
     await initializeDatabase();
+    console.log('[INIT] Loading Workspace');
 
     // 3. Start HTTP Server
     const server = app.listen(port, '0.0.0.0', () => {
       console.log(`Server running in ${env.NODE_ENV} mode on port ${port} (bound to 0.0.0.0)`);
+      console.log('[INIT] Ready');
     });
 
     // 4. Initialize Scheduled Jobs

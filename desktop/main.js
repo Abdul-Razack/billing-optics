@@ -115,6 +115,11 @@ function createOnboardingWindow() {
   onboardingWindow.loadFile(path.join(__dirname, 'onboarding.html'));
 }
 
+ipcMain.on('retry-startup', () => {
+  app.relaunch();
+  app.quit();
+});
+
 ipcMain.on('start-setup', async (event, companyData) => {
   try {
     const { Client } = require('pg');
@@ -245,11 +250,12 @@ async function startServers(isOnboarding = false) {
   backendProcess.on('exit', (code) => {
     if (!isBackendHealthy && code !== 0) {
       console.error(`Backend process exited prematurely with code ${code}`);
-      dialog.showErrorBox(
-        'Database Connection Error', 
-        'The ERP Backend failed to connect to PostgreSQL. Please check your credentials.'
-      );
-      app.quit();
+      if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.loadFile(path.join(__dirname, 'error.html'), { query: { type: 'database' } });
+      } else {
+        dialog.showErrorBox('Database Connection Error', 'The ERP Backend failed to connect to PostgreSQL.');
+        app.quit();
+      }
     }
   });
 
