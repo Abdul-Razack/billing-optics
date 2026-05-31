@@ -96,6 +96,14 @@ export class CustomerService {
     return await CustomerRepository.update(id, dbData);
   }
 
+  async delete(id: number) {
+    const customer = await CustomerRepository.findById(id);
+    if (!customer) {
+      throw new AppError(404, 'Customer not found');
+    }
+    return await CustomerRepository.delete(id);
+  }
+
   async addPrescription(customerId: number, data: any) {
     const rightEye = data.rightEye || {};
     const leftEye = data.leftEye || {};

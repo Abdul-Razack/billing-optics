@@ -74,6 +74,29 @@ export class CustomerController {
     }
   }
 
+  static async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const original = await customerService.getById(id, false).catch(() => null);
+      
+      await customerService.delete(id);
+      
+      await AuditService.logEvent({
+        userId: req.user?.id,
+        action: 'DELETE_CUSTOMER',
+        module: 'CUSTOMER',
+        recordId: id.toString(),
+        oldValues: original,
+        newValues: null,
+        req,
+      });
+
+      res.status(200).json({ success: true, message: 'Customer deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async addPrescription(req: Request, res: Response, next: NextFunction) {
     try {
       const customerId = parseInt(req.params.id, 10);

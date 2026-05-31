@@ -39,6 +39,13 @@ router.put(
   CustomerController.update
 );
 
+router.delete(
+  '/:id',
+  authenticate,
+  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+  CustomerController.delete
+);
+
 router.post(
   '/:id/prescriptions',
   authenticate,

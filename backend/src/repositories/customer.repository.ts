@@ -20,6 +20,14 @@ export class CustomerRepository {
     return result;
   }
 
+  static async delete(id: number, dbClient: DbOrTx = db) {
+    const [result] = await dbClient
+      .delete(customers)
+      .where(eq(customers.id, id))
+      .returning();
+    return result;
+  }
+
   static async findById(id: number, dbClient: DbOrTx = db) {
     const [result] = await dbClient
       .select()
