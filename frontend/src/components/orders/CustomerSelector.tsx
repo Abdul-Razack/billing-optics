@@ -62,13 +62,13 @@ export function CustomerSelector({ value, customer, onChange, error, disabled }:
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
   
+  const [now] = useState(() => Date.now());
   const RECENT_THRESHOLD = 48 * 60 * 60 * 1000; // 48 hours
   const { recentCustomers, existingCustomers } = useMemo(() => {
-    const now = Date.now();
     const recent = sortedCustomers.filter(c => (now - new Date(c.createdAt).getTime()) < RECENT_THRESHOLD);
     const existing = sortedCustomers.filter(c => (now - new Date(c.createdAt).getTime()) >= RECENT_THRESHOLD);
     return { recentCustomers: recent, existingCustomers: existing };
-  }, [sortedCustomers, RECENT_THRESHOLD]);
+  }, [sortedCustomers, now, RECENT_THRESHOLD]);
 
   const renderCustomerItem = (c: ApiCustomer) => (
     <CommandItem

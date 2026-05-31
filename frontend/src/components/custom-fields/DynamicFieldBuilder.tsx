@@ -228,7 +228,7 @@ export function DynamicFieldBuilder({ initialData, onConfigChange, onSave, onCan
             <div className="flex items-center justify-between p-3 rounded-md border border-border">
               <div>
                 <Label className="text-base">Active Status</Label>
-                <p className="text-sm text-muted-foreground">If disabled, the field won't appear in new forms.</p>
+                <p className="text-sm text-muted-foreground">If disabled, the field {"won't"} appear in new forms.</p>
               </div>
               <Controller
                 control={form.control}

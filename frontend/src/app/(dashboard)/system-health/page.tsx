@@ -77,7 +77,9 @@ export default function SystemHealthPage() {
   };
 
   useEffect(() => {
-    void loadHealth();
+    Promise.resolve().then(() => {
+      void loadHealth();
+    });
   }, []);
 
   const handleExport = async () => {

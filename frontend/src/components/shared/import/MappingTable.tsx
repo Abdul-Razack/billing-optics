@@ -19,14 +19,10 @@ interface MappingTableProps {
   onBack: () => void;
 }
 
-export function MappingTable({ fields, headers, rawData, onComplete, onBack }: MappingTableProps) {
-  const [mapping, setMapping] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    // Check for saved template first
+const getInitialMapping = (fields: ImportFieldDef[], headers: string[]) => {
+  let initialMapping: Record<string, string> | null = null;
+  if (typeof window !== "undefined") {
     const savedTemplate = localStorage.getItem("import_mapping_template");
-    let initialMapping: Record<string, string> | null = null;
-    
     if (savedTemplate) {
       try {
         const parsed = JSON.parse(savedTemplate);
@@ -37,26 +33,35 @@ export function MappingTable({ fields, headers, rawData, onComplete, onBack }: M
         }
       } catch (e) {}
     }
+  }
 
-    const newMapping: Record<string, string> = { ...initialMapping };
+  const newMapping: Record<string, string> = { ...initialMapping };
 
-    // Auto-map based on similar names for fields not mapped by template
-    const lowerHeaders = headers.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
-    
-    fields.forEach(field => {
-      if (!newMapping[field.id] || !headers.includes(newMapping[field.id])) {
-        const fieldIdLower = field.id.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const fieldLabelLower = field.label.toLowerCase().replace(/[^a-z0-9]/g, '');
-        
-        const matchIndex = lowerHeaders.findIndex(h => h === fieldIdLower || h === fieldLabelLower);
-        if (matchIndex !== -1) {
-          newMapping[field.id] = headers[matchIndex];
-        }
+  // Auto-map based on similar names for fields not mapped by template
+  const lowerHeaders = headers.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  
+  fields.forEach(field => {
+    if (!newMapping[field.id] || !headers.includes(newMapping[field.id])) {
+      const fieldIdLower = field.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const fieldLabelLower = field.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+      
+      const matchIndex = lowerHeaders.findIndex(h => h === fieldIdLower || h === fieldLabelLower);
+      if (matchIndex !== -1) {
+        newMapping[field.id] = headers[matchIndex];
       }
-    });
-    
-    setMapping(newMapping);
-  }, [headers, fields]);
+    }
+  });
+  return newMapping;
+};
+
+export function MappingTable({ fields, headers, rawData, onComplete, onBack }: MappingTableProps) {
+  const [prevHeaders, setPrevHeaders] = useState<string[]>(headers);
+  const [mapping, setMapping] = useState<Record<string, string>>(() => getInitialMapping(fields, headers));
+
+  if (headers !== prevHeaders) {
+    setPrevHeaders(headers);
+    setMapping(getInitialMapping(fields, headers));
+  }
 
   const handleNext = () => {
     // Transform data

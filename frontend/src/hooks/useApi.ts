@@ -49,7 +49,11 @@ export function useFetch<T>(endpoint: string, options: UseFetchOptions<T> = {}) 
       return;
     }
     const abortController = new AbortController();
-    fetchData(abortController);
+    Promise.resolve().then(() => {
+      if (!abortController.signal.aborted) {
+        void fetchData(abortController);
+      }
+    });
 
     return () => {
       abortController.abort();

@@ -23,33 +23,55 @@ const REQUIRED_FIELDS = [
   { id: "minStockAlert", label: "Min Stock Alert", required: true },
 ];
 
+const getInitialMapping = (fields: typeof REQUIRED_FIELDS, headers: string[]) => {
+  const newMapping: Record<string, string> = {};
+  const lowerHeaders = headers.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  
+  fields.forEach(field => {
+    const fieldIdLower = field.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const fieldLabelLower = field.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    const matchIndex = lowerHeaders.findIndex(h => h === fieldIdLower || h === fieldLabelLower);
+    if (matchIndex !== -1) {
+      newMapping[field.id] = headers[matchIndex];
+    }
+  });
+  return newMapping;
+};
+
 export function MappingStep({ headers, rawData, onComplete, onBack }: MappingStepProps) {
-  const [mapping, setMapping] = useState<Record<string, string>>({});
+  const [prevHeaders, setPrevHeaders] = useState<string[]>(headers);
+  const [mapping, setMapping] = useState<Record<string, string>>(() => getInitialMapping(REQUIRED_FIELDS, headers));
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
+
+  if (headers !== prevHeaders) {
+    setPrevHeaders(headers);
+    setMapping(getInitialMapping(REQUIRED_FIELDS, headers));
+  }
 
   useEffect(() => {
     SettingsService.getSettings()
-      .then(res => setCustomFields(res.customFieldDefinitions?.products || []))
+      .then(res => {
+        const fields = res.customFieldDefinitions?.products || [];
+        setCustomFields(fields);
+        
+        // Auto-map custom fields and merge into mapping
+        const lowerHeaders = headers.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+        const customMapping: Record<string, string> = {};
+        fields.forEach(field => {
+          const fieldIdLower = field.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const fieldLabelLower = (field.name || "").toLowerCase().replace(/[^a-z0-9]/g, '');
+          
+          const matchIndex = lowerHeaders.findIndex(h => h === fieldIdLower || h === fieldLabelLower);
+          if (matchIndex !== -1) {
+            customMapping[field.id] = headers[matchIndex];
+          }
+        });
+        
+        setMapping(prev => ({ ...prev, ...customMapping }));
+      })
       .catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    // Auto-map based on similar names
-    const newMapping: Record<string, string> = {};
-    const lowerHeaders = headers.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
-    
-    [...REQUIRED_FIELDS, ...customFields].forEach(field => {
-      const fieldIdLower = field.id.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const fieldLabelLower = ((field as any).name || (field as any).label || "").toLowerCase().replace(/[^a-z0-9]/g, '');
-      
-      const matchIndex = lowerHeaders.findIndex(h => h === fieldIdLower || h === fieldLabelLower);
-      if (matchIndex !== -1) {
-        newMapping[field.id] = headers[matchIndex];
-      }
-    });
-    
-    setMapping(newMapping);
-  }, [headers, customFields]);
+  }, [headers]);
 
   const allFields = [...REQUIRED_FIELDS, ...customFields.map(f => ({ id: f.id, label: f.name, required: f.required }))];
 

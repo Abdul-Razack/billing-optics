@@ -113,8 +113,9 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
   }, [form, onSubmit]);
 
   const handleFormSubmit = useCallback(
-    form.handleSubmit(onSubmit),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    (e?: React.BaseSyntheticEvent) => {
+      return form.handleSubmit(onSubmit)(e);
+    },
     [form, onSubmit]
   );
 

@@ -40,7 +40,9 @@ export default function AuditLogsPage() {
   };
 
   useEffect(() => {
-    void fetchLogs(filters);
+    Promise.resolve().then(() => {
+      void fetchLogs(filters);
+    });
   }, [filters]);
 
   const handleFilterChange = (newFilters: Record<string, string>) => {

@@ -51,7 +51,9 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    void loadSettings();
+    Promise.resolve().then(() => {
+      void loadSettings();
+    });
   }, []);
 
   const handleSave = async () => {
