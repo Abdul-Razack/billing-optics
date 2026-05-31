@@ -75,13 +75,13 @@ export class ReportRepository {
 
     const trends = await db
       .select({
-        period: sql<string>`date_trunc(${dateTruncUnit}, ${invoices.createdAt})`,
+        period: sql<string>`date_trunc(${sql.raw(`'${dateTruncUnit}'`)}, ${invoices.createdAt})`,
         sales: sql<number>`COALESCE(SUM(${invoices.grandTotal}), 0)`.mapWith(Number),
       })
       .from(invoices)
       .where(between(invoices.createdAt, startDate, endDate))
-      .groupBy(sql`date_trunc(${dateTruncUnit}, ${invoices.createdAt})`)
-      .orderBy(sql`date_trunc(${dateTruncUnit}, ${invoices.createdAt})`);
+      .groupBy(sql`1`)
+      .orderBy(sql`1`);
 
     // Format labels depending on groupBy
     return trends.map((t) => {
