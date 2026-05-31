@@ -7,7 +7,8 @@
     "shared",
     "backend",
     "frontend",
-    "desktop"
+    "desktop",
+    "download-site"
   ],
   "scripts": {
     "dev:backend": "npm run dev -w backend",
@@ -18,6 +19,8 @@
     "db:push": "npm run db:push -w backend",
     "db:studio": "npm run db:studio -w backend",
     "dev:desktop": "npm run dev -w desktop",
-    "build:desktop": "npm run build -w desktop"
+    "build:desktop": "npm run build -w desktop",
+    "dev:download": "npm run dev -w download-site",
+    "build:download": "npm run build -w download-site"
   }
 }
