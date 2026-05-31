@@ -8,7 +8,9 @@
   "main": "main.js",
   "scripts": {
     "dev": "electron .",
-    "build": "electron-builder --win"
+    "build": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --win --linux"
   },
   "dependencies": {
     "electron-log": "^5.4.4",
@@ -67,7 +69,16 @@
       ],
       "category": "Office",
       "maintainer": "Billing Optics <support@billingoptics.com>",
-      "executableName": "billing-optics-erp"
+      "executableName": "billing-optics-erp",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "desktop": {
+        "Name": "Billing Optics ERP",
+        "Comment": "Billing Optics ERP Desktop Application",
+        "Exec": "\"/opt/Billing Optics ERP/billing-optics-erp\" %U",
+        "Terminal": "false",
+        "Type": "Application",
+        "Categories": "Office;"
+      }
     },
     "deb": {
       "depends": [
@@ -75,7 +86,7 @@
         "libnss3",
         "libxtst6",
         "libxss1",
-        "libasound2",
+        "libasound2t64 | libasound2",
         "libatk-bridge2.0-0",
         "libgtk-3-0",
         "libc6"
