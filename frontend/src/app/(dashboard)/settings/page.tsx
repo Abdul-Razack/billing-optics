@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { SettingsSection } from "@/components/settings/SettingsSection";
+import { SystemUpdates } from "@/components/settings/SystemUpdates";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -126,6 +127,12 @@ export default function SettingsPage() {
               className={`px-4 py-2 rounded-md font-medium text-sm text-left transition-colors whitespace-nowrap ${activeTab === "license" ? "bg-muted text-blue-600 dark:bg-muted/50 dark:text-blue-400" : "text-blue-600/70 dark:text-blue-400/70 hover:bg-muted hover:text-blue-600 dark:hover:text-blue-400"}`}
             >
               License & Activation
+            </button>
+            <button 
+              onClick={() => setActiveTab("system-updates")}
+              className={`px-4 py-2 rounded-md font-medium text-sm text-left transition-colors whitespace-nowrap ${activeTab === "system-updates" ? "bg-muted text-green-600 dark:bg-muted/50 dark:text-green-400" : "text-green-600/70 dark:text-green-400/70 hover:bg-muted hover:text-green-600 dark:hover:text-green-400"}`}
+            >
+              System Updates
             </button>
           </nav>
         </aside>
@@ -375,6 +382,12 @@ export default function SettingsPage() {
 
                 </div>
               </SettingsSection>
+            </div>
+          )}
+
+          {activeTab === "system-updates" && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <SystemUpdates />
             </div>
           )}
         </div>
