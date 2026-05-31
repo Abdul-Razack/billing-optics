@@ -74,7 +74,6 @@
       "desktop": {
         "Name": "Billing Optics ERP",
         "Comment": "Billing Optics ERP Desktop Application",
-        "Exec": "\"/opt/Billing Optics ERP/billing-optics-erp\" %U",
         "Terminal": "false",
         "Type": "Application",
         "Categories": "Office;"
