@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Billing Optics ERP - Setup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      user-select: none;
+      -webkit-app-region: drag;
+      overflow: hidden;
+    }
+    input, button {
+      -webkit-app-region: no-drag;
+    }
+    .step {
+      display: none;
+    }
+    .step.active {
+      display: block;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 h-screen w-screen flex items-center justify-center">
+  <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-100">
+    
+    <!-- Step 1: Welcome -->
+    <div id="step-1" class="step active text-center">
+      <div class="mb-8 flex justify-center">
+        <!-- Temporary placeholder icon -->
+        <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        </div>
+      </div>
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Welcome to Billing Optics ERP</h1>
+      <p class="text-lg text-gray-500 mt-4 max-w-md mx-auto">The modern enterprise resource planning solution for your business. Let's get your workspace set up.</p>
+      <div class="mt-10 flex justify-center gap-4">
+        <button id="quitBtn" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors">Quit</button>
+        <button id="nextToStep2" class="px-6 py-3 bg-blue-600 rounded-lg text-white hover:bg-blue-700 font-medium shadow-md shadow-blue-200 transition-colors">Get Started</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Company Information -->
+    <div id="step-2" class="step">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Company Details</h2>
+        <p class="text-sm text-gray-500 mt-1">Please provide your business information to initialize your workspace.</p>
+      </div>
+      <form id="companyForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Company Name</label>
+          <input type="text" id="companyName" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Owner Name</label>
+            <input type="text" id="ownerName" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+            <input type="tel" id="phone" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+            <input type="email" id="email" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Address</label>
+            <input type="text" id="address" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+          </div>
+        </div>
+        <div class="pt-6 flex justify-between items-center">
+          <button type="button" id="backToStep1" class="text-sm text-gray-500 hover:text-gray-900 font-medium">Back</button>
+          <button type="submit" class="px-6 py-2.5 bg-blue-600 rounded-lg text-white hover:bg-blue-700 font-medium shadow-md shadow-blue-200 transition-colors">Continue to Setup</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Step 3: System Setup -->
+    <div id="step-3" class="step">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-900">Setting up your workspace</h2>
+        <p class="text-sm text-gray-500 mt-1">This will only take a moment.</p>
+      </div>
+      
+      <div class="space-y-4 max-w-sm mx-auto">
+        <div class="flex items-center gap-3" id="task-1">
+          <div class="w-6 h-6 rounded-full border-2 border-blue-600 border-t-transparent animate-spin flex-shrink-0" id="icon-1"></div>
+          <span class="text-gray-700 font-medium" id="text-1">Preparing Application</span>
+        </div>
+        <div class="flex items-center gap-3 opacity-50" id="task-2">
+          <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0" id="icon-2"></div>
+          <span class="text-gray-500 font-medium" id="text-2">Configuring Database</span>
+        </div>
+        <div class="flex items-center gap-3 opacity-50" id="task-3">
+          <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0" id="icon-3"></div>
+          <span class="text-gray-500 font-medium" id="text-3">Creating Workspace</span>
+        </div>
+        <div class="flex items-center gap-3 opacity-50" id="task-4">
+          <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0" id="icon-4"></div>
+          <span class="text-gray-500 font-medium" id="text-4">Finalizing Setup</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Setup Complete -->
+    <div id="step-4" class="step text-center">
+      <div class="mb-6 flex justify-center">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+          <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+      </div>
+      <h2 class="text-3xl font-bold text-gray-900">You're all set!</h2>
+      <p class="text-gray-500 mt-2">Billing Optics ERP has been successfully configured.</p>
+      <div class="mt-8">
+        <button id="launchBtn" class="px-8 py-3 bg-blue-600 rounded-lg text-white hover:bg-blue-700 font-semibold shadow-lg shadow-blue-200 transition-transform hover:scale-105 active:scale-95">Launch Billing Optics</button>
+      </div>
+    </div>
+
+  </div>
+  <script src="./onboarding.js"></script>
+</body>
+</html>

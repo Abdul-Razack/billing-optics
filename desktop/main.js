@@ -65,7 +65,7 @@ function createWindow() {
 const fs = require('fs');
 const { ipcMain } = require('electron');
 
-let configWindow;
+let onboardingWindow;
 let envConfig = {};
 const envPath = path.join(app.getPath('userData'), '.env');
 
@@ -83,10 +83,10 @@ function loadEnv() {
   return false;
 }
 
-function createConfigWindow() {
-  configWindow = new BrowserWindow({
-    width: 500,
-    height: 450,
+function createOnboardingWindow() {
+  onboardingWindow = new BrowserWindow({
+    width: 700,
+    height: 550,
     frame: true,
     title: "Billing Optics ERP - Setup",
     webPreferences: {
@@ -95,22 +95,37 @@ function createConfigWindow() {
     }
   });
 
-  configWindow.loadFile(path.join(__dirname, 'config.html'));
+  onboardingWindow.loadFile(path.join(__dirname, 'onboarding.html'));
 }
 
-ipcMain.on('save-config', (event, { dbUrl, port }) => {
-  const envContent = `DATABASE_URL=${dbUrl}\nPORT=${port}\nNODE_ENV=production\n`;
+ipcMain.on('start-setup', async (event, companyData) => {
+  // Silently generate default .env for PostgreSQL and backend port
+  const defaultDbUrl = 'postgresql://postgres:postgres@localhost:5432/billing_optics';
+  const defaultPort = '5000';
+  const envContent = `DATABASE_URL=${defaultDbUrl}\nPORT=${defaultPort}\nNODE_ENV=production\n`;
   fs.writeFileSync(envPath, envContent);
-  envConfig = { DATABASE_URL: dbUrl, PORT: port, NODE_ENV: 'production' };
+  envConfig = { DATABASE_URL: defaultDbUrl, PORT: defaultPort, NODE_ENV: 'production' };
   
-  if (configWindow) configWindow.close();
-  
-  // Proceed with startup
-  createSplashWindow();
-  startServers().catch(err => {
+  try {
+    await startServers(true); // onboarding mode
+  } catch (err) {
     console.error(err);
-    dialog.showErrorBox('Startup Error', 'Failed to start servers.');
-    app.quit();
+    if (onboardingWindow) onboardingWindow.webContents.send('setup-error', 'Failed to start servers.');
+  }
+});
+
+ipcMain.on('launch-app', () => {
+  if (onboardingWindow) onboardingWindow.close();
+  createWindow();
+  
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    if (app.isPackaged) {
+      log.info('Checking for updates on startup...');
+      autoUpdater.checkForUpdates().catch(err => {
+        log.error('Failed to check for updates:', err);
+      });
+    }
   });
 });
 
@@ -118,7 +133,7 @@ ipcMain.on('quit-app', () => {
   app.quit();
 });
 
-async function startServers() {
+async function startServers(isOnboarding = false) {
   const rootPath = isDev ? path.resolve(__dirname, '..') : app.getAppPath();
   
   const serverEnv = { 
@@ -185,20 +200,34 @@ async function startServers() {
   isBackendHealthy = true;
   console.log('Servers are ready!');
 
-  createWindow();
-  
-  mainWindow.once('ready-to-show', () => {
-    if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
-    mainWindow.show();
-    
-    // Check for updates after the app is ready (silently)
-    if (app.isPackaged) {
-      log.info('Checking for updates on startup...');
-      autoUpdater.checkForUpdates().catch(err => {
-        log.error('Failed to check for updates:', err);
-      });
+  if (isOnboarding) {
+    if (onboardingWindow) {
+      onboardingWindow.webContents.send('setup-progress', 'database-ready');
+      // Simulate API call to create workspace with companyData
+      setTimeout(() => {
+        onboardingWindow.webContents.send('setup-progress', 'workspace-ready');
+        // Finalizing
+        setTimeout(() => {
+          onboardingWindow.webContents.send('setup-progress', 'all-ready');
+        }, 1000);
+      }, 2000);
     }
-  });
+  } else {
+    createWindow();
+    
+    mainWindow.once('ready-to-show', () => {
+      if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
+      mainWindow.show();
+      
+      // Check for updates after the app is ready (silently)
+      if (app.isPackaged) {
+        log.info('Checking for updates on startup...');
+        autoUpdater.checkForUpdates().catch(err => {
+          log.error('Failed to check for updates:', err);
+        });
+      }
+    });
+  }
 }
 
 // IPC Handlers for Auto Updater
@@ -270,7 +299,7 @@ app.whenReady().then(async () => {
     }
   } else {
     // Missing config, show setup window
-    createConfigWindow();
+    createOnboardingWindow();
   }
 
   app.on('activate', () => {
