@@ -7,69 +7,62 @@ import { toast } from "sonner";
 
 export function SystemUpdates() {
   const [status, setStatus] = useState<"idle" | "checking" | "available" | "downloading" | "ready" | "error">("idle");
-  const [versionInfo, setVersionInfo] = useState<{ current: string; latest?: string }>({ current: "1.0.0" }); // Default to 1.0.0, will fetch from electron if possible
+  const [versionInfo, setVersionInfo] = useState<{ current: string; latest?: string }>({ current: "1.0.0" });
   const [progress, setProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
 
   // Determine if we are in desktop or need to use a mock for the web browser demo
-  const isActualDesktop = typeof window !== "undefined" && !!(window as any).electron?.updater;
+  const isActualDesktop = typeof window !== "undefined" && !!(window as any).electron?.checkForUpdates;
   const isDesktop = typeof window !== "undefined"; // Allow it to run in browser via mock
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Inject a mock updater if we're in the browser to demo the functionality
+    // Inject a mock electron updater if we're in the browser to demo the functionality
     if (!isActualDesktop && !(window as any).electron) {
-      const mockUpdater = {
-        listeners: {} as Record<string, any>,
-        onUpdateAvailable: (cb: any) => { mockUpdater.listeners.available = cb; },
-        onUpdateNotAvailable: (cb: any) => { mockUpdater.listeners.notAvailable = cb; },
-        onDownloadProgress: (cb: any) => { mockUpdater.listeners.progress = cb; },
-        onUpdateDownloaded: (cb: any) => { mockUpdater.listeners.downloaded = cb; },
-        onError: (cb: any) => { mockUpdater.listeners.error = cb; },
-        removeAllListeners: () => { mockUpdater.listeners = {}; },
+      const listeners = {} as Record<string, any>;
+      (window as any).electron = {
+        onUpdateAvailable: (cb: any) => { listeners.available = cb; return () => {}; },
+        onUpdateProgress: (cb: any) => { listeners.progress = cb; return () => {}; },
+        onUpdateReady: (cb: any) => { listeners.downloaded = cb; return () => {}; },
+        onUpdateError: (cb: any) => { listeners.error = cb; return () => {}; },
         checkForUpdates: async () => {
           setTimeout(() => {
-            if (mockUpdater.listeners.available) mockUpdater.listeners.available({ version: "1.1.0" });
-          }, 2000);
+            if (listeners.available) listeners.available({ version: "1.1.0" });
+            
+            // Auto start download simulation
+            let p = 0;
+            const int = setInterval(() => {
+              p += 10;
+              if (listeners.progress) listeners.progress({ percent: p });
+              if (p >= 100) {
+                clearInterval(int);
+                setTimeout(() => {
+                  if (listeners.downloaded) listeners.downloaded();
+                }, 500);
+              }
+            }, 300);
+          }, 1500);
+          return { success: true };
         },
-        downloadUpdate: () => {
-          let p = 0;
-          const int = setInterval(() => {
-            p += 10;
-            if (mockUpdater.listeners.progress) mockUpdater.listeners.progress({ percent: p });
-            if (p >= 100) {
-              clearInterval(int);
-              setTimeout(() => {
-                if (mockUpdater.listeners.downloaded) mockUpdater.listeners.downloaded();
-              }, 500);
-            }
-          }, 300);
-        },
-        installUpdateAndRestart: () => {
+        installUpdate: () => {
           toast.success("Mock: Restarting application...");
           setTimeout(() => window.location.reload(), 1500);
         }
       };
-      (window as any).electron = { updater: mockUpdater };
     }
   }, [isActualDesktop]);
 
   useEffect(() => {
     if (!isDesktop) return;
 
-    const updater = (window as any).electron?.updater;
-    if (!updater) return;
+    const electron = (window as any).electron;
+    if (!electron || !electron.onUpdateAvailable) return;
 
     const handleAvailable = (info: any) => {
       setStatus("available");
       setVersionInfo(prev => ({ ...prev, latest: info?.version || "New Version" }));
-      toast.success("A new update is available!");
-    };
-
-    const handleNotAvailable = () => {
-      setStatus("idle");
-      toast.info("You are on the latest version.");
+      toast.success("A new update is available! Downloading...");
     };
 
     const handleProgress = (prog: any) => {
@@ -84,29 +77,28 @@ export function SystemUpdates() {
 
     const handleError = (err: string) => {
       setStatus("error");
-      setErrorMessage(err || "Failed to download update.");
+      setErrorMessage(typeof err === 'string' ? err : "Failed to download update.");
       toast.error("Update failed.");
     };
 
-    updater.onUpdateAvailable(handleAvailable);
-    updater.onUpdateNotAvailable(handleNotAvailable);
-    updater.onDownloadProgress(handleProgress);
-    updater.onUpdateDownloaded(handleDownloaded);
-    updater.onError(handleError);
+    const cleanup1 = electron.onUpdateAvailable(handleAvailable);
+    const cleanup2 = electron.onUpdateProgress(handleProgress);
+    const cleanup3 = electron.onUpdateReady(handleDownloaded);
+    const cleanup4 = electron.onUpdateError(handleError);
 
     return () => {
-      updater.removeAllListeners();
+      if (cleanup1) cleanup1();
+      if (cleanup2) cleanup2();
+      if (cleanup3) cleanup3();
+      if (cleanup4) cleanup4();
     };
   }, [isDesktop]);
 
   const checkUpdates = async () => {
-    if (!isDesktop) {
-      toast.error("Updates are only managed automatically in the Desktop Application.");
-      return;
-    }
+    if (!isDesktop) return;
     try {
       setStatus("checking");
-      await (window as any).electron.updater.checkForUpdates();
+      await (window as any).electron.checkForUpdates();
     } catch (error) {
       setStatus("error");
       setErrorMessage("Failed to reach update servers.");
@@ -115,7 +107,7 @@ export function SystemUpdates() {
 
   const installUpdate = () => {
     if (!isDesktop) return;
-    (window as any).electron.updater.installUpdateAndRestart();
+    (window as any).electron.installUpdate();
   };
 
   return (
