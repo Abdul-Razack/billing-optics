@@ -7,7 +7,7 @@
   "main": "main.js",
   "scripts": {
     "dev": "electron .",
-    "build": "electron-builder --windows"
+    "build": "electron-builder --win"
   },
   "dependencies": {
     "electron-log": "^5.4.4",

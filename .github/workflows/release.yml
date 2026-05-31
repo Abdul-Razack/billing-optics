@@ -55,7 +55,8 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
       - name: Build and Publish Desktop Installer
-        run: npm run build:desktop -- --publish always
+        run: npx electron-builder --win --publish always
+        working-directory: desktop
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
