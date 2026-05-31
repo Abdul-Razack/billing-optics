@@ -71,7 +71,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for progress from main process
     ipcRenderer.on('setup-progress', (event, stage) => {
-      if (stage === 'database-ready') {
+      if (stage === 'installing-database') {
+        // Show the hidden installing row
+        document.getElementById('task-installing').classList.replace('hidden', 'flex');
+        setTaskComplete(1); // Checking is complete
+      } else if (stage.startsWith('installing-progress:')) {
+        const percent = stage.split(':')[1];
+        if (percent === '100') {
+          document.getElementById('text-installing-sub').innerText = 'Executing silent installation (this may take a few minutes)...';
+        } else {
+          document.getElementById('text-installing-sub').innerText = `Downloading components (${percent}%)...`;
+        }
+      } else if (stage === 'database-ready') {
+        if (!document.getElementById('task-installing').classList.contains('hidden')) {
+          // If we went through installation, mark it complete
+          document.getElementById(`icon-installing`).className = 'w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 text-white';
+          document.getElementById(`icon-installing`).innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+          document.getElementById(`text-installing`).classList.replace('text-gray-700', 'text-green-700');
+          document.getElementById('text-installing-sub').innerText = 'Installation successful';
+        } else {
+          setTaskComplete(1); // Normal flow
+        }
         setTaskComplete(2);
         setTaskActive(3); // Running Migrations
       } else if (stage === 'workspace-ready') {

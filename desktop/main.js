@@ -120,6 +120,7 @@ ipcMain.on('start-setup', async (event, companyData) => {
     const { Client } = require('pg');
     const crypto = require('crypto');
     const { safeStorage } = require('electron');
+    const { ensurePostgresInstalled } = require('./pg-installer');
 
     const appPassword = crypto.randomBytes(24).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
     
@@ -132,7 +133,25 @@ ipcMain.on('start-setup', async (event, companyData) => {
       password: 'postgres', 
     });
 
-    await superuserClient.connect();
+    try {
+      await superuserClient.connect();
+    } catch (err) {
+      if (err.code === 'ECONNREFUSED') {
+        onboardingWindow.webContents.send('setup-progress', 'installing-database');
+        
+        await ensurePostgresInstalled(
+          (percent) => onboardingWindow.webContents.send('setup-progress', `installing-progress:${percent}`),
+          (logMsg) => console.log('Installer:', logMsg)
+        );
+        
+        // Retry connection after successful installation
+        await new Promise(r => setTimeout(r, 3000));
+        await superuserClient.connect();
+      } else {
+        // If authentication failed on an existing service, bubble up
+        throw err;
+      }
+    }
 
     // Create Database
     const dbRes = await superuserClient.query(`SELECT datname FROM pg_catalog.pg_database WHERE datname = 'billing_optics_prod'`);
