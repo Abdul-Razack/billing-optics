@@ -77,7 +77,14 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
       - name: Build and Publish Desktop Installer
-        run: npx electron-builder --win --publish always
+        shell: bash
+        run: |
+          for i in 1 2 3; do
+            npx electron-builder --win --publish always && break || {
+              echo "Build failed with exit code $?. Retrying in 15 seconds..."
+              sleep 15
+            }
+          done
         working-directory: desktop
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -120,7 +127,14 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
       - name: Build and Publish Linux Installer
-        run: npx electron-builder --linux --publish always
+        shell: bash
+        run: |
+          for i in 1 2 3; do
+            npx electron-builder --linux --publish always && break || {
+              echo "Build failed with exit code $?. Retrying in 15 seconds..."
+              sleep 15
+            }
+          done
         working-directory: desktop
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
