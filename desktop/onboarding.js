@@ -87,10 +87,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     ipcRenderer.on('setup-error', (event, msg) => {
-      alert('Setup Error: ' + msg);
-      // fallback
-      step3.classList.remove('active');
-      step2.classList.add('active');
+      document.getElementById('setup-tasks').classList.add('hidden');
+      document.getElementById('setup-title').innerText = 'Setup Interrupted';
+      document.getElementById('setup-subtitle').innerText = 'We encountered a problem while provisioning your environment.';
+      document.getElementById('setup-error-container').classList.remove('hidden');
+    });
+
+    document.getElementById('retrySetupBtn').addEventListener('click', () => {
+      // Reset UI and retry
+      document.getElementById('setup-tasks').classList.remove('hidden');
+      document.getElementById('setup-title').innerText = 'Setting up your workspace';
+      document.getElementById('setup-subtitle').innerText = 'This will only take a moment.';
+      document.getElementById('setup-error-container').classList.add('hidden');
+      
+      // Reset tasks
+      for(let i=2; i<=4; i++) {
+        document.getElementById(`task-${i}`).classList.add('opacity-50');
+        document.getElementById(`icon-${i}`).className = 'w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0';
+        document.getElementById(`icon-${i}`).innerHTML = '';
+        document.getElementById(`text-${i}`).classList.replace('text-green-700', 'text-gray-500');
+        document.getElementById(`text-${i}`).classList.replace('text-gray-700', 'text-gray-500');
+      }
+
+      setTaskActive(2);
+      ipcRenderer.send('start-setup', companyData);
     });
   }
 });

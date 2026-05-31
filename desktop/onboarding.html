@@ -86,11 +86,11 @@
     <!-- Step 3: System Setup -->
     <div id="step-3" class="step">
       <div class="text-center mb-8">
-        <h2 class="text-2xl font-bold text-gray-900">Setting up your workspace</h2>
-        <p class="text-sm text-gray-500 mt-1">This will only take a moment.</p>
+        <h2 class="text-2xl font-bold text-gray-900" id="setup-title">Setting up your workspace</h2>
+        <p class="text-sm text-gray-500 mt-1" id="setup-subtitle">This will only take a moment.</p>
       </div>
       
-      <div class="space-y-4 max-w-sm mx-auto">
+      <div class="space-y-4 max-w-sm mx-auto" id="setup-tasks">
         <div class="flex items-center gap-3" id="task-1">
           <div class="w-6 h-6 rounded-full border-2 border-blue-600 border-t-transparent animate-spin flex-shrink-0" id="icon-1"></div>
           <span class="text-gray-700 font-medium" id="text-1">Preparing Application</span>
@@ -107,6 +107,14 @@
           <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0" id="icon-4"></div>
           <span class="text-gray-500 font-medium" id="text-4">Finalizing Setup</span>
         </div>
+      </div>
+
+      <div id="setup-error-container" class="hidden text-center mt-6">
+        <div class="p-4 mb-6 text-sm text-red-800 rounded-lg bg-red-50 text-left border border-red-100" role="alert">
+          <span class="font-semibold block mb-1">Setup Failed</span>
+          Billing Optics could not complete setup. Local database service not found or access denied.
+        </div>
+        <button id="retrySetupBtn" class="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-medium shadow transition-colors">Retry Connection</button>
       </div>
     </div>
 

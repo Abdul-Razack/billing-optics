@@ -78,6 +78,21 @@ function loadEnv() {
       const val = parts.slice(1).join('=')?.trim();
       if (key && val) envConfig[key] = val;
     });
+
+    if (envConfig['DATABASE_URL_ENCRYPTED']) {
+      try {
+        const { safeStorage } = require('electron');
+        if (safeStorage && safeStorage.isEncryptionAvailable()) {
+          const buffer = Buffer.from(envConfig['DATABASE_URL_ENCRYPTED'], 'base64');
+          envConfig.DATABASE_URL = safeStorage.decryptString(buffer);
+        } else {
+          envConfig.DATABASE_URL = Buffer.from(envConfig['DATABASE_URL_ENCRYPTED'], 'base64').toString('utf-8');
+        }
+      } catch (err) {
+        console.error('Failed to decrypt database URL:', err);
+      }
+    }
+
     return true;
   }
   return false;
@@ -99,18 +114,59 @@ function createOnboardingWindow() {
 }
 
 ipcMain.on('start-setup', async (event, companyData) => {
-  // Silently generate default .env for PostgreSQL and backend port
-  const defaultDbUrl = 'postgresql://postgres:postgres@localhost:5432/billing_optics';
-  const defaultPort = '5000';
-  const envContent = `DATABASE_URL=${defaultDbUrl}\nPORT=${defaultPort}\nNODE_ENV=production\n`;
-  fs.writeFileSync(envPath, envContent);
-  envConfig = { DATABASE_URL: defaultDbUrl, PORT: defaultPort, NODE_ENV: 'production' };
-  
   try {
+    const { Client } = require('pg');
+    const crypto = require('crypto');
+    const { safeStorage } = require('electron');
+
+    const appPassword = crypto.randomBytes(24).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
+    
+    // Connect to PostgreSQL as superuser
+    const superuserClient = new Client({
+      host: 'localhost',
+      port: 5432,
+      user: 'postgres',
+      // Assuming peer auth or trust for local setup, or empty password.
+      password: '', 
+    });
+
+    await superuserClient.connect();
+
+    // Create Database
+    const dbRes = await superuserClient.query(`SELECT datname FROM pg_catalog.pg_database WHERE datname = 'billing_optics_prod'`);
+    if (dbRes.rows.length === 0) {
+      await superuserClient.query(`CREATE DATABASE billing_optics_prod`);
+    }
+
+    // Create User
+    const roleRes = await superuserClient.query(`SELECT rolname FROM pg_roles WHERE rolname = 'billing_app'`);
+    if (roleRes.rows.length === 0) {
+      await superuserClient.query(`CREATE USER billing_app WITH ENCRYPTED PASSWORD '${appPassword}'`);
+    } else {
+      await superuserClient.query(`ALTER USER billing_app WITH ENCRYPTED PASSWORD '${appPassword}'`);
+    }
+
+    await superuserClient.query(`GRANT ALL PRIVILEGES ON DATABASE billing_optics_prod TO billing_app`);
+    await superuserClient.end();
+
+    const secureDbUrl = `postgresql://billing_app:${appPassword}@localhost:5432/billing_optics_prod`;
+    const defaultPort = '5000';
+
+    // Store securely
+    let encryptedUrl = Buffer.from(secureDbUrl).toString('base64');
+    if (safeStorage && safeStorage.isEncryptionAvailable()) {
+      encryptedUrl = safeStorage.encryptString(secureDbUrl).toString('base64');
+    }
+
+    const envContent = `DATABASE_URL_ENCRYPTED=${encryptedUrl}\nPORT=${defaultPort}\nNODE_ENV=production\n`;
+    fs.writeFileSync(envPath, envContent);
+
+    envConfig = { DATABASE_URL: secureDbUrl, PORT: defaultPort, NODE_ENV: 'production' };
+    
     await startServers(true); // onboarding mode
   } catch (err) {
-    console.error(err);
-    if (onboardingWindow) onboardingWindow.webContents.send('setup-error', 'Failed to start servers.');
+    console.error('Auto-provisioning failed:', err.message);
+    if (onboardingWindow) onboardingWindow.webContents.send('setup-error', 'Local database service not found or access denied.');
   }
 });
 
