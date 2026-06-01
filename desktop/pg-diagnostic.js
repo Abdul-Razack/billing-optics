@@ -28,7 +28,7 @@ async function runDiagnostics(config) {
     return result;
   }
 
-  if (config.port && result.detectedPort && config.port !== result.detectedPort) {
+  if (config.port && result.detectedPort && Number(config.port) !== Number(result.detectedPort)) {
     result.issue = `PostgreSQL port changed (configured: ${config.port}, detected: ${result.detectedPort}).`;
     return result;
   }

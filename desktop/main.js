@@ -270,12 +270,14 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
     const targetDbName = dbConfig?.dbName || DEFAULT_CONFIG.database;
     const targetAppUser = dbConfig?.appUser || DEFAULT_CONFIG.appUser;
     const targetPort = dbConfig?.port || DEFAULT_CONFIG.port;
+    const targetHost = dbConfig?.isAutoInstall ? DEFAULT_CONFIG.host : (dbConfig?.host || DEFAULT_CONFIG.host);
 
+    let appPassword = null;
     if (dbConfig && dbConfig.isAdvanced) {
       // Scenario 3: Advanced Mode
-      secureDbUrl = `postgresql://${targetAppUser}:${dbConfig.appPass}@${dbConfig.host}:${targetPort}/${targetDbName}`;
+      secureDbUrl = `postgresql://${targetAppUser}:${dbConfig.appPass}@${targetHost}:${targetPort}/${targetDbName}`;
     } else {
-      const appPassword = crypto.randomBytes(24).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
+      appPassword = crypto.randomBytes(24).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
       let superuserClient;
 
       if (dbConfig && dbConfig.isAutoInstall) {
@@ -298,7 +300,7 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
       } else if (dbConfig && !dbConfig.isAutoInstall) {
         // Scenario 2: Admin provided credentials
         superuserClient = new Client({
-          host: dbConfig.host,
+          host: targetHost,
           port: targetPort,
           user: dbConfig.adminUser,
           password: dbConfig.adminPass
@@ -327,14 +329,12 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
       await superuserClient.end();
 
       // Grant on schema public by connecting to the new DB
-      const host = dbConfig.isAutoInstall ? DEFAULT_CONFIG.host : dbConfig.host;
-      const port = targetPort;
       const user = dbConfig.adminUser;
       const pass = dbConfig.adminPass;
 
       const dbClient = new Client({
-        host: host,
-        port: port,
+        host: targetHost,
+        port: targetPort,
         user: user,
         password: pass,
         database: targetDbName
@@ -345,7 +345,7 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
 
       console.log('[INSTALLER] Database provisioning completed');
 
-      secureDbUrl = `postgresql://${targetAppUser}:${appPassword}@${host}:${port}/${targetDbName}`;
+      secureDbUrl = `postgresql://${targetAppUser}:${appPassword}@${targetHost}:${targetPort}/${targetDbName}`;
     }
 
     // Generate a stable JWT secret for this installation
@@ -367,8 +367,8 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
     }
 
     const configData = {
-      host: host,
-      port: port,
+      host: targetHost,
+      port: targetPort,
       database: targetDbName,
       username: targetAppUser,
       password: encryptedPassword,
@@ -381,7 +381,10 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
 
     // Run Diagnostics immediately after generating config
     const { runDiagnostics } = require('./pg-diagnostic');
-    const diag = await runDiagnostics(configData);
+    const diag = await runDiagnostics({
+      ...configData,
+      password: finalPassword
+    });
     if (diag.issue !== 'No issue detected. Database is healthy.') {
       throw new Error(`Diagnostics failed after setup: ${diag.issue}`);
     }
