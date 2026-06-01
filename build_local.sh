@@ -64,4 +64,4 @@ if [ ! -d "desktop" ]; then
 fi
 cd desktop
 npm install
-npx electron-builder --linux
+npx electron-builder --linux --publish never
