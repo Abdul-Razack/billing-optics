@@ -36,7 +36,7 @@ function downloadFile(url, dest, onProgress) {
 }
 
 // Function to install PostgreSQL on Windows
-async function installPostgresWindows(adminPass, onProgress, onLog) {
+async function installPostgresWindows(adminPass, port, onProgress, onLog) {
   const installerUrl = 'https://get.enterprisedb.com/postgresql/postgresql-16.3-1-windows-x64.exe';
   const installerPath = path.join(os.tmpdir(), 'postgresql-installer.exe');
   
@@ -52,10 +52,12 @@ async function installPostgresWindows(adminPass, onProgress, onLog) {
   onLog('Executing silent installation (requires elevated privileges)...');
   
   return new Promise((resolve, reject) => {
+    onLog('Executing installer silently...');
+    onProgress(100); // Hand over to silent installer
     const { execFile } = require('child_process');
-    execFile(installerPath, ['--mode', 'unattended', '--superpassword', adminPass, '--serverport', '5432'], (error, stdout, stderr) => {
+    execFile(installerPath, ['--mode', 'unattended', '--superpassword', adminPass, '--serverport', port.toString()], (error, stdout, stderr) => {
       if (error) {
-        onLog(`Installer failed: ${error.message}`);
+        onLog(`Installer error: ${error.message}`);
         return reject(error);
       }
       onLog('Installation completed successfully.');
@@ -65,7 +67,7 @@ async function installPostgresWindows(adminPass, onProgress, onLog) {
 }
 
 // Function to install PostgreSQL on Linux (Ubuntu/Debian)
-async function installPostgresLinux(adminPass, onProgress, onLog) {
+async function installPostgresLinux(adminPass, port, onProgress, onLog) {
   onLog('Executing apt-get installation for PostgreSQL (requires pkexec)...');
   
   // Prompt user for auth and run install commands. It sets 'postgres' user password to adminPass.
@@ -74,9 +76,20 @@ async function installPostgresLinux(adminPass, onProgress, onLog) {
   const bashScript = `
     apt-get update -y &&
     apt-get install -y postgresql postgresql-contrib &&
+    PG_CONF=$(find /etc/postgresql -name postgresql.conf | head -n 1) &&
+    if [ -z "$PG_CONF" ]; then
+      echo "[INSTALLER] postgresql.conf not found"
+      exit 1
+    fi &&
+    echo "[INSTALLER] Using config: $PG_CONF" &&
+    sed -i "s/^#\\?port = .*/port = ${port}/" "$PG_CONF" &&
     systemctl enable postgresql &&
-    systemctl start postgresql &&
-    su - postgres -c "psql -c \\"ALTER ROLE postgres WITH PASSWORD '${escapedPass}';\\""
+    systemctl restart postgresql &&
+    sleep 2 &&
+    pg_isready -p ${port} &&
+    echo "[INSTALLER] Setting postgres password" &&
+    su - postgres -c "psql -p ${port} -c \\"ALTER ROLE postgres WITH PASSWORD '${escapedPass}';\\"" &&
+    echo "[INSTALLER] Password configured successfully"
   `;
 
   return new Promise((resolve, reject) => {
@@ -101,7 +114,7 @@ async function installPostgresLinux(adminPass, onProgress, onLog) {
 }
 
 // Main orchestrator function
-async function ensurePostgresInstalled(adminPass, onProgress, onLog) {
+async function ensurePostgresInstalled(adminPass, port, onProgress, onLog) {
   const platform = os.platform();
   
   if (platform === 'win32') {
@@ -114,7 +127,7 @@ async function ensurePostgresInstalled(adminPass, onProgress, onLog) {
         }
         
         onLog('Service not found or already running. Proceeding with installation...');
-        installPostgresWindows(adminPass, onProgress, onLog).then(resolve).catch(reject);
+        installPostgresWindows(adminPass, port, onProgress, onLog).then(resolve).catch(reject);
       });
     });
   } else if (platform === 'linux') {
@@ -126,7 +139,7 @@ async function ensurePostgresInstalled(adminPass, onProgress, onLog) {
           return resolve(true);
         } else {
           onLog('Service not found or not active. Proceeding with pkexec installation...');
-          installPostgresLinux(adminPass, onProgress, onLog).then(resolve).catch(reject);
+          installPostgresLinux(adminPass, port, onProgress, onLog).then(resolve).catch(reject);
         }
       });
     });

@@ -1,6 +1,9 @@
 const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const { exec } = require('child_process');
 const waitOn = require('wait-on');
+const { DEFAULT_CONFIG } = require('../shared/src/db-config.js');
 const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
 
@@ -64,48 +67,53 @@ const { ipcMain } = require('electron');
 
 let onboardingWindow;
 let envConfig = {};
-const envPath = path.join(app.getPath('userData'), '.env');
+const configPath = path.join(app.getPath('userData'), 'config.json');
 
-function loadEnv() {
-  if (fs.existsSync(envPath)) {
-    const content = fs.readFileSync(envPath, 'utf-8');
-    content.split('\n').forEach(line => {
-      const parts = line.split('=');
-      const key = parts[0]?.trim();
-      // Strip all whitespace/newlines from value (handles wrapped base64)
-      const val = parts.slice(1).join('=')?.replace(/\s/g, '');
-      if (key && val) envConfig[key] = val;
-    });
+function loadConfig() {
+  if (fs.existsSync(configPath)) {
+    try {
+      const content = fs.readFileSync(configPath, 'utf-8');
+      const parsedConfig = JSON.parse(content);
 
-    if (envConfig['DATABASE_URL_ENCRYPTED']) {
-      try {
-        const { safeStorage } = require('electron');
-        if (safeStorage && safeStorage.isEncryptionAvailable()) {
-          const buffer = Buffer.from(envConfig['DATABASE_URL_ENCRYPTED'], 'base64');
-          envConfig.DATABASE_URL = safeStorage.decryptString(buffer);
-        } else {
-          // safeStorage unavailable — stored as plain base64 fallback
-          envConfig.DATABASE_URL = Buffer.from(envConfig['DATABASE_URL_ENCRYPTED'], 'base64').toString('utf-8');
+      // Validate required fields explicitly (no silent defaults)
+      const requiredFields = ['host', 'port', 'database', 'username', 'password'];
+      for (const field of requiredFields) {
+        if (parsedConfig[field] === undefined || parsedConfig[field] === null || parsedConfig[field] === '') {
+          log.warn(`loadConfig: Missing required field '${field}'. Redirecting to onboarding.`);
+          return false;
         }
-      } catch (err) {
-        log.error('Failed to decrypt database URL (config may be corrupt):', err.message);
-        // Return 'corrupted' so app.whenReady can redirect to onboarding
-        return 'corrupted';
       }
-    }
 
-    // JWT_SECRET stored as plain base64
-    if (envConfig['JWT_SECRET_ENCODED']) {
-      envConfig.JWT_SECRET = Buffer.from(envConfig['JWT_SECRET_ENCODED'], 'base64').toString('utf-8');
-    }
+      if (!parsedConfig.jwtSecret) {
+        log.warn('loadConfig: Missing jwtSecret. Redirecting to onboarding.');
+        return false;
+      }
 
-    // .env exists but DATABASE_URL still missing → config incomplete
-    if (!envConfig.DATABASE_URL) {
-      log.warn('loadEnv: .env found but DATABASE_URL could not be resolved. Redirecting to onboarding.');
+      const { safeStorage } = require('electron');
+      if (parsedConfig.isPasswordEncrypted) {
+        if (safeStorage && safeStorage.isEncryptionAvailable()) {
+          const buffer = Buffer.from(parsedConfig.password, 'base64');
+          parsedConfig.password = safeStorage.decryptString(buffer);
+        } else {
+          log.error('loadConfig: OS Encryption is unavailable to decrypt credentials.');
+          return 'corrupted';
+        }
+      }
+
+      const dbUrl = `postgresql://${parsedConfig.username}:${parsedConfig.password}@${parsedConfig.host}:${parsedConfig.port}/${parsedConfig.database}`;
+
+      envConfig = {
+        DATABASE_URL: dbUrl,
+        JWT_SECRET: parsedConfig.jwtSecret,
+        PORT: parsedConfig.appPort || 5000,
+        NODE_ENV: 'production'
+      };
+
+      return true;
+    } catch (err) {
+      log.error('Failed to parse config.json (config may be corrupt):', err.message);
       return 'corrupted';
     }
-
-    return true;
   }
   return false;
 }
@@ -126,25 +134,92 @@ function createOnboardingWindow() {
   onboardingWindow.loadFile(path.join(__dirname, 'onboarding.html'));
 }
 
-ipcMain.on('retry-startup', () => {
+let recoveryWindow;
+function createRecoveryWindow(diagnosticResult, config) {
+  recoveryWindow = new BrowserWindow({
+    width: 650,
+    height: 500,
+    frame: true,
+    title: "Billing Optics ERP - Recovery Mode",
+    icon: path.join(__dirname, 'build', 'icon.ico'),
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+  recoveryWindow.loadFile(path.join(__dirname, 'recovery.html'));
+  
+  recoveryWindow.webContents.once('did-finish-load', () => {
+    recoveryWindow.webContents.send('recovery-state', diagnosticResult, config);
+  });
+}
+
+let startupErrorWindow;
+function createStartupErrorWindow(errorMsg) {
+  startupErrorWindow = new BrowserWindow({
+    width: 600,
+    height: 400,
+    frame: true,
+    title: "Billing Optics ERP - Startup Error",
+    icon: path.join(__dirname, 'build', 'icon.ico'),
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+  startupErrorWindow.loadFile(path.join(__dirname, 'startup-error.html'));
+  
+  startupErrorWindow.webContents.once('did-finish-load', () => {
+    startupErrorWindow.webContents.send('error-details', errorMsg, log.transports?.file?.getFile()?.path || '');
+  });
+}
+
+ipcMain.on('retry-startup', async () => {
+  if (startupErrorWindow && !startupErrorWindow.isDestroyed()) {
+    startupErrorWindow.close();
+  }
+  await initializeWorkflow();
+});
+
+ipcMain.on('recovery-restart', () => {
+  app.relaunch();
+  app.quit();
+});
+
+ipcMain.on('run-repair', async (event, config, diagnosticResult) => {
+  try {
+    const { repairDatabase } = require('./pg-repair');
+    let repairLogs = '';
+    const updatedConfig = await repairDatabase(config, diagnosticResult, (logMsg) => {
+      repairLogs += logMsg + '\n';
+      log.info(`[REPAIR] ${logMsg}`);
+      event.reply('repair-log', logMsg);
+    });
+
+    const rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    if (updatedConfig.port !== rawConfig.port) {
+       rawConfig.port = updatedConfig.port;
+       fs.writeFileSync(configPath, JSON.stringify(rawConfig, null, 2), 'utf-8');
+       loadConfig();
+    }
+
+    event.reply('repair-success', repairLogs);
+  } catch(err) {
+    event.reply('repair-failed', err.message);
+  }
+});
+
+ipcMain.on('reset-setup', () => {
+  if (fs.existsSync(configPath)) {
+    fs.unlinkSync(configPath);
+  }
   app.relaunch();
   app.quit();
 });
 
 ipcMain.handle('check-postgres', async () => {
-  const { execSync } = require('child_process');
-  const os = require('os');
-  try {
-    if (os.platform() === 'win32') {
-      execSync('sc query postgresql-x64-16', { stdio: 'ignore' });
-      return true;
-    } else {
-      execSync('which psql', { stdio: 'ignore' });
-      return true;
-    }
-  } catch (err) {
-    return false;
-  }
+  const { discoverPostgres } = require('./pg-discovery');
+  return discoverPostgres();
 });
 
 ipcMain.handle('test-db-connection', async (event, config) => {
@@ -155,8 +230,8 @@ ipcMain.handle('test-db-connection', async (event, config) => {
     const database = config.isAdvanced ? config.dbName : undefined;
     
     const client = new Client({
-      host: config.host || 'localhost',
-      port: config.port || 5432,
+      host: config.host || DEFAULT_CONFIG.host,
+      port: config.port || DEFAULT_CONFIG.port,
       user: user,
       password: password,
       database: database
@@ -180,9 +255,13 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
     let secureDbUrl = '';
     const defaultPort = '5000';
 
+    const targetDbName = dbConfig?.dbName || DEFAULT_CONFIG.database;
+    const targetAppUser = dbConfig?.appUser || DEFAULT_CONFIG.appUser;
+    const targetPort = dbConfig?.port || DEFAULT_CONFIG.port;
+
     if (dbConfig && dbConfig.isAdvanced) {
       // Scenario 3: Advanced Mode
-      secureDbUrl = `postgresql://${dbConfig.appUser}:${dbConfig.appPass}@${dbConfig.host}:${dbConfig.port}/${dbConfig.dbName}`;
+      secureDbUrl = `postgresql://${targetAppUser}:${dbConfig.appPass}@${dbConfig.host}:${targetPort}/${targetDbName}`;
     } else {
       const appPassword = crypto.randomBytes(24).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
       let superuserClient;
@@ -192,14 +271,15 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
         onboardingWindow.webContents.send('setup-progress', 'installing-database');
         await ensurePostgresInstalled(
           dbConfig.adminPass,
+          targetPort,
           (percent) => onboardingWindow.webContents.send('setup-progress', `installing-progress:${percent}`),
           (logMsg) => console.log('Installer:', logMsg)
         );
         // Retry connection after install
         await new Promise(r => setTimeout(r, 3000));
         superuserClient = new Client({
-          host: 'localhost',
-          port: 5432,
+          host: DEFAULT_CONFIG.host,
+          port: targetPort,
           user: dbConfig.adminUser,
           password: dbConfig.adminPass
         });
@@ -207,7 +287,7 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
         // Scenario 2: Admin provided credentials
         superuserClient = new Client({
           host: dbConfig.host,
-          port: dbConfig.port,
+          port: targetPort,
           user: dbConfig.adminUser,
           password: dbConfig.adminPass
         });
@@ -215,26 +295,28 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
 
       await superuserClient.connect();
 
+      console.log('[INSTALLER] Starting database provisioning');
+
       // Create Database
-      const dbRes = await superuserClient.query(`SELECT datname FROM pg_catalog.pg_database WHERE datname = 'billing_optics_prod'`);
+      const dbRes = await superuserClient.query(`SELECT datname FROM pg_catalog.pg_database WHERE datname = $1`, [targetDbName]);
       if (dbRes.rows.length === 0) {
-        await superuserClient.query(`CREATE DATABASE billing_optics_prod`);
+        await superuserClient.query(`CREATE DATABASE ${targetDbName}`);
       }
 
       // Create User
-      const roleRes = await superuserClient.query(`SELECT rolname FROM pg_roles WHERE rolname = 'billing_app'`);
+      const roleRes = await superuserClient.query(`SELECT rolname FROM pg_roles WHERE rolname = $1`, [targetAppUser]);
       if (roleRes.rows.length === 0) {
-        await superuserClient.query(`CREATE USER billing_app WITH ENCRYPTED PASSWORD '${appPassword}'`);
+        await superuserClient.query(`CREATE USER ${targetAppUser} WITH ENCRYPTED PASSWORD '${appPassword}'`);
       } else {
-        await superuserClient.query(`ALTER USER billing_app WITH ENCRYPTED PASSWORD '${appPassword}'`);
+        await superuserClient.query(`ALTER USER ${targetAppUser} WITH ENCRYPTED PASSWORD '${appPassword}'`);
       }
 
-      await superuserClient.query(`GRANT ALL PRIVILEGES ON DATABASE billing_optics_prod TO billing_app`);
+      await superuserClient.query(`GRANT ALL PRIVILEGES ON DATABASE ${targetDbName} TO ${targetAppUser}`);
       await superuserClient.end();
 
       // Grant on schema public by connecting to the new DB
-      const host = dbConfig.isAutoInstall ? 'localhost' : dbConfig.host;
-      const port = dbConfig.isAutoInstall ? 5432 : dbConfig.port;
+      const host = dbConfig.isAutoInstall ? DEFAULT_CONFIG.host : dbConfig.host;
+      const port = targetPort;
       const user = dbConfig.adminUser;
       const pass = dbConfig.adminPass;
 
@@ -243,27 +325,47 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
         port: port,
         user: user,
         password: pass,
-        database: 'billing_optics_prod'
+        database: targetDbName
       });
       await dbClient.connect();
-      await dbClient.query(`GRANT ALL ON SCHEMA public TO billing_app`);
+      await dbClient.query(`GRANT ALL ON SCHEMA public TO ${targetAppUser}`);
       await dbClient.end();
 
-      secureDbUrl = `postgresql://billing_app:${appPassword}@${host}:${port}/billing_optics_prod`;
+      console.log('[INSTALLER] Database provisioning completed');
+
+      secureDbUrl = `postgresql://${targetAppUser}:${appPassword}@${host}:${port}/${targetDbName}`;
     }
 
     // Generate a stable JWT secret for this installation
     const jwtSecret = crypto.randomBytes(48).toString('hex');
-    const jwtSecretEncoded = Buffer.from(jwtSecret).toString('base64');
-
-    // Store securely
-    let encryptedUrl = Buffer.from(secureDbUrl).toString('base64');
-    if (safeStorage && safeStorage.isEncryptionAvailable()) {
-      encryptedUrl = safeStorage.encryptString(secureDbUrl).toString('base64');
+    
+    let finalPassword = appPassword;
+    if (dbConfig && dbConfig.isAdvanced) {
+      finalPassword = dbConfig.appPass;
     }
 
-    const envContent = `DATABASE_URL_ENCRYPTED=${encryptedUrl}\nJWT_SECRET_ENCODED=${jwtSecretEncoded}\nPORT=${defaultPort}\nNODE_ENV=production\n`;
-    fs.writeFileSync(envPath, envContent);
+    let encryptedPassword = finalPassword;
+    let isPasswordEncrypted = false;
+
+    if (safeStorage && safeStorage.isEncryptionAvailable()) {
+      encryptedPassword = safeStorage.encryptString(finalPassword).toString('base64');
+      isPasswordEncrypted = true;
+    } else {
+      throw new Error("System encryption (OS Keychain) is not available. Setup cannot proceed securely.");
+    }
+
+    const configData = {
+      host: host,
+      port: port,
+      database: targetDbName,
+      username: targetAppUser,
+      password: encryptedPassword,
+      isPasswordEncrypted: isPasswordEncrypted,
+      jwtSecret: jwtSecret,
+      appPort: defaultPort
+    };
+
+    fs.writeFileSync(configPath, JSON.stringify(configData, null, 2), 'utf-8');
 
     envConfig = { DATABASE_URL: secureDbUrl, JWT_SECRET: jwtSecret, PORT: defaultPort, NODE_ENV: 'production' };
     
@@ -297,13 +399,7 @@ async function startServers(isOnboarding = false) {
   const rootPath = isDev ? path.resolve(__dirname, '..') : app.getAppPath();
   
   if (!isDev) {
-    log.info(`[Startup] isPackaged: ${app.isPackaged}`);
-    log.info(`[Startup] app.getAppPath(): ${app.getAppPath()}`);
-    log.info(`[Startup] process.resourcesPath: ${process.resourcesPath}`);
-    log.info(`[Startup] rootPath: ${rootPath}`);
-    log.info(`[Startup] DATABASE_URL present? ${!!envConfig.DATABASE_URL}`);
-    log.info(`[Startup] JWT_SECRET present? ${!!envConfig.JWT_SECRET}`);
-    log.info(`[Startup] PORT: ${envConfig.PORT || 5000}`);
+    log.info(`[Startup]\nhost=${envConfig.DATABASE_URL ? (new URL(envConfig.DATABASE_URL)).hostname : 'localhost'}\nport=${envConfig.DATABASE_URL ? (new URL(envConfig.DATABASE_URL)).port : '5432'}\ndatabase=${envConfig.DATABASE_URL ? (new URL(envConfig.DATABASE_URL)).pathname.substring(1) : 'billing_optics_prod'}`);
   }
 
   const serverEnv = { 
@@ -349,15 +445,22 @@ async function startServers(isOnboarding = false) {
   }
 
   console.log('Waiting for Backend and Frontend...');
-  await waitOn({
-    resources: [
-      `tcp:localhost:${envConfig.PORT || 5000}`,
-      'tcp:localhost:3000'
-    ],
-    timeout: 30000,
-  });
-  isBackendHealthy = true;
-  console.log('Servers are ready!');
+  try {
+    await waitOn({
+      resources: [
+        `http-get://localhost:${envConfig.PORT || 5000}/api/health`,
+        'tcp:localhost:3000'
+      ],
+      timeout: 60000,
+    });
+    isBackendHealthy = true;
+    console.log('Servers are ready!');
+  } catch (err) {
+    console.error('Backend readiness check failed:', err);
+    if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
+    createStartupErrorWindow(err.message || 'Timeout waiting for backend to start.');
+    return;
+  }
 
   if (isOnboarding) {
     if (onboardingWindow) {
@@ -445,33 +548,56 @@ autoUpdater.on('error', (err) => {
   }
 });
 
-app.whenReady().then(async () => {
-  const envStatus = loadEnv();
+async function initializeWorkflow() {
+  const configStatus = loadConfig();
 
-  if (envStatus === 'corrupted') {
-    // .env exists but DB credentials are corrupt/unreadable — show onboarding
+  if (configStatus === 'corrupted') {
     log.warn('Database config appears corrupt. Showing onboarding to reconfigure.');
     createOnboardingWindow();
-    // Notify the onboarding window once it loads
     setTimeout(() => {
       if (onboardingWindow && !onboardingWindow.isDestroyed()) {
         onboardingWindow.webContents.send('setup-error', 'Your database configuration appears to be corrupted or from a different installation. Please reconfigure.', '');
       }
     }, 2000);
-  } else if (envStatus === true) {
-    createSplashWindow();
+  } else if (configStatus === true) {
+    if (!splashWindow || splashWindow.isDestroyed()) {
+      createSplashWindow();
+    }
     try {
+      const { runDiagnostics } = require('./pg-diagnostic');
+      const rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      const { safeStorage } = require('electron');
+      
+      if (rawConfig.isPasswordEncrypted) {
+        if (safeStorage && safeStorage.isEncryptionAvailable()) {
+          const buffer = Buffer.from(rawConfig.password, 'base64');
+          rawConfig.password = safeStorage.decryptString(buffer);
+        } else {
+          throw new Error('OS Encryption unavailable.');
+        }
+      }
+      
+      const diag = await runDiagnostics(rawConfig);
+      if (diag.issue !== 'No issue detected. Database is healthy.') {
+        log.warn(`Health check failed: ${diag.issue}`);
+        if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
+        createRecoveryWindow(diag, rawConfig);
+        return;
+      }
+
       await startServers();
     } catch (error) {
       console.error('Failed to start servers:', error);
       if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
-      dialog.showErrorBox('Startup Error', 'Failed to start the local ERP servers.');
-      app.quit();
+      createStartupErrorWindow(error.message);
     }
   } else {
-    // No .env at all — fresh install, show setup
     createOnboardingWindow();
   }
+}
+
+app.whenReady().then(async () => {
+  await initializeWorkflow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0 && mainWindow) {
