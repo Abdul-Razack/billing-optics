@@ -318,6 +318,7 @@ async function startServers(isOnboarding = false) {
   if (!isDev) {
     // Production: Require the backend directly
     try {
+      Object.assign(process.env, serverEnv);
       const backendScript = path.join(rootPath, 'backend', 'dist', 'server.js');
       require(backendScript);
       console.log('[Backend] Started successfully in-process');

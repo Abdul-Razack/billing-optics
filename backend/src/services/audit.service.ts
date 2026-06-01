@@ -2,7 +2,7 @@ import { db } from '../config/db';
 import { auditLogs } from '../db/schema';
 import { desc, eq, and, or, sql, gte, lte } from 'drizzle-orm';
 import { Request } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export interface LogEventParams {
   userId?: number | null; // Nullable for system tasks or failed logins where user doesn't exist
@@ -31,7 +31,7 @@ export class AuditService {
       }
 
       await db.insert(auditLogs).values({
-        id: uuidv4(),
+        id: randomUUID(),
         userId: params.userId || null,
         action: params.action,
         module: params.module,
