@@ -367,6 +367,13 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
 
     fs.writeFileSync(configPath, JSON.stringify(configData, null, 2), 'utf-8');
 
+    // Run Diagnostics immediately after generating config
+    const { runDiagnostics } = require('./pg-diagnostic');
+    const diag = await runDiagnostics(configData);
+    if (diag.issue !== 'No issue detected. Database is healthy.') {
+      throw new Error(`Diagnostics failed after setup: ${diag.issue}`);
+    }
+
     envConfig = { DATABASE_URL: secureDbUrl, JWT_SECRET: jwtSecret, PORT: defaultPort, NODE_ENV: 'production' };
     
     await startServers(true); // onboarding mode
@@ -409,7 +416,7 @@ async function startServers(isOnboarding = false) {
     USER_DATA_PATH: app.getPath('userData')
   };
 
-  console.log('Starting backend and frontend in-process...');
+  console.log('Starting backend...');
   
   if (!isDev) {
     // Production: Require the backend directly
@@ -421,7 +428,30 @@ async function startServers(isOnboarding = false) {
     } catch (err) {
       console.error('[Backend ERR] Failed to start backend:', err);
     }
+  } else {
+    // Development: Run manually outside electron or use dynamic imports
+    console.log('In DEV mode: Please run frontend and backend manually using npm run dev.');
+  }
 
+  console.log('Waiting for Backend Health Check...');
+  try {
+    await waitOn({
+      resources: [
+        `http-get://localhost:${envConfig.PORT || 5000}/api/health`
+      ],
+      timeout: 60000,
+    });
+    isBackendHealthy = true;
+    console.log('Backend is ready!');
+  } catch (err) {
+    console.error('Backend readiness check failed:', err);
+    if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
+    createStartupErrorWindow(err.message || 'Timeout waiting for backend to start.');
+    return;
+  }
+
+  if (!isDev) {
+    console.log('Starting frontend...');
     // Production: Start Next.js programmatically
     try {
       const next = require(path.join(rootPath, 'frontend', 'node_modules', 'next'));
@@ -439,26 +469,21 @@ async function startServers(isOnboarding = false) {
     } catch (err) {
       console.error('[Frontend ERR] Failed to start frontend:', err);
     }
-  } else {
-    // Development: Run manually outside electron or use dynamic imports
-    console.log('In DEV mode: Please run frontend and backend manually using npm run dev.');
   }
 
-  console.log('Waiting for Backend and Frontend...');
+  console.log('Waiting for Frontend...');
   try {
     await waitOn({
       resources: [
-        `http-get://localhost:${envConfig.PORT || 5000}/api/health`,
         'tcp:localhost:3000'
       ],
       timeout: 60000,
     });
-    isBackendHealthy = true;
-    console.log('Servers are ready!');
+    console.log('Frontend is ready!');
   } catch (err) {
-    console.error('Backend readiness check failed:', err);
+    console.error('Frontend readiness check failed:', err);
     if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
-    createStartupErrorWindow(err.message || 'Timeout waiting for backend to start.');
+    createStartupErrorWindow(err.message || 'Timeout waiting for frontend to start.');
     return;
   }
 

@@ -68,9 +68,50 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Back from Step 2 Config
-  document.getElementById('backToStep1FromConfig').addEventListener('click', () => {
+  document.getElementById('backToStep1FromConfig')?.addEventListener('click', () => {
     step2.classList.remove('active');
     step1.classList.add('active');
+  });
+
+  // Use Existing DB
+  document.getElementById('useExistingDb')?.addEventListener('click', async () => {
+    const pwd = document.getElementById('existingPgPassword').value;
+    if (!pwd) {
+      alert("Please enter the postgres password to continue.");
+      return;
+    }
+    
+    const dbConfig = {
+      isAutoInstall: false,
+      isAdvanced: false,
+      adminUser: 'postgres',
+      adminPass: pwd,
+      host: 'localhost',
+      port: companyData.pgPort || 5432
+    };
+
+    const btn = document.getElementById('useExistingDb');
+    const originalText = btn.innerText;
+    btn.innerText = 'Testing Connection...';
+    btn.disabled = true;
+
+    try {
+      const res = await ipcRenderer.invoke('test-db-connection', dbConfig);
+      if (res.success) {
+        document.getElementById('db-installed').classList.add('hidden');
+        step2.classList.remove('active');
+        step3.classList.add('active');
+        runSetupTasks(companyData, dbConfig);
+      } else {
+        alert("Connection failed: " + res.error);
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
+    } catch (err) {
+      alert("Connection test error: " + err.message);
+      btn.innerText = originalText;
+      btn.disabled = false;
+    }
   });
 
   // Advanced Mode Toggle
