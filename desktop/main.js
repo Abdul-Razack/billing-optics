@@ -62,7 +62,6 @@ function createWindow() {
   // }
 }
 
-const fs = require('fs');
 const { ipcMain } = require('electron');
 
 let onboardingWindow;
