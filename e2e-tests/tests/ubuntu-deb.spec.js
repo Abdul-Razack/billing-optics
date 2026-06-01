@@ -80,19 +80,35 @@ test.describe('Ubuntu .deb Validation - Fresh Machine', () => {
     await window.fill('#phone', '1234567890');
     await window.fill('#email', 'test@example.com');
     await window.click('button[type="submit"]');
+    console.log('[E2E] Onboarding submitted');
 
     // Step 2: Ensure auto install route triggers
     await window.waitForSelector('#db-not-installed:not(.hidden)');
     await window.screenshot({ path: 'screenshots/2-db-not-installed.png' });
     await window.click('#startAutoInstall');
+    console.log('[E2E] PostgreSQL installation started');
+    
+    // Poll localhost:5432 every 5 seconds
+    for (let i = 0; i < 36; i++) {
+      try {
+        const ss = execSync('ss -tulpn').toString();
+        if (ss.includes(':5432')) {
+          console.log('[E2E] PostgreSQL detected');
+          break;
+        }
+      } catch (e) {}
+      await window.waitForTimeout(5000);
+    }
     
     // Wait for setup to complete (Step 4)
     await window.waitForSelector('#step-4.active', { timeout: 180000 }); // Installation can take a couple minutes
+    console.log('[E2E] PostgreSQL installation completed');
     await window.screenshot({ path: 'screenshots/3-setup-success.png' });
 
     // Verify config file is generated
     const configFile = path.join(userDataPath, 'config.json');
     expect(fs.existsSync(configFile)).toBeTruthy();
+    console.log('[E2E] Config generated');
     fs.copyFileSync(configFile, 'screenshots/config.json');
     
     // Stage 3 Provisioning Verification
@@ -124,6 +140,7 @@ test.describe('Ubuntu .deb Validation - Fresh Machine', () => {
     
     const healthRes = await apiContext.get('http://localhost:5000/api/health');
     expect(healthRes.status()).toBe(200);
+    console.log('[E2E] Backend healthy');
     fs.writeFileSync('screenshots/health.json', await healthRes.text());
   });
 
