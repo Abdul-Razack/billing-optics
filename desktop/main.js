@@ -14,7 +14,9 @@ process.on('unhandledRejection', (err) => {
 });
 const { exec } = require('child_process');
 const waitOn = require('wait-on');
-const { DEFAULT_CONFIG } = require('../shared/src/db-config.js');
+const isDevEnv = !app.isPackaged;
+const sharedDbConfigPath = isDevEnv ? '../shared/src/db-config.js' : './shared/src/db-config.js';
+const { DEFAULT_CONFIG } = require(sharedDbConfigPath);
 const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
 
