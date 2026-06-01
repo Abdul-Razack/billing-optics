@@ -56,7 +56,7 @@
       },
       {
         "from": "../backend/bundle/node_modules",
-        "to": "node_modules",
+        "to": "backend/node_modules",
         "filter": ["**/*"]
       },
       {
