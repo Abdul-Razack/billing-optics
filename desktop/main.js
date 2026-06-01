@@ -1,6 +1,17 @@
 const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+
+process.on('uncaughtException', (err) => {
+  fs.writeFileSync(path.join(app.getPath('userData'), 'crash.log'), err.stack || err.message || String(err));
+  console.error("FATAL CRASH:", err);
+  process.exit(1);
+});
+process.on('unhandledRejection', (err) => {
+  fs.writeFileSync(path.join(app.getPath('userData'), 'rejection.log'), err ? (err.stack || err.message) : 'Unknown rejection');
+  console.error("FATAL REJECTION:", err);
+  process.exit(1);
+});
 const { exec } = require('child_process');
 const waitOn = require('wait-on');
 const { DEFAULT_CONFIG } = require('../shared/src/db-config.js');

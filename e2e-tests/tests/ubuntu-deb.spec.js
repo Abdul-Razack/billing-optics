@@ -58,6 +58,12 @@ test.describe('Ubuntu .deb Validation - Fresh Machine', () => {
     fs.writeFileSync('screenshots/backend_logs.txt', logs.backend.join(''));
     fs.writeFileSync('screenshots/frontend_logs.txt', logs.frontend.join(''));
     try {
+      const crashLog = path.join(userDataPath, 'crash.log');
+      if (fs.existsSync(crashLog)) fs.copyFileSync(crashLog, 'screenshots/crash.log');
+      const rejectionLog = path.join(userDataPath, 'rejection.log');
+      if (fs.existsSync(rejectionLog)) fs.copyFileSync(rejectionLog, 'screenshots/rejection.log');
+    } catch(e) {}
+    try {
       const journal = execSync('journalctl -xe --no-pager | tail -n 100').toString();
       fs.writeFileSync('screenshots/journalctl.txt', journal);
     } catch (e) {}
