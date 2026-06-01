@@ -53,13 +53,53 @@ jobs:
           npm ci || npm install
           npx playwright install --with-deps
 
-      - name: Run Playwright Tests (xvfb)
+      - name: Install Desktop Environment Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dbus-x11 gnome-keyring libsecret-1-0
+
+      - name: Validate and Run Playwright Tests (xvfb + dbus)
         env:
           TEST_PG_USER: ci_admin
           TEST_PG_PASS: ci_secure_pass123
         run: |
           cd e2e-tests
-          xvfb-run -a npx playwright test tests/ubuntu-deb.spec.js
+          mkdir -p scripts screenshots
+          cat << 'EOF' > scripts/validate-safestorage.js
+          const { app, safeStorage } = require('electron');
+          const fs = require('fs');
+          app.whenReady().then(() => {
+            const isAvailable = safeStorage.isEncryptionAvailable();
+            const logLine = `DBUS_SESSION_BUS_ADDRESS=${process.env.DBUS_SESSION_BUS_ADDRESS}\nsafeStorage.isEncryptionAvailable()=${isAvailable}\n`;
+            fs.writeFileSync('screenshots/safestorage-diagnostic.txt', logLine);
+            console.log(logLine);
+            if (!isAvailable) {
+              console.error('FATAL: Encryption unavailable in CI!');
+              process.exit(1);
+            }
+            console.log('Success: CI Environment behaves like Ubuntu Desktop.');
+            process.exit(0);
+          }).catch(err => {
+            console.error('Electron validation error:', err);
+            process.exit(1);
+          });
+          EOF
+
+          dbus-run-session -- sh -c "
+            echo '--- Bootstrapping GNOME Keyring ---'
+            eval \$(echo -n 'dummy-password' | gnome-keyring-daemon --daemonize --login)
+            export DBUS_SESSION_BUS_ADDRESS
+            
+            echo '--- Validating Electron safeStorage ---'
+            # Using exact version from desktop/package.json
+            xvfb-run -a npx -y electron@31.0.0 --no-sandbox scripts/validate-safestorage.js
+            
+            echo '--- Running Playwright E2E Tests ---'
+            xvfb-run -a npx playwright test tests/ubuntu-deb.spec.js
+            
+            echo '--- Dumping Config Directory ---'
+            find ~/.config -maxdepth 3 -type f > screenshots/config-folder-dump.txt || true
+          "
 
       - name: Upload Logs and Screenshots
         if: always()
@@ -69,3 +109,6 @@ jobs:
           path: |
             e2e-tests/screenshots/
             e2e-tests/playwright-report/
+            ~/.config/Billing Optics ERP/logs/
+            ~/.config/Billing Optics ERP/crash.log
+            ~/.config/Billing Optics ERP/rejection.log
