@@ -20,12 +20,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install PostgreSQL
+      - name: Ensure Clean Machine (Purge PostgreSQL)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql postgresql-contrib
-          sudo systemctl start postgresql
-          sudo -u postgres psql -c "CREATE USER ci_admin WITH SUPERUSER PASSWORD 'ci_secure_pass123';"
+          sudo systemctl stop postgresql || true
+          sudo apt-get purge -y "postgresql*" || true
+          sudo rm -rf /var/lib/postgresql /etc/postgresql
 
       - name: Build the .deb Package
         run: |
@@ -41,6 +40,12 @@ jobs:
         run: |
           # Install the local built deb package
           sudo dpkg -i desktop/dist/*.deb || sudo apt-get install -f -y
+
+      - name: Mock pkexec for headless CI
+        run: |
+          echo '#!/bin/bash' | sudo tee /usr/local/bin/pkexec
+          echo 'sudo "$@"' | sudo tee -a /usr/local/bin/pkexec
+          sudo chmod +x /usr/local/bin/pkexec
 
       - name: Setup Playwright for E2E
         run: |
