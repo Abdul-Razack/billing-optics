@@ -1,11 +1,18 @@
-import { Client } from 'pg';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
+import { getDatabaseConfig } from '../shared/src/db-config';
+
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 async function run() {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+  const dbConfig = getDatabaseConfig(process.env.DATABASE_URL);
+  const client = new Pool({
+    host: dbConfig.host,
+    port: dbConfig.port,
+    database: dbConfig.database,
+    user: dbConfig.username,
+    password: dbConfig.password,
   });
   await client.connect();
   

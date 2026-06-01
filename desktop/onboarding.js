@@ -33,12 +33,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('db-config-form').classList.add('hidden');
 
     try {
-      const isInstalled = await ipcRenderer.invoke('check-postgres');
+      const discovery = await ipcRenderer.invoke('check-postgres');
       document.getElementById('db-detecting').classList.add('hidden');
       
-      if (isInstalled) {
+      if (discovery.installed) {
         dbStatus = 'installed';
         document.getElementById('db-config-form').classList.remove('hidden');
+
+        document.getElementById('discovery-version').innerText = discovery.version || 'Unknown';
+        document.getElementById('discovery-port').innerText = discovery.port || 'Unknown';
+        document.getElementById('discovery-status').innerText = discovery.running ? 'Running' : 'Stopped';
+
+        if (discovery.port) {
+          document.getElementById('dbPort').value = discovery.port;
+        }
+
       } else {
         dbStatus = 'not_installed';
         document.getElementById('db-not-installed').classList.remove('hidden');
