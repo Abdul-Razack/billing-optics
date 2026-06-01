@@ -29,7 +29,8 @@ test.describe('Ubuntu .deb Validation - Fresh Machine', () => {
   async function launchApp() {
     electronApp = await electron.launch({
       executablePath: appExecutablePath,
-      args: ['--no-sandbox']
+      args: ['--no-sandbox'],
+      env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1' }
     });
 
     electronApp.process().stdout.on('data', (data) => {
@@ -106,8 +107,19 @@ test.describe('Ubuntu .deb Validation - Fresh Machine', () => {
       await window.waitForTimeout(5000);
     }
     
-    // Wait for setup to complete (Step 4)
-    await window.waitForSelector('#step-4.active', { timeout: 180000 }); // Installation can take a couple minutes
+    // Wait for setup to complete (Step 4) or an error
+    const setupResult = await Promise.race([
+      window.waitForSelector('#step-4.active', { timeout: 180000 }).then(() => 'success'),
+      window.waitForSelector('#setup-error-container:not(.hidden)', { timeout: 180000 }).then(() => 'error')
+    ]);
+    
+    if (setupResult === 'error') {
+      const errorSummary = await window.locator('#setup-error-summary').innerText();
+      console.error('[E2E FATAL] Setup failed with:', errorSummary);
+      await window.screenshot({ path: 'screenshots/fatal-setup-error.png' });
+      throw new Error('Setup failed: ' + errorSummary);
+    }
+
     console.log('[E2E] PostgreSQL installation completed');
     await window.screenshot({ path: 'screenshots/3-setup-success.png' });
 
