@@ -77,6 +77,68 @@ jobs:
           NODE_ENV: production
           NEXT_PUBLIC_API_URL: http://localhost:5000/api
 
+      - name: Prepare Backend Runtime Bundle
+        shell: bash
+        run: |
+          # Install only production deps for backend (resolves full transitive tree)
+          mkdir -p backend/bundle
+          node -e "
+            const pkg = JSON.parse(require('fs').readFileSync('backend/package.json','utf-8'));
+            delete pkg.devDependencies; delete pkg.scripts;
+            delete pkg.dependencies.shared;
+            require('fs').writeFileSync('backend/bundle/package.json', JSON.stringify(pkg,null,2));
+          "
+          cd backend/bundle && npm install --omit=dev --ignore-scripts
+          cd ../..
+          # Copy shared workspace package into the bundle
+          cp -r shared backend/bundle/node_modules/shared
+          echo "Backend bundle size: $(du -sh backend/bundle/node_modules | cut -f1)"
+
+      - name: Prepare Frontend Runtime Bundle
+        shell: bash
+        run: |
+          # Install only next + react + react-dom (runtime deps for 'next start')
+          mkdir -p frontend/bundle
+          node -e "
+            const pkg = JSON.parse(require('fs').readFileSync('frontend/package.json','utf-8'));
+            const keep = ['next','react','react-dom'];
+            const deps = {};
+            keep.forEach(k => { if(pkg.dependencies[k]) deps[k]=pkg.dependencies[k]; });
+            pkg.dependencies = deps;
+            delete pkg.devDependencies; delete pkg.scripts;
+            require('fs').writeFileSync('frontend/bundle/package.json', JSON.stringify(pkg,null,2));
+          "
+          cd frontend/bundle && npm install --omit=dev --ignore-scripts
+          echo "Frontend bundle size: $(du -sh node_modules | cut -f1)"
+
+      - name: Verify Runtime Bundles Before Packaging
+        shell: bash
+        run: |
+          echo "--- CI Verification Report ---"
+          FAIL=0
+          
+          # 1. Verify existence of directories
+          if [ ! -d "backend/bundle/node_modules" ]; then echo "FAIL: backend/bundle/node_modules missing"; FAIL=1; fi
+          if [ ! -d "frontend/bundle/node_modules" ]; then echo "FAIL: frontend/bundle/node_modules missing"; FAIL=1; fi
+          
+          # 2. Verify critical backend dependencies exist
+          if [ ! -d "backend/bundle/node_modules/express" ]; then echo "FAIL: express missing in backend bundle"; FAIL=1; fi
+          if [ ! -d "backend/bundle/node_modules/pg" ]; then echo "FAIL: pg missing in backend bundle"; FAIL=1; fi
+          if [ ! -d "backend/bundle/node_modules/drizzle-orm" ]; then echo "FAIL: drizzle-orm missing in backend bundle"; FAIL=1; fi
+          
+          if [ $FAIL -eq 1 ]; then
+            echo "Runtime bundle preparation failed. See errors above."
+            exit 1
+          fi
+          
+          echo "PASS: Runtime bundle prepared"
+          echo "PASS: Backend dependencies present"
+          echo "PASS: Frontend dependencies present"
+          
+          # 3. Build Logs (Dependency counts)
+          echo "Backend dependency count: $(ls -1 backend/bundle/node_modules | wc -l)"
+          echo "Frontend dependency count: $(ls -1 frontend/bundle/node_modules | wc -l)"
+
       - name: Build Desktop Installer
         shell: bash
         run: |
@@ -94,6 +156,35 @@ jobs:
         working-directory: desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Packaged Resources
+        shell: bash
+        run: |
+          echo "--- Installer Validation Report ---"
+          UNPACKED_RESOURCES="desktop/dist/win-unpacked/resources/app"
+          
+          # Check if asar is disabled or enabled
+          if [ -f "desktop/dist/win-unpacked/resources/app.asar" ]; then
+            echo "App is packaged as ASAR. Extracting to inspect..."
+            npx @electron/asar extract desktop/dist/win-unpacked/resources/app.asar desktop/dist/win-unpacked/resources/app_extracted
+            UNPACKED_RESOURCES="desktop/dist/win-unpacked/resources/app_extracted"
+          elif [ ! -d "$UNPACKED_RESOURCES" ]; then
+            echo "FAIL: Cannot find resources/app or resources/app.asar"
+            exit 1
+          fi
+          
+          FAIL=0
+          if [ ! -d "$UNPACKED_RESOURCES/backend/node_modules" ]; then echo "FAIL: backend/node_modules missing in packaged app"; FAIL=1; fi
+          if [ ! -d "$UNPACKED_RESOURCES/frontend/node_modules" ]; then echo "FAIL: frontend/node_modules missing in packaged app"; FAIL=1; fi
+          
+          if [ $FAIL -eq 1 ]; then
+            echo "Installer validation failed. Required dependencies were not packaged."
+            exit 1
+          fi
+          
+          echo "PASS: Installer validation"
+          echo "Packaged backend dependency count: $(ls -1 $UNPACKED_RESOURCES/backend/node_modules | wc -l)"
+          echo "Packaged frontend dependency count: $(ls -1 $UNPACKED_RESOURCES/frontend/node_modules | wc -l)"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
