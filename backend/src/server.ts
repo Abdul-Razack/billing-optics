@@ -55,9 +55,10 @@ async function startServer() {
     }
     
     console.error(`* Exact Reason:  ${error.message}`);
+    console.error(`* Full Stack:    ${error.stack}`);
     console.error('============================================================\n');
     
-    return; // Recoverable: just return instead of killing the entire process
+    process.exit(1); // Exit so the desktop app's startup wrapper can detect the failure
   }
 }
 
