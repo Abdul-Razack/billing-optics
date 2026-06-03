@@ -87,15 +87,38 @@ async function installPostgresWindows(adminPass, port, onProgress, onLog) {
     if (onProgress) onProgress(100); // Hand over to silent installer
     
     const { exec } = require('child_process');
-    const args = `--mode unattended --superpassword ${adminPass} --serverport ${port.toString()}`;
-    const psCommand = `Start-Process -FilePath "${installerPath}" -ArgumentList "${args}" -Verb RunAs -Wait`;
+    
+    // Escape single quotes for PowerShell literal string
+    const psPass = adminPass.replace(/'/g, "''");
+    const psPath = installerPath.replace(/'/g, "''");
+    
+    // Build the script block
+    const psScript = `
+$ErrorActionPreference = 'Stop'
+$installArgs = @('--mode', 'unattended', '--superpassword', '${psPass}', '--serverport', '${port}')
+Write-Host "Arguments built successfully"
+$process = Start-Process -FilePath '${psPath}' -ArgumentList $installArgs -Verb RunAs -Wait -PassThru
+if ($process) {
+  exit $process.ExitCode
+} else {
+  exit 1
+}
+`;
+    onLog('PowerShell script generated.');
 
-    exec(`powershell.exe -Command "${psCommand}"`, (error, stdout, stderr) => {
+    // Encode script to Base64 in UTF-16LE for powershell.exe -EncodedCommand
+    const encodedCmd = Buffer.from(psScript, 'utf16le').toString('base64');
+
+    exec(`powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${encodedCmd}`, (error, stdout, stderr) => {
+      if (stdout) onLog(`Installer stdout: ${stdout.trim()}`);
+      if (stderr) onLog(`Installer stderr: ${stderr.trim()}`);
+
       if (error) {
         onLog(`Installer error code: ${error.code}. Message: ${error.message}`);
         
-        let customErrorMsg = `Failed to install PostgreSQL. Error: ${error.message}`;
-        if (error.message.includes('Canceled by user') || error.message.includes('canceled by the user') || error.message.includes('EACCES')) {
+        let customErrorMsg = `Failed to install PostgreSQL. Exit code: ${error.code}`;
+        // 1223 is ERROR_CANCELLED (UAC denied)
+        if (error.message.includes('Canceled by user') || error.message.includes('canceled by the user') || error.message.includes('EACCES') || error.code === 1223) {
           customErrorMsg = 'Administrator privileges are required to install PostgreSQL. Please accept the UAC prompt to continue, or manually install PostgreSQL.';
         }
         
