@@ -44,21 +44,64 @@ async function installPostgresWindows(adminPass, port, onProgress, onLog) {
   
   if (!fs.existsSync(installerPath)) {
     await downloadFile(installerUrl, installerPath, onProgress);
+    onLog('Download complete.');
   } else {
-    onLog('Installer already downloaded in temp directory.');
+    onLog('Installer found in temp directory.');
+  }
+
+  // Validation
+  const stats = fs.statSync(installerPath);
+  onLog(`Installer path: ${installerPath}, size: ${stats.size} bytes`);
+  
+  // Verify size > 10MB
+  if (stats.size < 10 * 1024 * 1024) {
+    onLog('Downloaded file is less than 10MB, likely corrupted. Re-downloading...');
+    fs.unlinkSync(installerPath);
+    await downloadFile(installerUrl, installerPath, onProgress);
+    const newStats = fs.statSync(installerPath);
+    onLog(`New installer size: ${newStats.size} bytes`);
+    if (newStats.size < 10 * 1024 * 1024) {
+      const err = new Error('Installer download failed or corrupted.');
+      err.fallbackPath = installerPath;
+      throw err;
+    }
+  } else {
     if (onProgress) onProgress(100);
+  }
+
+  // Check if locked
+  try {
+    const fd = fs.openSync(installerPath, 'r+');
+    fs.closeSync(fd);
+  } catch (err) {
+    onLog(`Installer file is locked or cannot be accessed: ${err.message}`);
+    const fallbackErr = new Error('Installer file is locked by another process (possibly antivirus). Please run it manually.');
+    fallbackErr.fallbackPath = installerPath;
+    throw fallbackErr;
   }
 
   onLog('Executing silent installation (requires elevated privileges)...');
   
   return new Promise((resolve, reject) => {
-    onLog('Executing installer silently...');
-    onProgress(100); // Hand over to silent installer
-    const { execFile } = require('child_process');
-    execFile(installerPath, ['--mode', 'unattended', '--superpassword', adminPass, '--serverport', port.toString()], (error, stdout, stderr) => {
+    onLog('Executing installer silently via PowerShell...');
+    if (onProgress) onProgress(100); // Hand over to silent installer
+    
+    const { exec } = require('child_process');
+    const args = `--mode unattended --superpassword ${adminPass} --serverport ${port.toString()}`;
+    const psCommand = `Start-Process -FilePath "${installerPath}" -ArgumentList "${args}" -Verb RunAs -Wait`;
+
+    exec(`powershell.exe -Command "${psCommand}"`, (error, stdout, stderr) => {
       if (error) {
-        onLog(`Installer error: ${error.message}`);
-        return reject(error);
+        onLog(`Installer error code: ${error.code}. Message: ${error.message}`);
+        
+        let customErrorMsg = `Failed to install PostgreSQL. Error: ${error.message}`;
+        if (error.message.includes('Canceled by user') || error.message.includes('canceled by the user') || error.message.includes('EACCES')) {
+          customErrorMsg = 'Administrator privileges are required to install PostgreSQL. Please accept the UAC prompt to continue, or manually install PostgreSQL.';
+        }
+        
+        const fallbackErr = new Error(customErrorMsg);
+        fallbackErr.fallbackPath = installerPath;
+        return reject(fallbackErr);
       }
       onLog('Installation completed successfully.');
       resolve(true);

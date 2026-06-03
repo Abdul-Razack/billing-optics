@@ -394,8 +394,13 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
     await startServers(true); // onboarding mode
   } catch (err) {
     console.error('Auto-provisioning failed:', err.message);
-    if (onboardingWindow) onboardingWindow.webContents.send('setup-error', 'Database provisioning failed.', err.stack || err.message);
+    if (onboardingWindow) onboardingWindow.webContents.send('setup-error', 'Database provisioning failed.', err.stack || err.message, err.fallbackPath);
   }
+});
+
+ipcMain.on('open-external', (event, pathStr) => {
+  const { shell } = require('electron');
+  shell.showItemInFolder(pathStr);
 });
 
 ipcMain.on('launch-app', () => {

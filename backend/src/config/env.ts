@@ -7,6 +7,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string(),
   JWT_SECRET: z.string(),
+  JWT_EXPIRES_IN: z.string().default('30d'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   CORS_ORIGIN: z.string().default('*'),
 });
@@ -22,6 +23,7 @@ export const env = parsed.success ? parsed.data : {
   PORT: 3000,
   DATABASE_URL: '',
   JWT_SECRET: 'fallback_secret_do_not_use_in_prod',
+  JWT_EXPIRES_IN: '30d',
   NODE_ENV: 'development' as const,
   CORS_ORIGIN: '*'
 };

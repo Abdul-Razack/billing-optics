@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    ipcRenderer.on('setup-error', (event, summary, logDetail) => {
+    ipcRenderer.on('setup-error', (event, summary, logDetail, fallbackPath) => {
       document.getElementById('setup-tasks').classList.add('hidden');
       document.getElementById('setup-title').innerText = 'Setup Failed';
       document.getElementById('setup-subtitle').innerText = 'An error occurred while provisioning.';
@@ -284,6 +284,14 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('setup-error-summary').innerText = summary;
       if (logDetail) {
         document.getElementById('diagnostics-log').value = logDetail;
+      }
+      if (fallbackPath) {
+        document.getElementById('openInstallerBtn').classList.remove('hidden');
+        document.getElementById('openInstallerBtn').onclick = () => {
+          ipcRenderer.send('open-external', fallbackPath);
+        };
+      } else {
+        document.getElementById('openInstallerBtn').classList.add('hidden');
       }
     });
 
@@ -297,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('setup-subtitle').innerText = 'This will only take a moment.';
       document.getElementById('setup-error-container').classList.add('hidden');
       document.getElementById('diagnostics-container').classList.add('hidden');
+      document.getElementById('openInstallerBtn').classList.add('hidden');
       
       // Go back to step 2 instead of blindly retrying setup tasks
       step3.classList.remove('active');

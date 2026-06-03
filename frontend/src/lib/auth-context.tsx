@@ -15,7 +15,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password?: string) => Promise<void>;
+  login: (email: string, password?: string, rememberMe?: boolean) => Promise<void>;
   logout: () => void;
 }
 
@@ -31,7 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (storedSession) {
         try {
           const parsed = JSON.parse(storedSession);
-          if (parsed.user) {
+          if (parsed.expiresAt && parsed.expiresAt < Date.now()) {
+            localStorage.removeItem("optics_session");
+            if (window.location.pathname !== "/login") {
+              window.location.href = "/login?expired=true";
+            }
+          } else if (parsed.user) {
             setUser(parsed.user);
           }
         } catch (error) {
@@ -45,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadSession();
   }, []);
 
-  const login = async (email: string, password?: string) => {
+  const login = async (email: string, password?: string, rememberMe?: boolean) => {
     try {
       // Default fallback password for development if not provided
       const pwd = password || "123456";
@@ -54,9 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { email, password: pwd }
       });
 
+      const expiresAt = Date.now() + (rememberMe ? 30 : 1) * 24 * 60 * 60 * 1000;
+
       const sessionData = {
         token: response.data.token,
-        user: response.data.user
+        user: response.data.user,
+        expiresAt
       };
       
       localStorage.setItem("optics_session", JSON.stringify(sessionData));
