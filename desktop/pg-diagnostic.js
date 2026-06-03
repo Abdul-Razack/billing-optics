@@ -23,11 +23,6 @@ async function runDiagnostics(config) {
     return result;
   }
 
-  if (!result.postgresRunning) {
-    result.issue = 'PostgreSQL service is stopped or not responding.';
-    return result;
-  }
-
   if (config.port && result.detectedPort && Number(config.port) !== Number(result.detectedPort)) {
     result.issue = `PostgreSQL port changed (configured: ${config.port}, detected: ${result.detectedPort}).`;
     return result;
@@ -43,6 +38,7 @@ async function runDiagnostics(config) {
 
   try {
     await client.connect();
+    result.postgresRunning = true;
     result.databaseExists = true;
     result.userExists = true;
     result.credentialsValid = true;
@@ -63,25 +59,28 @@ async function runDiagnostics(config) {
     if (code === 'ECONNREFUSED') {
       result.postgresRunning = false;
       result.issue = 'Connection refused. PostgreSQL service is likely stopped.';
-    } else if (code === '3D000' || (msg.includes('database') && msg.includes('does not exist'))) {
-      result.userExists = true;
-      result.credentialsValid = true;
-      result.databaseExists = false;
-      result.issue = 'Database is missing or was deleted.';
-    } else if (code === '28P01' || msg.includes('password authentication failed')) {
-      if (msg.includes(`role "${config.username}" does not exist`)) {
-         result.userExists = false;
-         result.issue = 'Application user is missing or was deleted.';
-      } else {
-         result.userExists = true;
-         result.credentialsValid = false;
-         result.issue = 'Database credentials are invalid or were changed.';
-      }
-    } else if (code === '28000' && msg.includes('role') && msg.includes('does not exist')) {
-      result.userExists = false;
-      result.issue = 'Application user is missing or was deleted.';
     } else {
-      result.issue = `Connection error: ${msg}`;
+      result.postgresRunning = true; // Service is running, just rejecting auth or db
+      if (code === '3D000' || (msg.includes('database') && msg.includes('does not exist'))) {
+        result.userExists = true;
+        result.credentialsValid = true;
+        result.databaseExists = false;
+        result.issue = 'Database is missing or was deleted.';
+      } else if (code === '28P01' || msg.includes('password authentication failed')) {
+        if (msg.includes(`role "${config.username}" does not exist`)) {
+           result.userExists = false;
+           result.issue = 'Application user is missing or was deleted.';
+        } else {
+           result.userExists = true;
+           result.credentialsValid = false;
+           result.issue = 'Database credentials are invalid or were changed.';
+        }
+      } else if (code === '28000' && msg.includes('role') && msg.includes('does not exist')) {
+        result.userExists = false;
+        result.issue = 'Application user is missing or was deleted.';
+      } else {
+        result.issue = `Connection error: ${msg}`;
+      }
     }
   }
 

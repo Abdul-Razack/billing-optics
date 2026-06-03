@@ -374,7 +374,8 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
       password: encryptedPassword,
       isPasswordEncrypted: isPasswordEncrypted,
       jwtSecret: jwtSecret,
-      appPort: defaultPort
+      appPort: defaultPort,
+      pgBinPath: require('os').platform() === 'win32' ? 'C:\\\\Program Files\\\\PostgreSQL\\\\16\\\\bin' : '/usr/bin'
     };
 
     fs.writeFileSync(configPath, JSON.stringify(configData, null, 2), 'utf-8');
