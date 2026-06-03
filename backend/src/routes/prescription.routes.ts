@@ -11,41 +11,42 @@ import {
 import { ROLES } from '../constants/roles';
 import { authorizeRoles } from '../middleware/role.middleware';
 
-const router = Router();
-
-router.use(authenticate);
-
-router.get(
-  '/',
-  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
-  validate(getPrescriptionsSchema),
-  PrescriptionController.getPrescriptions
-);
-
-router.get(
-  '/:id',
-  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
-  PrescriptionController.getPrescriptionById
-);
-
-router.get(
-  '/customer/:customerId',
-  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
-  PrescriptionController.getPrescriptionsByCustomerId
-);
-
-router.post(
-  '/',
-  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST),
-  validate(createPrescriptionSchema),
-  PrescriptionController.createPrescription
-);
-
-router.put(
-  '/:id',
-  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST),
-  validate(updatePrescriptionSchema),
-  PrescriptionController.updatePrescription
-);
-
-export default router;
+export function createPrescriptionRoutes() {
+  const router = Router();
+  
+  router.use(authenticate);
+  
+  router.get(
+    '/',
+    authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+    validate(getPrescriptionsSchema),
+    PrescriptionController.getPrescriptions
+  );
+  
+  router.get(
+    '/:id',
+    authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+    PrescriptionController.getPrescriptionById
+  );
+  
+  router.get(
+    '/customer/:customerId',
+    authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+    PrescriptionController.getPrescriptionsByCustomerId
+  );
+  
+  router.post(
+    '/',
+    authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST),
+    validate(createPrescriptionSchema),
+    PrescriptionController.createPrescription
+  );
+  
+  router.put(
+    '/:id',
+    authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST),
+    validate(updatePrescriptionSchema),
+    PrescriptionController.updatePrescription
+  );
+  return router;
+}

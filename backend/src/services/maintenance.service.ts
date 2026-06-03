@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import path from 'path';
 import fs from 'fs';
 import extractZip from 'extract-zip';
+import { appPaths } from '../config/paths';
 
 export class MaintenanceService {
   /**
@@ -55,14 +56,14 @@ export class MaintenanceService {
    * Verifies the integrity of a backup zip by extracting it to a temp dir and checking for database.sql
    */
   static async verifyBackupIntegrity(filename: string) {
-    const backupDir = path.resolve(process.cwd(), 'backups');
+    const backupDir = appPaths.backups;
     const zipFilePath = path.join(backupDir, filename);
 
     if (!fs.existsSync(zipFilePath) || !filename.endsWith('.zip')) {
       throw new Error('Backup file not found or invalid format.');
     }
 
-    const tempDir = path.join(backupDir, `verify_${Date.now()}`);
+    const tempDir = path.join(appPaths.temp, `verify_${Date.now()}`);
     let isIntact = false;
     let sizeBytes = fs.statSync(zipFilePath).size;
     let errorDetails = null;

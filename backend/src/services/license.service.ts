@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../config/db';
 import { settings } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { appPaths } from '../config/paths';
 
 const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu2Jbvx5r5S9xF7/mv667
@@ -27,8 +28,7 @@ export interface LicenseStatus {
 
 export class LicenseService {
   private static getLicenseFilePath(): string {
-    const basePath = process.env.USER_DATA_PATH || process.cwd();
-    return path.join(basePath, 'license.key');
+    return appPaths.license;
   }
 
   static getHardwareId(): string {

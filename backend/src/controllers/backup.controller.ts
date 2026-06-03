@@ -3,6 +3,7 @@ import { BackupService } from '../services/backup.service';
 import { AppError } from '../utils/errors';
 import path from 'path';
 import fs from 'fs';
+import { appPaths } from '../config/paths';
 
 export class BackupController {
   static async createBackup(req: Request, res: Response, next: NextFunction) {
@@ -39,7 +40,7 @@ export class BackupController {
         return next(new AppError(400, 'Invalid filename format'));
       }
 
-      const filePath = path.resolve(process.cwd(), 'backups', filename);
+      const filePath = path.join(appPaths.backups, filename);
 
       if (!fs.existsSync(filePath)) {
         return next(new AppError(404, 'Backup file not found'));

@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
 import { BackupService } from './backup.service';
+import { appPaths } from '../config/paths';
 
 export class HealthService {
   private static getDirectorySize(dirPath: string): number {
@@ -48,7 +49,7 @@ export class HealthService {
     }
 
     // 3. Storage Health
-    const rootPath = process.cwd();
+    const rootPath = appPaths.root;
     let availableSpace = 0;
     let totalSpace = 0;
     try {
@@ -59,8 +60,8 @@ export class HealthService {
       console.error('Failed to read statfs', e);
     }
     
-    const backupsDir = path.join(rootPath, 'backups');
-    const uploadsDir = path.join(rootPath, 'uploads');
+    const backupsDir = appPaths.backups;
+    const uploadsDir = appPaths.uploads;
     
     const backupsSize = this.getDirectorySize(backupsDir);
     const uploadsSize = this.getDirectorySize(uploadsDir);
@@ -72,7 +73,7 @@ export class HealthService {
     try {
       const backups = BackupService.listBackups();
       if (backups.length > 0) {
-        lastBackupTime = fs.statSync(path.join(rootPath, 'backups', backups[0])).mtime.toISOString();
+        lastBackupTime = fs.statSync(path.join(appPaths.backups, backups[0])).mtime.toISOString();
         const diffHours = (Date.now() - new Date(lastBackupTime).getTime()) / (1000 * 60 * 60);
         if (diffHours < 24) {
           backupStatus = 'Healthy';

@@ -21,5 +21,16 @@ contextBridge.exposeInMainWorld('electron', {
   onUpdateError: (callback) => {
     ipcRenderer.on('update-error', (event, error) => callback(error));
     return () => ipcRenderer.removeListener('update-error', callback);
+  },
+  
+  // Backend Management
+  restartBackend: () => ipcRenderer.send('restart-backend'),
+  onBackendStatus: (callback) => {
+    ipcRenderer.on('backend-status', (event, data) => callback(data));
+    return () => ipcRenderer.removeListener('backend-status', callback);
+  },
+  onBackendCrashReport: (callback) => {
+    ipcRenderer.on('backend-crash-report', (event, data) => callback(data));
+    return () => ipcRenderer.removeListener('backend-crash-report', callback);
   }
 });

@@ -5,6 +5,7 @@ import fs from 'fs';
 import archiver from 'archiver';
 import extractZip from 'extract-zip';
 import env from '../config/env';
+import { appPaths } from '../config/paths';
 
 const execPromise = util.promisify(exec);
 
@@ -15,8 +16,8 @@ export class BackupService {
    */
   static async createBackup(): Promise<string> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupDir = path.resolve(process.cwd(), 'backups');
-    const uploadsDir = path.resolve(process.cwd(), 'uploads');
+    const backupDir = appPaths.backups;
+    const uploadsDir = appPaths.uploads;
     const envFile = path.resolve(process.cwd(), '.env');
     
     // Ensure backups and uploads directories exist
@@ -98,7 +99,7 @@ export class BackupService {
    * Retrieves a list of all available backup files.
    */
   static listBackups(): string[] {
-    const backupDir = path.resolve(process.cwd(), 'backups');
+    const backupDir = appPaths.backups;
     if (!fs.existsSync(backupDir)) {
       return [];
     }
@@ -112,8 +113,8 @@ export class BackupService {
    * Restores a backup file, with automatic rollback on failure.
    */
   static async restoreBackup(filename: string): Promise<void> {
-    const backupDir = path.resolve(process.cwd(), 'backups');
-    const uploadsDir = path.resolve(process.cwd(), 'uploads');
+    const backupDir = appPaths.backups;
+    const uploadsDir = appPaths.uploads;
     const zipFilePath = path.join(backupDir, filename);
 
     if (!fs.existsSync(zipFilePath) || !filename.endsWith('.zip')) {
@@ -127,7 +128,7 @@ export class BackupService {
     const safetySnapshotFilename = await this.createBackup();
     const safetySnapshotPath = path.join(backupDir, safetySnapshotFilename);
 
-    const tempRestoreDir = path.join(backupDir, `temp_restore_${Date.now()}`);
+    const tempRestoreDir = path.join(appPaths.temp, `temp_restore_${Date.now()}`);
 
     try {
       // 2. Extract target backup
@@ -168,7 +169,7 @@ export class BackupService {
       
       try {
         // ROLLBACK
-        const tempRollbackDir = path.join(backupDir, `temp_rollback_${Date.now()}`);
+        const tempRollbackDir = path.join(appPaths.temp, `temp_rollback_${Date.now()}`);
         await extractZip(safetySnapshotPath, { dir: tempRollbackDir });
         const rollbackSqlFile = path.join(tempRollbackDir, 'database.sql');
         

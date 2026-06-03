@@ -7,14 +7,15 @@ import { getPaymentsSchema } from '../validators/payment.validator';
 import { ROLES } from '../constants/roles';
 import { authorizeRoles } from '../middleware/role.middleware';
 
-const router = Router();
-
-router.get(
-  '/',
-  authenticate,
-  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
-  validate(getPaymentsSchema),
-  PaymentController.getPayments
-);
-
-export default router;
+export function createPaymentRoutes() {
+  const router = Router();
+  
+  router.get(
+    '/',
+    authenticate,
+    authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+    validate(getPaymentsSchema),
+    PaymentController.getPayments
+  );
+  return router;
+}

@@ -4,67 +4,71 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { errorMiddleware } from './middleware/error.middleware';
 import env from './config/env';
-import authRoutes from './routes/auth.routes';
-import customerRoutes from './routes/customer.routes';
-import categoryRoutes from './routes/category.routes';
-import productRoutes from './routes/product.routes';
-import billingRoutes from './routes/billing.routes';
-import paymentRoutes from './routes/payment.routes';
-import inventoryRoutes from './routes/inventory.routes';
-import reportRoutes from './routes/report.routes';
-import systemRoutes from './routes/system.routes';
-import userRoutes from './routes/user.routes';
-import settingsRoutes from './routes/settings.routes';
-import prescriptionRoutes from './routes/prescription.routes';
-import exportRoutes from './routes/export.routes';
-import backupRoutes from './routes/backup.routes';
-import healthRoutes from './routes/health.routes';
-import maintenanceRoutes from './routes/maintenance.routes';
-import licenseRoutes from './routes/license.routes';
-import auditRoutes from './routes/audit.routes';
+import { BootstrapContext } from './bootstrap';
+
+import { createAuthRoutes } from './routes/auth.routes';
+import { createCustomerRoutes } from './routes/customer.routes';
+import { createCategoryRoutes } from './routes/category.routes';
+import { createProductRoutes } from './routes/product.routes';
+import { createBillingRoutes } from './routes/billing.routes';
+import { createPaymentRoutes } from './routes/payment.routes';
+import { createInventoryRoutes } from './routes/inventory.routes';
+import { createReportRoutes } from './routes/report.routes';
+import { createSystemRoutes } from './routes/system.routes';
+import { createUserRoutes } from './routes/user.routes';
+import { createSettingsRoutes } from './routes/settings.routes';
+import { createPrescriptionRoutes } from './routes/prescription.routes';
+import { createExportRoutes } from './routes/export.routes';
+import { createBackupRoutes } from './routes/backup.routes';
+import { createHealthRoutes } from './routes/health.routes';
+import { createMaintenanceRoutes } from './routes/maintenance.routes';
+import { createLicenseRoutes } from './routes/license.routes';
+import { createAuditRoutes } from './routes/audit.routes';
 import { requireLicense } from './middleware/license.middleware';
 
-const app = express();
+export function buildApp(context: BootstrapContext) {
+  const app = express();
 
-app.use(helmet());
-app.use(cors({ origin: env.CORS_ORIGIN }));
-app.use(express.json({ limit: '1mb' }));
+  app.use(helmet());
+  app.use(cors({ origin: env.CORS_ORIGIN }));
+  app.use(express.json({ limit: '1mb' }));
 
-// Global rate limiter for API routes
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Limit each IP to 1000 requests per windowMs
-  message: { success: false, message: 'Too many requests from this IP, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/', globalLimiter);
+  // Global rate limiter for API routes
+  const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Limit each IP to 1000 requests per windowMs
+    message: { success: false, message: 'Too many requests from this IP, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  app.use('/api/', globalLimiter);
 
-// API Routes
-app.use('/api', systemRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/license', licenseRoutes);
+  // API Routes
+  app.use('/api', createSystemRoutes());
+  app.use('/api/auth', createAuthRoutes());
+  app.use('/api/license', createLicenseRoutes());
 
-// Apply License Protection Middleware to all subsequent routes
-app.use('/api', requireLicense);
+  // Apply License Protection Middleware to all subsequent routes
+  app.use('/api', requireLicense);
 
-app.use('/api/customers', customerRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/invoices', billingRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/prescriptions', prescriptionRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/exports', exportRoutes);
-app.use('/api/backups', backupRoutes);
-app.use('/api/system-health', healthRoutes);
-app.use('/api/database-maintenance', maintenanceRoutes);
-app.use('/api/audit-logs', auditRoutes);
+  app.use('/api/customers', createCustomerRoutes());
+  app.use('/api/categories', createCategoryRoutes());
+  app.use('/api/products', createProductRoutes());
+  app.use('/api/invoices', createBillingRoutes());
+  app.use('/api/payments', createPaymentRoutes());
+  app.use('/api/prescriptions', createPrescriptionRoutes());
+  app.use('/api/inventory', createInventoryRoutes());
+  app.use('/api/reports', createReportRoutes());
+  app.use('/api/users', createUserRoutes());
+  app.use('/api/settings', createSettingsRoutes());
+  app.use('/api/exports', createExportRoutes());
+  app.use('/api/backups', createBackupRoutes());
+  app.use('/api/system-health', createHealthRoutes());
+  app.use('/api/database-maintenance', createMaintenanceRoutes());
+  app.use('/api/audit-logs', createAuditRoutes());
 
-// Global Error Handler
-app.use(errorMiddleware);
+  // Global Error Handler
+  app.use(errorMiddleware);
 
-export default app;
+  return app;
+}

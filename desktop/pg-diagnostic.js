@@ -36,6 +36,13 @@ async function runDiagnostics(config) {
     database: config.database
   });
 
+  console.log('[PG CONNECT ATTEMPT]', {
+    host: config.host,
+    port: config.port,
+    database: config.database,
+    username: config.username
+  });
+
   try {
     await client.connect();
     result.postgresRunning = true;
@@ -53,6 +60,11 @@ async function runDiagnostics(config) {
     
     await client.end();
   } catch (err) {
+    console.log('[PG CONNECT ERROR]', {
+      code: err.code,
+      message: err.message,
+      stack: err.stack
+    });
     const code = err.code || '';
     const msg = err.message || '';
 

@@ -246,7 +246,7 @@ ipcMain.handle('test-db-connection', async (event, config) => {
       port: config.port || DEFAULT_CONFIG.port,
       user: user,
       password: password,
-      database: database
+      database: 'postgres' // Validate credentials against maintenance DB, as the target app DB may not exist yet
     });
     
     await client.connect();

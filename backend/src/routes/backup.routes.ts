@@ -4,14 +4,15 @@ import { authenticate } from '../middleware/auth.middleware';
 import { authorizeRoles } from '../middleware/role.middleware';
 import { ROLES } from '../constants/roles';
 
-const router = Router();
-
-// Only ADMINs can manage backups
-router.use(authenticate, authorizeRoles(ROLES.ADMIN));
-
-router.post('/', BackupController.createBackup);
-router.get('/', BackupController.listBackups);
-router.get('/download/:filename', BackupController.downloadBackup);
-router.post('/:filename/restore', BackupController.restoreBackup);
-
-export default router;
+export function createBackupRoutes() {
+  const router = Router();
+  
+  // Only ADMINs can manage backups
+  router.use(authenticate, authorizeRoles(ROLES.ADMIN));
+  
+  router.post('/', BackupController.createBackup);
+  router.get('/', BackupController.listBackups);
+  router.get('/download/:filename', BackupController.downloadBackup);
+  router.post('/:filename/restore', BackupController.restoreBackup);
+  return router;
+}
