@@ -439,35 +439,137 @@ async function startServers(isOnboarding = false) {
   console.log('Starting backend...');
   
   if (!isDev) {
-    // Production: Require the backend directly
+    const { fork } = require('child_process');
+    const http = require('http');
+    const backendScript = path.join(rootPath, 'backend', 'dist', 'server.js');
+    
+    // Diagnostic Report Tracking
+    const startupReport = {
+      PostgreSQLConnected: 'UNKNOWN',
+      DatabaseExists: 'UNKNOWN',
+      MigrationsCompleted: 'UNKNOWN',
+      BackendSpawned: 'NO',
+      BackendRunning: 'NO',
+      Port5000Listening: 'NO',
+      HealthEndpointReachable: 'NO'
+    };
+    
+    const dumpReport = () => {
+      let reportStr = '\\n--- BACKEND STARTUP REPORT ---\\n';
+      for (const [k, v] of Object.entries(startupReport)) {
+        reportStr += `${k}: ${v}\\n`;
+      }
+      reportStr += '------------------------------';
+      log.info(reportStr);
+    };
+
+    let backendProc;
+    let backendCrashError = null;
+    let backendLogs = [];
+    
     try {
-      Object.assign(process.env, serverEnv);
-      const backendScript = path.join(rootPath, 'backend', 'dist', 'server.js');
-      require(backendScript);
-      console.log('[Backend] Started successfully in-process');
+      log.info(`Spawning backend: node ${backendScript}`);
+      log.info(`Backend CWD: ${path.dirname(backendScript)}`);
+      
+      backendProc = fork(backendScript, [], {
+        env: serverEnv,
+        stdio: 'pipe',
+        cwd: path.dirname(backendScript)
+      });
+      
+      startupReport.BackendSpawned = 'YES';
+      startupReport.BackendRunning = 'YES';
+      
+      backendProc.stdout.on('data', (data) => {
+        const msg = data.toString();
+        log.info(`[Backend] ${msg.trim()}`);
+        backendLogs.push(`[STDOUT] ${msg.trim()}`);
+        if (msg.includes('Database connected')) startupReport.PostgreSQLConnected = 'YES';
+        if (msg.includes('Migrations completed') || msg.includes('migrated')) startupReport.MigrationsCompleted = 'YES';
+        if (msg.includes('Server listening on port') || msg.includes('listening on')) startupReport.Port5000Listening = 'YES';
+      });
+      
+      backendProc.stderr.on('data', (data) => {
+        const msg = data.toString();
+        log.error(`[Backend ERR] ${msg.trim()}`);
+        backendLogs.push(`[STDERR] ${msg.trim()}`);
+      });
+      
+      backendProc.on('exit', (code, signal) => {
+        startupReport.BackendRunning = 'NO';
+        backendCrashError = `Backend exited unexpectedly with code ${code} (Signal: ${signal}).\\nLast logs:\\n${backendLogs.slice(-15).join('\\n')}`;
+        log.error(backendCrashError);
+        dumpReport();
+      });
+      
+      // Polling Loop instead of wait-on
+      console.log('Polling for Backend Health Check...');
+      const targetPort = envConfig.PORT || 5000;
+      let isHealthy = false;
+      const startTime = Date.now();
+      
+      while (!isHealthy && (Date.now() - startTime < 60000)) {
+        if (backendProc.exitCode !== null) {
+          throw new Error(backendCrashError || 'Backend process crashed immediately.');
+        }
+        
+        try {
+          await new Promise((resolve, reject) => {
+            const req = http.get(`http://localhost:${targetPort}/api/health`, (res) => {
+              if (res.statusCode === 200) resolve();
+              else reject(new Error(`Bad status: ${res.statusCode}`));
+            });
+            req.on('error', reject);
+            req.setTimeout(1000, () => req.abort());
+          });
+          isHealthy = true;
+          startupReport.HealthEndpointReachable = 'YES';
+        } catch (err) {
+          await new Promise(r => setTimeout(r, 2000));
+        }
+      }
+      
+      if (!isHealthy) {
+        throw new Error(`Timeout waiting for backend to become healthy on port ${targetPort}`);
+      }
+      
+      dumpReport();
+      isBackendHealthy = true;
+      console.log('Backend is ready!');
+      
     } catch (err) {
-      console.error('[Backend ERR] Failed to start backend:', err);
+      log.error('Backend startup failure:', err);
+      dumpReport();
+      if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
+      
+      let reason = 'Backend failed to start. ';
+      if (startupReport.PostgreSQLConnected === 'UNKNOWN' || startupReport.PostgreSQLConnected === 'NO') reason = 'Database connection failed. ';
+      else if (startupReport.MigrationsCompleted === 'UNKNOWN' || startupReport.MigrationsCompleted === 'NO') reason = 'Database migration failed. ';
+      else if (startupReport.Port5000Listening === 'NO') reason = 'Port binding failed (Port might be in use). ';
+      else if (startupReport.HealthEndpointReachable === 'NO') reason = 'Health endpoint unavailable. ';
+      
+      createStartupErrorWindow(`${reason}\\n\\nDetails: ${err.message}`);
+      return;
     }
   } else {
     // Development: Run manually outside electron or use dynamic imports
     console.log('In DEV mode: Please run frontend and backend manually using npm run dev.');
-  }
-
-  console.log('Waiting for Backend Health Check...');
-  try {
-    await waitOn({
-      resources: [
-        `http-get://localhost:${envConfig.PORT || 5000}/api/health`
-      ],
-      timeout: 60000,
-    });
-    isBackendHealthy = true;
-    console.log('Backend is ready!');
-  } catch (err) {
-    console.error('Backend readiness check failed:', err);
-    if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
-    createStartupErrorWindow(err.message || 'Timeout waiting for backend to start.');
-    return;
+    console.log('Waiting for Backend Health Check...');
+    try {
+      await waitOn({
+        resources: [
+          `http-get://localhost:${envConfig.PORT || 5000}/api/health`
+        ],
+        timeout: 60000,
+      });
+      isBackendHealthy = true;
+      console.log('Backend is ready!');
+    } catch (err) {
+      console.error('Backend readiness check failed:', err);
+      if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
+      createStartupErrorWindow(err.message || 'Timeout waiting for backend to start.');
+      return;
+    }
   }
 
   if (!isDev) {
