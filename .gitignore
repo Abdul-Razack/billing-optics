@@ -45,6 +45,7 @@ drizzle/
 # Testing / Playwright
 test-results/
 playwright-report/
+ci_artifacts*/
 blob-report/
 playwright/.cache/
 frontend/e2e/

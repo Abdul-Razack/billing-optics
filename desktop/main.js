@@ -34,6 +34,20 @@ if (!gotTheLock) {
 
 let mainWindow;
 let splashWindow;
+let frontendPort = 3000;
+let backendPort = 5000;
+
+function getFreePort() {
+  return new Promise((resolve, reject) => {
+    const net = require('net');
+    const srv = net.createServer();
+    srv.listen(0, () => {
+      const port = srv.address().port;
+      srv.close(() => resolve(port));
+    });
+    srv.on('error', reject);
+  });
+}
 
 const isDev = !app.isPackaged;
 
@@ -68,7 +82,7 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadURL('http://localhost:3000');
+  mainWindow.loadURL(`http://localhost:${frontendPort}`);
   
   // if (isDev) {
   //  mainWindow.webContents.openDevTools();
@@ -427,6 +441,9 @@ async function startServers(isOnboarding = false) {
   const rootPath = isDev ? path.resolve(__dirname, '..') : app.getAppPath();
   
   if (!isDev) {
+    backendPort = await getFreePort();
+    frontendPort = await getFreePort();
+    envConfig.PORT = backendPort;
     log.info(`[Startup]\nhost=${envConfig.DATABASE_URL ? (new URL(envConfig.DATABASE_URL)).hostname : 'localhost'}\nport=${envConfig.DATABASE_URL ? (new URL(envConfig.DATABASE_URL)).port : '5432'}\ndatabase=${envConfig.DATABASE_URL ? (new URL(envConfig.DATABASE_URL)).pathname.substring(1) : 'billing_optics_prod'}`);
   }
 
@@ -586,8 +603,8 @@ async function startServers(isOnboarding = false) {
       
       http.createServer((req, res) => {
         handle(req, res);
-      }).listen(3000, () => {
-        console.log('[Frontend] Started successfully on port 3000');
+      }).listen(frontendPort, () => {
+        console.log(`[Frontend] Started successfully on port ${frontendPort}`);
       });
     } catch (err) {
       console.error('[Frontend ERR] Failed to start frontend:', err);
@@ -598,7 +615,7 @@ async function startServers(isOnboarding = false) {
   try {
     await waitOn({
       resources: [
-        'tcp:localhost:3000'
+        `tcp:localhost:${frontendPort}`
       ],
       timeout: 60000,
     });

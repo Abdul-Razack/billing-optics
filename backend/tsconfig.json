@@ -10,11 +10,20 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": ".",
-    "types": ["node", "jest"],
+    "types": [
+      "node",
+      "jest"
+    ],
     "paths": {
-      "@/*": ["src/*"],
-      "shared": ["../shared/src"]
+      "@/*": [
+        "src/*"
+      ],
+      "shared": [
+        "../shared/src"
+      ]
     }
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }
