@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchClient } from "@/lib/api-client";
+import { fetchClient, downloadFile } from "@/lib/api-client";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,24 +84,7 @@ export default function SystemHealthPage() {
 
   const handleExport = async () => {
     try {
-      const token = JSON.parse(localStorage.getItem("optics_session") || "{}")?.token;
-      
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/system-health/export", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      if (!res.ok) throw new Error("Failed to export");
-      
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `diagnostics_${format(new Date(), "yyyyMMdd_HHmmss")}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      await downloadFile("/system-health/export", `diagnostics_${format(new Date(), "yyyyMMdd_HHmmss")}.json`);
       toast.success("Diagnostics exported successfully");
     } catch (err) {
       toast.error("Failed to export diagnostics");

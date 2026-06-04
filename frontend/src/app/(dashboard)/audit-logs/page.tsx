@@ -5,7 +5,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AuditLogsTable, AuditLog } from "@/components/audit/AuditLogsTable";
-import { fetchClient } from "@/lib/api-client";
+import { fetchClient, downloadFile } from "@/lib/api-client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck } from "lucide-react";
@@ -56,23 +56,7 @@ export default function AuditLogsPage() {
         if (value) queryParams.append(key, String(value));
       });
       
-      const response = await fetch(`http://localhost:5000/api/audit-logs/export?${queryParams.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Export failed');
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `audit_logs_export_${new Date().getTime()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      await downloadFile(`/audit-logs/export?${queryParams.toString()}`, `audit_logs_export_${new Date().getTime()}.json`);
       
       toast.success("Audit logs exported successfully");
     } catch (error) {

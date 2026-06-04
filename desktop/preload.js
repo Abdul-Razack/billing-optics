@@ -32,5 +32,8 @@ contextBridge.exposeInMainWorld('electron', {
   onBackendCrashReport: (callback) => {
     ipcRenderer.on('backend-crash-report', (event, data) => callback(data));
     return () => ipcRenderer.removeListener('backend-crash-report', callback);
-  }
+  },
+  
+  // App Config
+  getEnv: () => ipcRenderer.invoke('get-env')
 });

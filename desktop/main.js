@@ -248,6 +248,10 @@ ipcMain.handle('check-postgres', async () => {
   return discoverPostgres();
 });
 
+ipcMain.handle('get-env', () => {
+  return envConfig;
+});
+
 ipcMain.handle('test-db-connection', async (event, config) => {
   const { Client } = require('pg');
   try {

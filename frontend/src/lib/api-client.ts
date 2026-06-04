@@ -1,4 +1,23 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+let dynamicApiUrl = "";
+
+async function getApiBaseUrl(): Promise<string> {
+  if (dynamicApiUrl) return dynamicApiUrl;
+
+  if (typeof window !== "undefined" && (window as any).electron && (window as any).electron.getEnv) {
+    try {
+      const env = await (window as any).electron.getEnv();
+      if (env && env.PORT) {
+        dynamicApiUrl = `http://localhost:${env.PORT}/api`;
+        return dynamicApiUrl;
+      }
+    } catch (err) {
+      console.warn("Failed to fetch env from electron:", err);
+    }
+  }
+
+  dynamicApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  return dynamicApiUrl;
+}
 
 interface FetchOptions extends RequestInit {
   data?: any;
@@ -63,7 +82,8 @@ export async function fetchClient<T>(endpoint: string, options: FetchOptions = {
 
   config.headers = headers;
 
-  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const baseUrl = await getApiBaseUrl();
+  const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   let response: Response;
   try {
@@ -136,7 +156,8 @@ export async function downloadFile(endpoint: string, filename: string): Promise<
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
-  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const baseUrl = await getApiBaseUrl();
+  const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   let response: Response;
   try {
