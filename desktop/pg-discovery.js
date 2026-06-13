@@ -46,10 +46,15 @@ function discoverPostgres() {
     }
   } else {
     try {
-      const statusOut = execSync('sc query postgresql-x64-16').toString();
-      result.installed = true;
-      if (statusOut.includes('RUNNING')) {
-        result.running = true;
+      const servicesOut = execSync('sc query state= all').toString();
+      const match = servicesOut.match(/SERVICE_NAME:\s*(postgresql-x64-\d+)/i) || servicesOut.match(/SERVICE_NAME:\s*(postgresql-\d+)/i);
+      if (match && match[1]) {
+        const serviceName = match[1];
+        const statusOut = execSync(`sc query ${serviceName}`).toString();
+        result.installed = true;
+        if (statusOut.includes('RUNNING')) {
+          result.running = true;
+        }
       }
     } catch(e) {}
   }

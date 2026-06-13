@@ -384,6 +384,17 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
       throw new Error("System encryption (OS Keychain) is not available. Setup cannot proceed securely.");
     }
 
+    let winPgPath = 'C:\\\\Program Files\\\\PostgreSQL\\\\16\\\\bin';
+    if (require('os').platform() === 'win32') {
+      for (let v = 22; v >= 12; v--) {
+        const p = `C:\\\\Program Files\\\\PostgreSQL\\\\${v}\\\\bin`;
+        if (fs.existsSync(p)) {
+          winPgPath = p;
+          break;
+        }
+      }
+    }
+
     const configData = {
       host: targetHost,
       port: targetPort,
@@ -393,7 +404,7 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
       isPasswordEncrypted: isPasswordEncrypted,
       jwtSecret: jwtSecret,
       appPort: defaultPort,
-      pgBinPath: require('os').platform() === 'win32' ? 'C:\\\\Program Files\\\\PostgreSQL\\\\16\\\\bin' : '/usr/bin'
+      pgBinPath: require('os').platform() === 'win32' ? winPgPath : '/usr/bin'
     };
 
     fs.writeFileSync(configPath, JSON.stringify(configData, null, 2), 'utf-8');

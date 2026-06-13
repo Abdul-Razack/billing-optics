@@ -141,8 +141,12 @@ async function installPostgresLinux(adminPass, port, onProgress, onLog) {
   const escapedPass = adminPass.replace(/'/g, "'\\''");
   const bashScript = `
     apt-get update -y &&
-    apt-get install -y postgresql postgresql-contrib &&
-    PG_CONF=$(find /etc/postgresql -name postgresql.conf | head -n 1) &&
+    apt-get install -y curl ca-certificates gnupg lsb-release &&
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor --yes -o /usr/share/keyrings/postgresql-keyring.gpg &&
+    echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list &&
+    apt-get update -y &&
+    apt-get install -y postgresql-16 postgresql-client-16 postgresql-contrib &&
+    PG_CONF=$(ls /etc/postgresql/*/main/postgresql.conf | sort -V | tail -n 1) &&
     if [ -z "$PG_CONF" ]; then
       echo "[INSTALLER] postgresql.conf not found"
       exit 1
