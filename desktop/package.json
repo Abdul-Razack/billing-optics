@@ -47,42 +47,58 @@
       {
         "from": "../backend/dist",
         "to": "backend/dist",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../backend",
         "to": "backend",
-        "filter": ["package.json"]
+        "filter": [
+          "package.json"
+        ]
       },
       {
         "from": "../backend/bundle/node_modules",
         "to": "backend/node_modules",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../frontend/.next",
         "to": "frontend/.next",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../frontend",
         "to": "frontend",
-        "filter": ["package.json"]
+        "filter": [
+          "package.json"
+        ]
       },
       {
         "from": "../frontend/public",
         "to": "frontend/public",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../frontend/bundle/node_modules",
         "to": "frontend/node_modules",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../shared",
         "to": "shared",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {

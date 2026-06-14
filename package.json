@@ -22,5 +22,8 @@
     "build:desktop": "npm run build -w desktop",
     "dev:download": "npm run dev -w download-site",
     "build:download": "npm run build -w download-site"
+  },
+  "dependencies": {
+    "electron": "^31.0.0"
   }
 }
