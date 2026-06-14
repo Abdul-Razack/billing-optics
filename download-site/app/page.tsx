@@ -200,10 +200,6 @@ export default async function Home() {
                     <span className="text-slate-400 font-bold">Debian Size (.deb)</span>
                     <span className="font-extrabold text-slate-700 dark:text-slate-200">{debSize}</span>
                   </div>
-                  <div className="flex justify-between items-center pb-2 border-b border-slate-200/30 dark:border-slate-800/30">
-                    <span className="text-slate-400 font-bold">AppImage Size (.AppImage)</span>
-                    <span className="font-extrabold text-slate-700 dark:text-slate-200">{appImageSize}</span>
-                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 font-bold">Target Architecture</span>
                     <span className="font-extrabold text-slate-700 dark:text-slate-200">Intel/AMD x86_64</span>
@@ -213,9 +209,8 @@ export default async function Home() {
 
               <div className="mt-10 relative z-10 space-y-3">
                 {/* Dynamic stateful direct download buttons */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <DownloadButton platform="linux-deb" variant="secondary" />
-                  <DownloadButton platform="linux-appimage" variant="outline" />
                 </div>
                 
                 <div className="flex items-center justify-center gap-2 text-xs text-slate-400 font-semibold bg-emerald-500/5 dark:bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-xl">
