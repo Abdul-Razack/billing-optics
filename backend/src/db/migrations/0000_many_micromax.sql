@@ -40,6 +40,18 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."lab_job_status" AS ENUM('PENDING', 'SENT_TO_LAB', 'PROCESSING', 'RECEIVED', 'READY', 'DELIVERED');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."offer_type" AS ENUM('PERCENTAGE', 'FLAT_AMOUNT');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "users" (
 	"id" bigserial PRIMARY KEY NOT NULL,
 	"full_name" varchar(255) NOT NULL,
@@ -107,6 +119,7 @@ CREATE TABLE IF NOT EXISTS "products" (
 	"gst_percent" integer DEFAULT 18 NOT NULL,
 	"min_stock_alert" integer DEFAULT 5 NOT NULL,
 	"is_active" boolean DEFAULT true NOT NULL,
+	"is_deleted" boolean DEFAULT false NOT NULL,
 	"attributes" jsonb DEFAULT '{}',
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
@@ -126,11 +139,41 @@ CREATE TABLE IF NOT EXISTS "inventory_ledger" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "vendors" (
+	"id" bigserial PRIMARY KEY NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"contact_person" varchar(255),
+	"phone" varchar(50),
+	"email" varchar(255),
+	"address" varchar(500),
+	"is_active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "offers" (
+	"id" bigserial PRIMARY KEY NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"code" varchar(50),
+	"type" "offer_type" NOT NULL,
+	"value" integer NOT NULL,
+	"min_order_value" integer DEFAULT 0 NOT NULL,
+	"applicable_products" jsonb,
+	"applicable_categories" jsonb,
+	"conditions" jsonb,
+	"start_date" timestamp,
+	"end_date" timestamp,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "invoices" (
 	"id" bigserial PRIMARY KEY NOT NULL,
 	"request_id" varchar(255),
 	"invoice_number" varchar(100) NOT NULL,
 	"customer_id" bigint,
+	"offer_id" bigint,
 	"created_by" bigint NOT NULL,
 	"subtotal" integer DEFAULT 0 NOT NULL,
 	"tax_total" integer DEFAULT 0 NOT NULL,
@@ -167,6 +210,29 @@ CREATE TABLE IF NOT EXISTS "payments" (
 	"reference_number" varchar(100),
 	"notes" varchar(500),
 	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "lab_jobs" (
+	"id" bigserial PRIMARY KEY NOT NULL,
+	"job_title" varchar(255) NOT NULL,
+	"invoice_id" bigint NOT NULL,
+	"vendor_id" bigint,
+	"status" "lab_job_status" DEFAULT 'PENDING' NOT NULL,
+	"notes" varchar(1000),
+	"expected_date" date,
+	"sent_date" date,
+	"received_date" date,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "pos_shortcuts" (
+	"id" bigserial PRIMARY KEY NOT NULL,
+	"shortcut_key" varchar(50) NOT NULL,
+	"product_id" bigint NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "pos_shortcuts_shortcut_key_unique" UNIQUE("shortcut_key")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "settings" (
@@ -291,6 +357,12 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "invoices" ADD CONSTRAINT "invoices_offer_id_offers_id_fk" FOREIGN KEY ("offer_id") REFERENCES "public"."offers"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "invoice_items" ADD CONSTRAINT "invoice_items_invoice_id_invoices_id_fk" FOREIGN KEY ("invoice_id") REFERENCES "public"."invoices"("id") ON DELETE restrict ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -304,6 +376,24 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "payments" ADD CONSTRAINT "payments_invoice_id_invoices_id_fk" FOREIGN KEY ("invoice_id") REFERENCES "public"."invoices"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "lab_jobs" ADD CONSTRAINT "lab_jobs_invoice_id_invoices_id_fk" FOREIGN KEY ("invoice_id") REFERENCES "public"."invoices"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "lab_jobs" ADD CONSTRAINT "lab_jobs_vendor_id_vendors_id_fk" FOREIGN KEY ("vendor_id") REFERENCES "public"."vendors"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "pos_shortcuts" ADD CONSTRAINT "pos_shortcuts_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -327,4 +417,10 @@ CREATE INDEX IF NOT EXISTS "invoices_customer_id_idx" ON "invoices" USING btree 
 CREATE INDEX IF NOT EXISTS "invoices_created_at_idx" ON "invoices" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "invoice_items_invoice_id_idx" ON "invoice_items" USING btree ("invoice_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "invoice_items_product_id_idx" ON "invoice_items" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "payments_invoice_id_idx" ON "payments" USING btree ("invoice_id");
+CREATE INDEX IF NOT EXISTS "payments_invoice_id_idx" ON "payments" USING btree ("invoice_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "vendors_name_idx" ON "vendors" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "offers_code_idx" ON "offers" USING btree ("code");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "pos_shortcuts_key_idx" ON "pos_shortcuts" USING btree ("shortcut_key");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "lab_jobs_invoice_id_idx" ON "lab_jobs" USING btree ("invoice_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "lab_jobs_vendor_id_idx" ON "lab_jobs" USING btree ("vendor_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "lab_jobs_status_idx" ON "lab_jobs" USING btree ("status");
