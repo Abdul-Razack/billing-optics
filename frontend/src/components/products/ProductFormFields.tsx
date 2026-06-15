@@ -11,9 +11,10 @@ import { ApiCategory } from "@/services/category.service";
 
 interface ProductFormFieldsProps {
   categories: ApiCategory[];
+  isEditMode?: boolean;
 }
 
-export function ProductFormFields({ categories }: ProductFormFieldsProps) {
+export function ProductFormFields({ categories, isEditMode = false }: ProductFormFieldsProps) {
   const { register, control, formState: { errors } } = useFormContext();
 
   return (
@@ -114,17 +115,34 @@ export function ProductFormFields({ categories }: ProductFormFieldsProps) {
               {errors.gstPercent && <p className="text-xs text-destructive">{errors.gstPercent.message as string}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="minStockAlert">Stock Quantity</Label>
+              <Label htmlFor="minStockAlert">Min Stock Alert</Label>
               <Input 
                 id="minStockAlert" 
                 type="NUMBER" 
                 min="0"
                 {...register("minStockAlert", { valueAsNumber: true })} 
               />
-              <p className="text-[10px] text-muted-foreground">Used as min alert/initial stock</p>
+              <p className="text-[10px] text-muted-foreground">Alert when stock falls below this level</p>
               {errors.minStockAlert && <p className="text-xs text-destructive">{errors.minStockAlert.message as string}</p>}
             </div>
           </div>
+
+          {!isEditMode && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="initialStock">Initial Stock Quantity</Label>
+                <Input
+                  id="initialStock"
+                  type="NUMBER"
+                  min="0"
+                  {...register("initialStock", { valueAsNumber: true })}
+                  placeholder="0"
+                />
+                <p className="text-[10px] text-muted-foreground">Opening stock added to inventory on save</p>
+                {errors.initialStock && <p className="text-xs text-destructive">{errors.initialStock.message as string}</p>}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

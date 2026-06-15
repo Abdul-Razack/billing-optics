@@ -48,7 +48,7 @@ export interface ApiResponse<T> {
 }
 
 export async function fetchClient<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-  const { data, headers: customHeaders, ...rest } = options;
+  const { data, ...rest } = options;
 
   let token = "";
   if (typeof window !== "undefined") {
@@ -65,22 +65,34 @@ export async function fetchClient<T>(endpoint: string, options: FetchOptions = {
     }
   }
 
-  const headers: Record<string, string> = {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(customHeaders as Record<string, string> || {}),
-  };
+  const defaultHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const restHeaders = rest.headers as any || {};
+  let mergedHeaders: Record<string, string> = { ...defaultHeaders };
+
+  if (typeof Headers !== "undefined" && restHeaders instanceof Headers) {
+    restHeaders.forEach((value, key) => {
+      mergedHeaders[key] = value;
+    });
+  } else if (Array.isArray(restHeaders)) {
+    restHeaders.forEach(([key, value]) => {
+      mergedHeaders[key] = value;
+    });
+  } else {
+    mergedHeaders = { ...mergedHeaders, ...restHeaders };
+  }
 
   const config: RequestInit = {
-    method: data ? "POST" : "GET",
     ...rest,
+    method: data ? "POST" : rest.method || "GET",
   };
 
   if (data) {
-    headers["Content-Type"] = "application/json";
+    mergedHeaders["Content-Type"] = "application/json";
     config.body = JSON.stringify(data);
   }
 
-  config.headers = headers;
+  config.headers = mergedHeaders;
 
   const baseUrl = await getApiBaseUrl();
   const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;

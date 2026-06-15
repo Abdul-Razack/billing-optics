@@ -53,7 +53,7 @@ export class InventoryService {
   static async adjustStock(payload: AdjustStockPayload): Promise<{ entry: InventoryLedgerRecord, newStock: number }> {
     const response = await fetchClient<{ success: boolean; data: { entry: InventoryLedgerRecord, newStock: number } }>("/inventory/adjust", {
       method: "POST",
-      body: JSON.stringify(payload)
+      data: payload
     });
     if (!response.success) throw new Error("Failed to adjust stock");
     return response.data;
@@ -62,7 +62,7 @@ export class InventoryService {
   static async bulkAdjustStock(payload: { adjustments: AdjustStockPayload[] }): Promise<{ successCount: number, failedCount: number, entries: InventoryLedgerRecord[], updatedStockSummary: Record<number, number> }> {
     const response = await fetchClient<{ success: boolean; data: { successCount: number, failedCount: number, entries: InventoryLedgerRecord[], updatedStockSummary: Record<number, number> } }>("/inventory/bulk-adjust", {
       method: "POST",
-      body: JSON.stringify(payload)
+      data: payload
     });
     if (!response.success) throw new Error("Failed to perform bulk stock adjustment");
     return response.data;

@@ -30,6 +30,9 @@ export class OfferController {
       const offer = await offerService.createOffer(data);
       res.status(201).json(offer);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
       next(error);
     }
   }
@@ -40,6 +43,9 @@ export class OfferController {
       const offer = await offerService.updateOffer(Number(req.params.id), data);
       res.json(offer);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
       next(error);
     }
   }
@@ -56,7 +62,7 @@ export class OfferController {
   async validateOffer(req: Request, res: Response, next: NextFunction) {
     try {
       const data = validateOfferSchema.parse(req.body);
-      const result = await offerService.validateAndCalculateDiscount(data.offerId, data.cartTotal);
+      const result = await offerService.validateAndCalculateDiscount(data.offerId, data.cartTotal, data.items);
       res.json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {

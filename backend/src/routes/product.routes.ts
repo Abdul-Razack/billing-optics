@@ -29,6 +29,7 @@ export function createProductRoutes() {
   const router = Router();
   
   router.get('/', authenticate, ProductController.getAll); // All authenticated can read products (cashier needs them)
+  router.get('/:id', authenticate, ProductController.getById);
   router.post('/bulk', authenticate, authorizeRoles(ROLES.ADMIN), upload.single('file'), BulkController.uploadProducts);
   router.post('/', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validate(createProductSchema), ProductController.create);
   router.put('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validate(updateProductSchema), ProductController.update);

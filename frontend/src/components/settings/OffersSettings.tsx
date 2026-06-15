@@ -4,25 +4,36 @@ import { useState, useEffect } from "react";
 import { SettingsSection } from "./SettingsSection";
 import { Offer, OfferType } from "@/types/offer";
 import { OfferService } from "@/services/offer.service";
+import { ProductService, ApiProduct } from "@/services/product.service";
+import { CategoryService, ApiCategory } from "@/services/category.service";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Trash2, Plus, Edit2, Loader2, Save } from "lucide-react";
 import { format } from "date-fns";
 
 export function OffersSettings() {
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingOffer, setEditingOffer] = useState<Partial<Offer> | null>(null);
 
   const fetchOffers = async () => {
     setIsLoading(true);
     try {
-      const data = await OfferService.getOffers();
-      setOffers(data);
+      const [offersData, productsData, categoriesData] = await Promise.all([
+        OfferService.getOffers(),
+        ProductService.getProducts(),
+        CategoryService.getCategories()
+      ]);
+      setOffers(offersData);
+      setProducts(productsData || []);
+      setCategories(categoriesData || []);
     } catch (error) {
       toast.error("Failed to fetch offers");
     } finally {
@@ -140,6 +151,34 @@ export function OffersSettings() {
                   type="number"
                   value={editingOffer.minOrderValue || ""} 
                   onChange={e => setEditingOffer({ ...editingOffer, minOrderValue: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Applicable Products</Label>
+                <MultiSelect
+                  options={products.map(p => ({ label: `${p.name} (${p.sku || 'No SKU'})`, value: p.id.toString() }))}
+                  selected={(editingOffer.applicableProducts || []).map(id => id.toString())}
+                  onChange={(selected) => {
+                    setEditingOffer({ 
+                      ...editingOffer, 
+                      applicableProducts: selected.map(id => parseInt(id)) 
+                    });
+                  }}
+                  placeholder="Select products..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Applicable Categories</Label>
+                <MultiSelect
+                  options={categories.map(c => ({ label: c.name, value: c.id.toString() }))}
+                  selected={(editingOffer.applicableCategories || []).map(id => id.toString())}
+                  onChange={(selected) => {
+                    setEditingOffer({ 
+                      ...editingOffer, 
+                      applicableCategories: selected.map(id => parseInt(id)) 
+                    });
+                  }}
+                  placeholder="Select categories..."
                 />
               </div>
               <div className="space-y-2 flex flex-col justify-end">

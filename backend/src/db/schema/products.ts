@@ -16,6 +16,7 @@ export const products = pgTable('products', {
   gstPercent: integer('gst_percent').notNull().default(18),
   minStockAlert: integer('min_stock_alert').notNull().default(5),
   isActive: boolean('is_active').notNull().default(true),
+  isDeleted: boolean('is_deleted').notNull().default(false),
   attributes: jsonb('attributes').default('{}'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')

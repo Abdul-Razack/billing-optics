@@ -15,7 +15,8 @@ export const handleRowClick = (
 ) => {
   const target = e.target as HTMLElement;
 
-  // Ignore clicks that originate from interactive elements or their children
+  // Ignore clicks that originate from interactive elements or their children.
+  // Includes Base UI data-slot attributes for dropdown menu items rendered in portals.
   if (
     target.closest("button") ||
     target.closest("a") ||
@@ -25,7 +26,10 @@ export const handleRowClick = (
     target.closest('[role="checkbox"]') ||
     target.closest('[role="button"]') ||
     target.closest('[role="dialog"]') ||
-    target.closest('[data-state="open"]')
+    target.closest('[data-state="open"]') ||
+    target.closest('[data-slot="dropdown-menu-item"]') ||
+    target.closest('[data-slot="dropdown-menu-content"]') ||
+    target.closest('[data-no-row-click]')
   ) {
     return;
   }

@@ -1,4 +1,4 @@
-import { pgTable, bigserial, varchar, integer, timestamp, boolean, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, bigserial, varchar, integer, timestamp, boolean, index, check, jsonb } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { offerTypeEnum } from './enums';
 
@@ -11,6 +11,9 @@ export const offers = pgTable('offers', {
   minOrderValue: integer('min_order_value').notNull().default(0), // cents
   startDate: timestamp('start_date'),
   endDate: timestamp('end_date'),
+  applicableProducts: jsonb('applicable_products').$type<number[]>(),
+  applicableCategories: jsonb('applicable_categories').$type<number[]>(),
+  conditions: jsonb('conditions'),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')

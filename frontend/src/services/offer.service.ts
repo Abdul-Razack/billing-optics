@@ -17,14 +17,14 @@ export const OfferService = {
   createOffer: async (data: CreateOfferPayload): Promise<Offer> => {
     return fetchClient('/offers', {
       method: 'POST',
-      body: JSON.stringify(data),
+      data,
     });
   },
 
   updateOffer: async (id: number, data: Partial<CreateOfferPayload>): Promise<Offer> => {
     return fetchClient(`/offers/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      data,
     });
   },
 
@@ -34,10 +34,10 @@ export const OfferService = {
     });
   },
 
-  validateOffer: async (offerId: number, cartTotal: number): Promise<ValidateOfferResult> => {
+  validateOffer: async (offerId: number, cartTotal: number, items?: any[]): Promise<ValidateOfferResult> => {
     return fetchClient('/offers/validate', {
       method: 'POST',
-      body: JSON.stringify({ offerId, cartTotal }),
+      data: { offerId, cartTotal, items },
     });
   },
 };

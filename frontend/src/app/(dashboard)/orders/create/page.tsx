@@ -127,13 +127,32 @@ export default function CreateOrderPage() {
     let discount = 0;
     if (selectedOfferId) {
       const offer = availableOffers.find(o => o.id === selectedOfferId);
-      if (offer && sub >= offer.minOrderValue) {
-        if (offer.type === 'PERCENTAGE') {
-          discount = Math.round((sub * offer.value) / 100);
-        } else {
-          discount = offer.value;
+      if (offer && sub >= (offer.minOrderValue || 0)) {
+        
+        let eligibleSubtotal = sub;
+        if (offer.applicableProducts?.length || offer.applicableCategories?.length) {
+          eligibleSubtotal = 0;
+          lineItems.forEach(item => {
+            let isEligible = false;
+            if (offer.applicableProducts?.length && offer.applicableProducts.includes(item.product.id)) {
+               isEligible = true;
+            } else if (offer.applicableCategories?.length && item.product.categoryId && offer.applicableCategories.includes(item.product.categoryId)) {
+               isEligible = true;
+            }
+            if (isEligible) {
+               eligibleSubtotal += (item.product.sellingPrice * item.quantity);
+            }
+          });
         }
-        if (discount > sub + tax) discount = sub + tax;
+
+        if (eligibleSubtotal > 0) {
+          if (offer.type === 'PERCENTAGE') {
+            discount = Math.round((eligibleSubtotal * offer.value) / 100);
+          } else {
+            discount = offer.value;
+          }
+          if (discount > sub + tax) discount = sub + tax;
+        }
       }
     }
 
@@ -321,7 +340,15 @@ export default function CreateOrderPage() {
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {availableOffers.map(offer => {
-                    const isEligible = totals.subtotal >= offer.minOrderValue;
+                    let hasEligibleItems = true;
+                    if (offer.applicableProducts?.length || offer.applicableCategories?.length) {
+                      hasEligibleItems = lineItems.some(item => 
+                        (offer.applicableProducts?.length && offer.applicableProducts.includes(item.product.id)) ||
+                        (offer.applicableCategories?.length && item.product.categoryId && offer.applicableCategories.includes(item.product.categoryId))
+                      );
+                    }
+                    const isEligible = totals.subtotal >= (offer.minOrderValue || 0) && hasEligibleItems;
+                    
                     return (
                       <div 
                         key={offer.id}
@@ -341,9 +368,14 @@ export default function CreateOrderPage() {
                             Min: ₹{(offer.minOrderValue / 100).toFixed(2)}
                           </div>
                         )}
+                        {(offer.applicableProducts?.length || offer.applicableCategories?.length) ? (
+                          <div className="text-[10px] text-primary/70 mt-1">
+                            Specific items only
+                          </div>
+                        ) : null}
                         {!isEligible && (
                           <div className="text-[10px] text-destructive mt-1 font-medium">
-                            Add ₹{((offer.minOrderValue - totals.subtotal) / 100).toFixed(2)} more
+                            {totals.subtotal < (offer.minOrderValue || 0) ? `Add ₹${(((offer.minOrderValue || 0) - totals.subtotal) / 100).toFixed(2)} more` : "No eligible items in cart"}
                           </div>
                         )}
                       </div>

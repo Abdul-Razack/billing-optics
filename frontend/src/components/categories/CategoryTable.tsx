@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -35,7 +35,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SecureActionConfirm } from "@/components/shared/SecureActionConfirm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ShieldAlert } from "lucide-react";
 import { RequireRole } from "@/components/auth/RequireRole";
 
 interface CategoryTableProps {
@@ -73,37 +83,68 @@ export function CategoryTable({ data, isLoading = false, onDelete }: CategoryTab
       id: "actions",
       cell: ({ row }) => {
         const category = row.original;
+        const [dropdownOpen, setDropdownOpen] = useState(false);
+        const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+        const handleDeleteClick = (e: React.MouseEvent) => {
+          e.stopPropagation();
+          setDropdownOpen(false);
+          setTimeout(() => setShowDeleteDialog(true), 50);
+        };
+
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <RequireRole allowedRoles={["ADMIN"]}>
-                  <SecureActionConfirm
-                    title="Delete Category?"
-                    description={`Are you sure you want to delete "${category.name}"? This action cannot be undone.`}
-                    onConfirm={() => onDelete?.(category.id)}
-                    actionLabel="Delete"
-                  >
+          <div data-no-row-click onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <RequireRole allowedRoles={["ADMIN"]}>
                     <DropdownMenuItem 
                       variant="destructive"
                       className="cursor-pointer" 
+                      onClick={handleDeleteClick}
                     >
                       <Trash className="mr-2 h-4 w-4" />
                       Delete
                     </DropdownMenuItem>
-                  </SecureActionConfirm>
-                </RequireRole>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  </RequireRole>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <ShieldAlert className="h-5 w-5 text-destructive" />
+                    Delete Category?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => {
+                      onDelete?.(category.id);
+                      setShowDeleteDialog(false);
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         );
       },
     },

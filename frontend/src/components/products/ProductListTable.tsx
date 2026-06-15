@@ -193,12 +193,15 @@ export function ProductListTable({
     },
     {
       id: "actions",
+      header: () => <div className="text-right">Actions</div>,
       cell: ({ row }) => (
-        <ProductActionsDropdown 
-          product={row.original} 
-          onDelete={onDelete} 
-          onQuickStockUpdate={onQuickStockUpdate} 
-        />
+        <div className="flex justify-end">
+          <ProductActionsDropdown 
+            product={row.original} 
+            onDelete={onDelete} 
+            onQuickStockUpdate={onQuickStockUpdate} 
+          />
+        </div>
       ),
     },
   ], [categories, onDelete, onQuickStockUpdate]);

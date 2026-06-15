@@ -33,6 +33,9 @@ export interface UpdateProductInput {
   gstPercent?: number;
   minStockAlert?: number;
   isActive?: boolean;
+  isDeleted?: boolean;
+  sku?: string;
+  barcode?: string;
   attributes?: Record<string, any>;
 }
 
@@ -92,9 +95,14 @@ export class ProductService {
 
   async getProductById(id: number) {
     const [product] = await db
-      .select()
+      .select({
+        ...getTableColumns(products),
+        stock: sql<number>`COALESCE(SUM(${inventoryLedger.quantityChange}), 0)`.mapWith(Number)
+      })
       .from(products)
-      .where(eq(products.id, id));
+      .leftJoin(inventoryLedger, eq(products.id, inventoryLedger.productId))
+      .where(eq(products.id, id))
+      .groupBy(products.id);
 
     if (!product) {
       throw new NotFoundError();
@@ -107,7 +115,7 @@ export class ProductService {
     const { page, limit, offset } = getPaginationParams(filters?.page, filters?.limit);
     
     let baseConditions: any = undefined;
-    const conditionsArr = [];
+    const conditionsArr: any[] = [eq(products.isDeleted, false)];
 
     if (filters?.categoryId) {
       conditionsArr.push(eq(products.categoryId, filters.categoryId));

@@ -19,6 +19,8 @@ import { ProductService, ApiProduct } from "@/services/product.service";
 import { CategoryService, ApiCategory } from "@/services/category.service";
 import { SettingsService } from "@/services/settings.service";
 import { CustomField } from "@/types/custom-field";
+import { InventoryService } from "@/services/inventory.service";
+import { formatCurrency } from "@/lib/utils";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -72,8 +74,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   
   // Stock calculation
   // currentStock doesn't exist on backend payload yet, falling back to minStockAlert trick for demonstration
-  const currentStock = (product as any).currentStock ?? 0;
-  const stockStatus = currentStock <= (product.minStockAlert || 5) ? (currentStock === 0 ? "OUT_OF_STOCK" : "LOW_STOCK") : "IN_STOCK";
+  const currentStock = (product as any).stock ?? 0;
+  const stockStatus = currentStock <= 0 ? "OUT_OF_STOCK" : currentStock <= (product.minStockAlert || 5) ? "LOW_STOCK" : "IN_STOCK";
 
   // Profit Margin calculation
   const sp = product.sellingPrice || 0;
@@ -106,10 +108,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       return;
     }
 
+    const quantityDiff = stockNum - currentStock;
+    if (quantityDiff === 0) {
+      setIsStockUpdateOpen(false);
+      return;
+    }
+
     setIsUpdatingStock(true);
     try {
-      await ProductService.updateProduct(product.id, {
-        minStockAlert: stockNum, // Demonstrating mutation on existing field for now
+      await InventoryService.adjustStock({
+        productId: product.id,
+        adjustmentType: quantityDiff > 0 ? "IN" : "OUT",
+        quantity: Math.abs(quantityDiff),
+        notes: "Quick stock update from product detail",
       });
       toast.success("Stock updated successfully!");
       setIsStockUpdateOpen(false);
@@ -165,11 +176,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b pb-2">
                 <span className="text-sm text-muted-foreground">Selling Price</span>
-                <span className="font-semibold text-lg">${sp.toFixed(2)}</span>
+                <span className="font-semibold text-lg">{formatCurrency(sp)}</span>
               </div>
               <div className="flex justify-between items-center border-b pb-2">
                 <span className="text-sm text-muted-foreground">Cost Price</span>
-                <span className="font-medium">${cp.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(cp)}</span>
               </div>
               <div className="flex justify-between items-center border-b pb-2">
                 <span className="text-sm text-muted-foreground">GST Tax</span>

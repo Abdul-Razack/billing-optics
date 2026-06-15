@@ -9,6 +9,9 @@ export interface Offer {
   minOrderValue: number;
   startDate?: string | null;
   endDate?: string | null;
+  applicableProducts?: number[] | null;
+  applicableCategories?: number[] | null;
+  conditions?: any | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -22,6 +25,9 @@ export interface CreateOfferPayload {
   minOrderValue?: number;
   startDate?: string | null;
   endDate?: string | null;
+  applicableProducts?: number[] | null;
+  applicableCategories?: number[] | null;
+  conditions?: any | null;
   isActive?: boolean;
 }
 

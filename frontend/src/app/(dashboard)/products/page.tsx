@@ -35,6 +35,7 @@ import { BulkActionConfirmation } from "@/components/products/BulkActionConfirma
 import { BulkStockModal } from "@/components/products/BulkStockModal";
 import { BulkCategoryModal } from "@/components/products/BulkCategoryModal";
 import { ProductExportModal } from "@/components/products/ProductExportModal";
+import { InventoryService } from "@/services/inventory.service";
 
 export default function ProductsPage() {
   const { state, updateState, clearFilters } = useProductUrlState();
@@ -278,7 +279,7 @@ export default function ProductsPage() {
 
   const handleQuickStockUpdate = (product: ApiProduct) => {
     setStockUpdateProduct(product);
-    const current = product.stock ?? (product as any).currentStock ?? product.minStockAlert ?? 0;
+    const current = product.stock ?? 0;
     setNewStockValue(current.toString());
   };
 
@@ -290,10 +291,21 @@ export default function ProductsPage() {
       return;
     }
 
+    const currentStock = stockUpdateProduct.stock ?? 0;
+    const quantityDiff = stockNum - currentStock;
+
+    if (quantityDiff === 0) {
+      setStockUpdateProduct(null);
+      return;
+    }
+
     setIsUpdatingStock(true);
     try {
-      await ProductService.updateProduct(stockUpdateProduct.id, {
-        minStockAlert: stockNum,
+      await InventoryService.adjustStock({
+        productId: stockUpdateProduct.id,
+        adjustmentType: quantityDiff > 0 ? "IN" : "OUT",
+        quantity: Math.abs(quantityDiff),
+        notes: "Quick stock update from products list",
       });
       toast.success("Stock updated successfully!");
       setStockUpdateProduct(null);

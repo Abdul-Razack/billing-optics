@@ -35,6 +35,7 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
     let taxTotal = 0;
     const itemsToInsert = [];
     const ledgerEntries: any[] = [];
+    const enrichedItems: any[] = [];
 
     for (const item of data.items) {
       const [product] = await tx.select().from(products).where(eq(products.id, item.productId));
@@ -62,6 +63,13 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
         snapshotTaxPercent: product.gstPercent || 0,
         lineTotal: itemTotal, // Subtotal for this line (cents)
       });
+      
+      enrichedItems.push({
+        productId: product.id,
+        categoryId: product.categoryId,
+        quantity: item.quantity,
+        price: product.sellingPrice,
+      });
 
       // Prepare ledger entry
       ledgerEntries.push({
@@ -81,7 +89,7 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
       const { OfferService } = require('../services/offer.service');
       const offerService = new OfferService();
       // Validates and throws if inactive/expired/below minimum
-      const offerResult = await offerService.validateAndCalculateDiscount(data.offerId, subtotal);
+      const offerResult = await offerService.validateAndCalculateDiscount(data.offerId, subtotal, enrichedItems);
       discountTotal = offerResult.discountTotal;
     } else if (data.manualDiscount) {
       discountTotal = data.manualDiscount;

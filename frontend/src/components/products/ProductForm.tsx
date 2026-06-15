@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { CategoryService, ApiCategory } from "@/services/category.service";
 import { ProductService, ApiProduct } from "@/services/product.service";
 import { SettingsService } from "@/services/settings.service";
+import { InventoryService } from "@/services/inventory.service";
 import { CustomField } from "@/types/custom-field";
 import { buildDynamicSchema } from "@/lib/dynamic-schema";
 
@@ -32,6 +33,7 @@ const productSchema = z.object({
   sellingPrice: z.number().min(0, "Must be >= 0"),
   gstPercent: z.number().min(0).max(100),
   minStockAlert: z.number().min(0),
+  initialStock: z.number().min(0).default(0),
   isActive: z.boolean(),
   customFields: z.record(z.any()).optional(),
 });
@@ -66,6 +68,7 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
       sellingPrice: initialData?.sellingPrice || 0,
       gstPercent: initialData?.gstPercent ?? 18,
       minStockAlert: initialData?.minStockAlert ?? 5,
+      initialStock: 0,
       isActive: initialData?.isActive ?? true,
       customFields: initialData?.attributes || {},
     },
@@ -77,22 +80,37 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
     setIsSaving(true);
     setError(null);
     try {
+      const { initialStock, customFields: cf, ...rest } = values as any;
       const payload = {
-        ...(values as any),
-        attributes: (values.customFields || {}) as Record<string, any>,
+        ...rest,
+        attributes: (cf || {}) as Record<string, any>,
       };
 
       if (isEditMode && initialData) {
         await ProductService.updateProduct(initialData.id, payload);
         toast.success("Product updated successfully");
       } else {
-        await ProductService.createProduct(payload);
+        const created = await ProductService.createProduct(payload);
+        // If an initial stock quantity was provided, create an inventory ledger entry
+        if (initialStock && initialStock > 0) {
+          try {
+            await InventoryService.adjustStock({
+              productId: created.id,
+              adjustmentType: "IN",
+              quantity: initialStock,
+              notes: "Initial stock on product creation",
+            });
+          } catch (stockErr) {
+            console.error("Failed to set initial stock:", stockErr);
+            // Don't block the product creation — just warn
+            toast.warning("Product created, but initial stock could not be set. You can adjust it from the product page.");
+          }
+        }
         toast.success("Product created successfully");
       }
       
       if (nextActionRef.current === "reset") {
         form.reset();
-        // Reset action back to default
         nextActionRef.current = "redirect";
       } else {
         router.push("/products");
@@ -138,7 +156,7 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* Main Form Area */}
             <div className="xl:col-span-2 space-y-8">
-              <ProductFormFields categories={categories} />
+              <ProductFormFields categories={categories} isEditMode={isEditMode} />
               
               {customFields.length > 0 && (
                 <ProductCustomFields customFields={customFields} />
