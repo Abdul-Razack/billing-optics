@@ -9,15 +9,14 @@ export async function initializeDatabase() {
   try {
     console.log('[INIT] Checking database status...');
 
-    // Safety check: reset stale migration history so migrations rerun cleanly.
-    // We store migration tracking in the PUBLIC schema (not a separate 'drizzle' schema)
-    // because the app user (billing_app) only has access to the public schema.
+    // --- Safety check: pre-migration environment repair ---
+    // The app connects as 'billing_app' which may not own tables created by 'postgres'.
+    // We use information_schema (which is accessible to all users) to check what exists.
     try {
-      // Step 1: Drop the old 'drizzle' schema if it exists (leftover from old system)
-      // The app user may not have permission to drop it, so we silently ignore errors.
+      // Step 1: Try to drop the old 'drizzle' schema (silently ignore permission errors)
       await pool.query(`DROP SCHEMA IF EXISTS drizzle CASCADE`).catch(() => {});
 
-      // Step 2: Check if our migration tracking table exists in the public schema
+      // Step 2: Check if __drizzle_migrations table exists in public schema
       const trackingResult = await pool.query(`
         SELECT EXISTS (
           SELECT FROM information_schema.tables 
@@ -28,20 +27,50 @@ export async function initializeDatabase() {
       const trackingExists = trackingResult.rows[0]?.exists === true;
 
       if (trackingExists) {
-        // Check how many migrations are recorded vs how many we have (should be exactly 1)
-        const recordedResult = await pool.query(`SELECT count(*) as count FROM public.__drizzle_migrations`);
-        const recordedCount = parseInt(recordedResult.rows[0]?.count || '0', 10);
+        // Check if current user has access to the table
+        const accessResult = await pool.query(`
+          SELECT has_table_privilege(current_user, 'public.__drizzle_migrations', 'SELECT') as has_access
+        `);
+        const hasAccess = accessResult.rows[0]?.has_access === true;
 
-        // We only have 1 squashed migration. If the DB has a different count,
-        // reset it so migrations rerun cleanly (all SQL uses IF NOT EXISTS so it's safe).
-        if (recordedCount !== 1) {
-          console.log(`[INIT] Detected stale migration history (${recordedCount} records). Resetting for squashed schema...`);
-          await pool.query(`DROP TABLE IF EXISTS public.__drizzle_migrations`);
-          console.log('[INIT] Migration history reset successfully.');
+        if (!hasAccess) {
+          // Table exists but current user can't access it (was created by postgres or another superuser).
+          // Check if the main app tables are already fully set up and accessible.
+          const usersExist = await pool.query(`
+            SELECT EXISTS (
+              SELECT FROM information_schema.tables 
+              WHERE table_schema = 'public' AND table_name = 'users'
+            ) as exists
+          `);
+          if (usersExist.rows[0]?.exists === true) {
+            console.log('[INIT] Database already initialized. Skipping migrations (permission-safe mode).');
+            // Jump directly to seeding check below by returning early from the try block.
+            // We skip the full migrate() call since the DB is already set up.
+            let isFresh = false;
+            const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(users);
+            if (Number(count) === 0) isFresh = true;
+            if (!isFresh) { console.log('[INIT] Database is already seeded.'); return; }
+            await seedDefaultData();
+            return;
+          }
+          // If users table doesn't exist, we have a broken state. 
+          // Drop the inaccessible tracking table if possible, then proceed.
+          await pool.query(`DROP TABLE IF EXISTS public.__drizzle_migrations`).catch(() => {});
+          console.log('[INIT] Cleared inaccessible migration tracking table.');
+        } else {
+          // We have access — check if count matches our single squashed migration
+          const recordedResult = await pool.query(`SELECT count(*) as count FROM public.__drizzle_migrations`);
+          const recordedCount = parseInt(recordedResult.rows[0]?.count || '0', 10);
+
+          if (recordedCount !== 1) {
+            console.log(`[INIT] Detected stale migration history (${recordedCount} records). Resetting...`);
+            await pool.query(`DROP TABLE IF EXISTS public.__drizzle_migrations`);
+            console.log('[INIT] Migration history reset successfully.');
+          }
         }
       }
     } catch (checkError: any) {
-      console.log('[INIT] Migration check skipped (safe to ignore):', checkError?.message);
+      console.log('[INIT] Pre-migration check skipped (safe to ignore):', checkError?.message);
     }
 
     // Run migrations unconditionally.
@@ -69,34 +98,36 @@ export async function initializeDatabase() {
       return;
     }
 
-    // 2. Seed default admin
-    console.log('[INIT] Creating default administrator account...');
-    const defaultPassword = 'admin';
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(defaultPassword, salt);
-
-    await db.insert(users).values({
-      fullName: 'System Administrator',
-      email: 'admin@example.com',
-      passwordHash: passwordHash,
-      role: 'ADMIN',
-      isActive: true,
-    });
-    
-    console.log('[INIT] Administrator account created (admin@example.com / admin).');
-
-    // 3. Seed default settings (Activates Trial)
-    console.log('[INIT] Initializing application settings...');
-    await db.insert(settings).values({
-      businessName: 'My Business',
-      currency: 'INR',
-      timezone: 'Asia/Kolkata'
-    });
-
-    console.log('[INIT] Database initialization completed successfully!');
+    await seedDefaultData();
 
   } catch (error) {
     console.error('[INIT] Failed to initialize database:', error);
     throw error;
   }
+}
+
+async function seedDefaultData() {
+  console.log('[INIT] Creating default administrator account...');
+  const defaultPassword = 'admin';
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(defaultPassword, salt);
+
+  await db.insert(users).values({
+    fullName: 'System Administrator',
+    email: 'admin@example.com',
+    passwordHash: passwordHash,
+    role: 'ADMIN',
+    isActive: true,
+  });
+
+  console.log('[INIT] Administrator account created (admin@example.com / admin).');
+
+  console.log('[INIT] Initializing application settings...');
+  await db.insert(settings).values({
+    businessName: 'My Business',
+    currency: 'INR',
+    timezone: 'Asia/Kolkata'
+  });
+
+  console.log('[INIT] Database initialization completed successfully!');
 }

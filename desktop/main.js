@@ -359,6 +359,13 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
       });
       await dbClient.connect();
       await dbClient.query(`GRANT ALL ON SCHEMA public TO ${targetAppUser}`);
+      // Grant access to ALL existing tables (including __drizzle_migrations if it already exists)
+      await dbClient.query(`GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${targetAppUser}`);
+      // Grant access to ALL existing sequences (needed for bigserial/serial columns)
+      await dbClient.query(`GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${targetAppUser}`);
+      // Grant access to ALL FUTURE tables and sequences created by any user in this schema
+      await dbClient.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${targetAppUser}`);
+      await dbClient.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${targetAppUser}`);
       await dbClient.end();
 
       console.log('[INSTALLER] Database provisioning completed');
