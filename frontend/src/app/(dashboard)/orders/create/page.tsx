@@ -238,7 +238,6 @@ export default function CreateOrderPage() {
       setReferenceNumber("");
       setPaymentMethod("CASH");
       setSelectedOfferId(undefined);
-      setDiscountTotal(0);
       
       setSuccessId(newInvoice.invoiceId);
       localStorage.removeItem("order_cart_draft");
