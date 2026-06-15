@@ -809,5 +809,10 @@ app.on('window-all-closed', () => {
 });
 
 app.on('will-quit', () => {
-  // Processes are run in-process now, so no external PIDs to kill
+  if (typeof backendProc !== 'undefined' && backendProc) {
+    try { backendProc.kill(); } catch(e) {}
+  }
+  if (typeof frontendProc !== 'undefined' && frontendProc) {
+    try { frontendProc.kill(); } catch(e) {}
+  }
 });
