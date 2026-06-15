@@ -35,9 +35,9 @@ export default function LowStockAlertsPage() {
   // Filter to only items that trigger an alert
   const alertProducts = useMemo(() => {
     return products.map(product => {
-      const currentStock = (product as any).currentStock ?? 0;
-      const { severity, isAlert } = calculateAlertSeverity(currentStock, product.minStockAlert);
-      return { ...product, currentStock, severity, isAlert };
+      const stock = (product as any).stock ?? 0;
+      const { severity, isAlert } = calculateAlertSeverity(stock, product.minStockAlert);
+      return { ...product, currentStock: stock, severity, isAlert };
     }).filter(p => p.isAlert && !reviewedProductIds.has(p.id));
   }, [products, reviewedProductIds]);
 
