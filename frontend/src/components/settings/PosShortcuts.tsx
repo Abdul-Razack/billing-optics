@@ -19,10 +19,6 @@ export function PosShortcuts() {
   const [newKey, setNewKey] = useState("");
   const [newProductId, setNewProductId] = useState<number | "">("");
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     try {
       setIsLoading(true);
@@ -38,6 +34,11 @@ export function PosShortcuts() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData();
+  }, []);
 
   const handleAdd = async () => {
     if (!newKey.trim() || newProductId === "") {
@@ -83,7 +84,7 @@ export function PosShortcuts() {
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-muted/50 p-4 rounded-lg border">
           <div className="space-y-2">
-            <Label>Shortcut Key (e.g. '1', 'A')</Label>
+            <Label>Shortcut Key (e.g. &apos;1&apos;, &apos;A&apos;)</Label>
             <Input 
               placeholder="Enter key..." 
               value={newKey} 

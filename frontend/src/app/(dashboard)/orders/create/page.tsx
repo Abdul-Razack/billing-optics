@@ -41,7 +41,7 @@ export default function CreateOrderPage() {
   // Offers State
   const [availableOffers, setAvailableOffers] = useState<Offer[]>([]);
   const [selectedOfferId, setSelectedOfferId] = useState<number | undefined>();
-  const [discountTotal, setDiscountTotal] = useState<number>(0);
+
 
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -156,7 +156,6 @@ export default function CreateOrderPage() {
       }
     }
 
-    setDiscountTotal(discount);
 
     return {
       subtotal: sub,

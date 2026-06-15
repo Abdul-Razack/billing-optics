@@ -24,7 +24,6 @@ export function OffersSettings() {
   const [editingOffer, setEditingOffer] = useState<Partial<Offer> | null>(null);
 
   const fetchOffers = async () => {
-    setIsLoading(true);
     try {
       const [offersData, productsData, categoriesData] = await Promise.all([
         OfferService.getOffers(),
@@ -42,6 +41,7 @@ export function OffersSettings() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOffers();
   }, []);
 
