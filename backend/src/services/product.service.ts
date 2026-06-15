@@ -126,8 +126,8 @@ export class ProductService {
       conditionsArr.push(
         or(
           ilike(products.name, searchTerm),
-          ilike(products.sku, searchTerm),
-          ilike(products.barcode, searchTerm)
+          sql`${products.sku} ILIKE ${searchTerm}`,
+          sql`${products.barcode} ILIKE ${searchTerm}`
         )
       );
     }
