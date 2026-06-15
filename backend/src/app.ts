@@ -27,6 +27,7 @@ import { createAuditRoutes } from './routes/audit.routes';
 import { createVendorRoutes } from './routes/vendor.routes';
 import { createLabJobRoutes } from './routes/labJob.routes';
 import { createShortcutRoutes } from './routes/shortcut.routes';
+import { createOfferRoutes } from './routes/offer.routes';
 import { requireLicense } from './middleware/license.middleware';
 
 export function buildApp(context: BootstrapContext) {
@@ -72,6 +73,7 @@ export function buildApp(context: BootstrapContext) {
   app.use('/api/vendors', createVendorRoutes());
   app.use('/api/lab-jobs', createLabJobRoutes());
   app.use('/api/shortcuts', createShortcutRoutes());
+  app.use('/api/offers', createOfferRoutes());
 
   // Global Error Handler
   app.use(errorMiddleware);

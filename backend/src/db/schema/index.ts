@@ -13,5 +13,6 @@ export * from './relations';
 export * from './ledger';
 export * from './auditLogs';
 export * from './vendors';
+export * from './offers';
 export * from './labJobs';
 export * from './posShortcuts';

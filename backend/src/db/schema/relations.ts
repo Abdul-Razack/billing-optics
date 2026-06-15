@@ -12,6 +12,7 @@ import { auditLogs } from './auditLogs';
 import { vendors } from './vendors';
 import { labJobs } from './labJobs';
 import { posShortcuts } from './posShortcuts';
+import { offers } from './offers';
 
 export const usersRelations = relations(users, ({ many }) => ({
   invoices: many(invoices),
@@ -55,13 +56,20 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
     fields: [invoices.customerId],
     references: [customers.id],
   }),
-  creator: one(users, {
+  createdBy: one(users, {
     fields: [invoices.createdBy],
     references: [users.id],
   }),
-  items: many(invoiceItems),
+  offer: one(offers, {
+    fields: [invoices.offerId],
+    references: [offers.id],
+  }),
+  lines: many(invoiceItems),
   payments: many(payments),
-  labJobs: many(labJobs),
+  labJob: one(labJobs, {
+    fields: [invoices.id],
+    references: [labJobs.invoiceId],
+  }),
 }));
 
 export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
@@ -98,6 +106,10 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
     fields: [auditLogs.userId],
     references: [users.id],
   }),
+}));
+
+export const offersRelations = relations(offers, ({ many }) => ({
+  invoices: many(invoices),
 }));
 
 export const vendorsRelations = relations(vendors, ({ many }) => ({

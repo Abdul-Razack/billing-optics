@@ -15,6 +15,13 @@
       "when": 1781487107580,
       "tag": "0001_minor_the_call",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781497225134,
+      "tag": "0002_spooky_roxanne_simpson",
+      "breakpoints": true
     }
   ]
 }

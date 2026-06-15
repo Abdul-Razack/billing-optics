@@ -16,6 +16,8 @@ export interface CheckoutDTO {
     amount: number;
     reference?: string;
   }[];
+  offerId?: number;
+  manualDiscount?: number;
 }
 
 export const processCheckout = async (data: CheckoutDTO & { requestId?: string }) => {
@@ -72,8 +74,23 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
       });
     }
 
-    // TODO: if you pass discountPercent in payload, calculate discountTotal. For now, 0.
-    const discountTotal = 0; 
+    let discountTotal = 0;
+    
+    // Process automated offer if provided
+    if (data.offerId) {
+      const { OfferService } = require('../services/offer.service');
+      const offerService = new OfferService();
+      // Validates and throws if inactive/expired/below minimum
+      const offerResult = await offerService.validateAndCalculateDiscount(data.offerId, subtotal);
+      discountTotal = offerResult.discountTotal;
+    } else if (data.manualDiscount) {
+      discountTotal = data.manualDiscount;
+    }
+
+    if (discountTotal > (subtotal + taxTotal)) {
+      discountTotal = subtotal + taxTotal; // Discount cannot exceed total
+    }
+
     const grandTotal = subtotal + taxTotal - discountTotal;
 
     // Validate payments
@@ -95,6 +112,7 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
       invoiceNumber: invoiceNum,
       customerId: data.customerId,
       createdBy: data.createdBy,
+      offerId: data.offerId || null,
       subtotal,
       taxTotal,
       discountTotal,

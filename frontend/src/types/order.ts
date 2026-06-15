@@ -23,6 +23,8 @@ export interface ApiPayment {
   createdAt?: string;
 }
 
+import { Offer } from "./offer";
+
 export interface ApiInvoice {
   id: number;
   invoiceNumber: string;
@@ -43,6 +45,8 @@ export interface ApiInvoice {
   updatedAt: string;
   dueDate?: string; // Mocked
   itemCount?: number; // Mocked
+  offerId?: number;
+  offer?: Offer;
   lines?: ApiInvoiceLine[];
   payments?: ApiPayment[];
 }

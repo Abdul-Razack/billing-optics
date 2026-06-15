@@ -6,6 +6,7 @@ export interface CheckoutPayload {
   invoiceId?: string;
   customerId?: number;
   items: { productId: number; quantity: number }[];
+  offerId?: number;
   payments?: {
     method: PaymentMethod;
     amount: number;

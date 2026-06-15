@@ -11,10 +11,12 @@ import { ProductOrderSelector } from "@/components/orders/ProductOrderSelector";
 import { InvoiceLineItems, InvoiceLineItem } from "@/components/orders/InvoiceLineItems";
 import { PaymentSection } from "@/components/orders/PaymentSection";
 import { OrderService } from "@/services/order.service";
+import { OfferService } from "@/services/offer.service";
 import { ApiProduct } from "@/services/product.service";
 import { CustomerService } from "@/services/customer.service";
 import { ApiCustomer } from "@/types/customer";
 import { PaymentMethod } from "@/types/order";
+import { Offer } from "@/types/offer";
 import { toast } from "sonner";
 import { Loader2, Receipt, Save, CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -35,6 +37,11 @@ export default function CreateOrderPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
+
+  // Offers State
+  const [availableOffers, setAvailableOffers] = useState<Offer[]>([]);
+  const [selectedOfferId, setSelectedOfferId] = useState<number | undefined>();
+  const [discountTotal, setDiscountTotal] = useState<number>(0);
 
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -70,6 +77,12 @@ export default function CreateOrderPage() {
             }).catch(console.error);
           }
         }
+
+        // Load active offers
+        OfferService.getOffers({ status: 'ACTIVE' }).then(offers => {
+          setAvailableOffers(offers);
+        }).catch(console.error);
+
       } catch (e) {
         console.error("Failed to load cart draft", e);
       } finally {
@@ -101,7 +114,6 @@ export default function CreateOrderPage() {
     sessionIdRef.current = `SESS-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   }, [isLoaded, customerId, customer, lineItems, paymentMethod, amountPaid, referenceNumber]);
 
-  // Live Math (prices are in cents)
   const totals = useMemo(() => {
     let sub = 0;
     let tax = 0;
@@ -111,12 +123,29 @@ export default function CreateOrderPage() {
       sub += itemTotal;
       tax += itemTax;
     });
+
+    let discount = 0;
+    if (selectedOfferId) {
+      const offer = availableOffers.find(o => o.id === selectedOfferId);
+      if (offer && sub >= offer.minOrderValue) {
+        if (offer.type === 'PERCENTAGE') {
+          discount = Math.round((sub * offer.value) / 100);
+        } else {
+          discount = offer.value;
+        }
+        if (discount > sub + tax) discount = sub + tax;
+      }
+    }
+
+    setDiscountTotal(discount);
+
     return {
       subtotal: sub,
       taxTotal: tax,
-      grandTotal: sub + tax
+      discountTotal: discount,
+      grandTotal: sub + tax - discount
     };
-  }, [lineItems]);
+  }, [lineItems, selectedOfferId, availableOffers]);
 
   const grandTotal = totals.grandTotal;
 
@@ -171,6 +200,7 @@ export default function CreateOrderPage() {
       const payload = {
         customerId,
         items: lineItems.map(i => ({ productId: i.product.id, quantity: i.quantity })),
+        offerId: selectedOfferId,
         payments: amountPaidCents > 0 ? [{
           method: paymentMethod,
           amount: amountPaidCents,
@@ -189,6 +219,8 @@ export default function CreateOrderPage() {
       setAmountPaid(0);
       setReferenceNumber("");
       setPaymentMethod("CASH");
+      setSelectedOfferId(undefined);
+      setDiscountTotal(0);
       
       setSuccessId(newInvoice.invoiceId);
       localStorage.removeItem("order_cart_draft");
@@ -280,6 +312,48 @@ export default function CreateOrderPage() {
             </CardContent>
           </Card>
 
+          {availableOffers.length > 0 && (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">Offers & Promotions</CardTitle>
+                <CardDescription>Select an applicable offer to apply to this order.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {availableOffers.map(offer => {
+                    const isEligible = totals.subtotal >= offer.minOrderValue;
+                    return (
+                      <div 
+                        key={offer.id}
+                        onClick={() => {
+                          if (isEligible) {
+                            setSelectedOfferId(offer.id === selectedOfferId ? undefined : offer.id);
+                          }
+                        }}
+                        className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${!isEligible ? 'opacity-50 cursor-not-allowed bg-muted border-transparent' : selectedOfferId === offer.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}
+                      >
+                        <div className="font-semibold text-sm mb-1">{offer.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {offer.type === 'PERCENTAGE' ? `${offer.value}% OFF` : `₹${(offer.value / 100).toFixed(2)} OFF`}
+                        </div>
+                        {offer.minOrderValue > 0 && (
+                          <div className="text-[10px] text-muted-foreground mt-2">
+                            Min: ₹{(offer.minOrderValue / 100).toFixed(2)}
+                          </div>
+                        )}
+                        {!isEligible && (
+                          <div className="text-[10px] text-destructive mt-1 font-medium">
+                            Add ₹{((offer.minOrderValue - totals.subtotal) / 100).toFixed(2)} more
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader className="pb-4">
               <div className="flex justify-between items-center">
@@ -336,7 +410,7 @@ export default function CreateOrderPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Discount</span>
-                    <span className="font-medium">{formatCurrency(0)}</span>
+                    <span className="font-medium text-emerald-600">-{formatCurrency(totals.discountTotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax</span>

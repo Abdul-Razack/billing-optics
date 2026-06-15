@@ -2,6 +2,7 @@ import { pgTable, bigserial, bigint, varchar, integer, timestamp, check, index }
 import { sql } from 'drizzle-orm';
 import { customers } from './customers';
 import { users } from './users';
+import { offers } from './offers';
 import { paymentStatusEnum, deliveryStatusEnum } from './enums';
 
 export const invoices = pgTable('invoices', {
@@ -13,6 +14,8 @@ export const invoices = pgTable('invoices', {
   createdBy: bigint('created_by', { mode: 'number' })
     .references(() => users.id, { onDelete: 'restrict' })
     .notNull(),
+  offerId: bigint('offer_id', { mode: 'number' })
+    .references(() => offers.id, { onDelete: 'set null' }),
   subtotal: integer('subtotal').notNull().default(0),
   taxTotal: integer('tax_total').notNull().default(0),
   discountTotal: integer('discount_total').notNull().default(0),

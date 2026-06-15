@@ -6,6 +6,7 @@ import { ProductHeader } from "@/components/products/ProductHeader";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { SystemUpdates } from "@/components/settings/SystemUpdates";
 import { PosShortcuts } from "@/components/settings/PosShortcuts";
+import { OffersSettings } from "@/components/settings/OffersSettings";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -134,6 +135,12 @@ export default function SettingsPage() {
               className={`px-4 py-2 rounded-md font-medium text-sm text-left transition-colors whitespace-nowrap ${activeTab === "pos-shortcuts" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
             >
               POS Shortcuts
+            </button>
+            <button 
+              onClick={() => setActiveTab("offers")}
+              className={`px-4 py-2 rounded-md font-medium text-sm text-left transition-colors whitespace-nowrap ${activeTab === "offers" ? "bg-muted text-purple-600 dark:bg-muted/50 dark:text-purple-400" : "text-purple-600/70 dark:text-purple-400/70 hover:bg-muted hover:text-purple-600 dark:hover:text-purple-400"}`}
+            >
+              Offers & Promotions
             </button>
             <button 
               onClick={() => setActiveTab("system-updates")}
@@ -401,6 +408,12 @@ export default function SettingsPage() {
           {activeTab === "pos-shortcuts" && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <PosShortcuts />
+            </div>
+          )}
+
+          {activeTab === "offers" && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <OffersSettings />
             </div>
           )}
         </div>
