@@ -18,10 +18,10 @@ export interface ApiCustomer {
   invoices?: any[];
 }
 
-export interface CustomerCustomField {
+export interface CustomField {
   id: string;
   name: string;
-  type: "text" | "number" | "dropdown" | "checkbox" | "textarea";
+  type: "TEXT" | "number" | "dropdown" | "checkbox" | "textarea";
   options?: string[];
   required?: boolean;
 }

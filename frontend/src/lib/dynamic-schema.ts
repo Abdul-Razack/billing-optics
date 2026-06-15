@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 
 export function buildDynamicSchema(baseSchema: z.ZodObject<any, any>, customFields: CustomField[]) {
   // If no custom fields, just return the base schema with an optional catch-all record
@@ -15,33 +15,33 @@ export function buildDynamicSchema(baseSchema: z.ZodObject<any, any>, customFiel
     let fieldSchema: z.ZodTypeAny;
 
     switch (field.type) {
-      case "text":
-      case "textarea":
+      case "TEXT":
+      case "TEXTAREA":
         fieldSchema = z.string();
-        if (field.required) {
+        if (field.isRequired) {
           fieldSchema = (fieldSchema as z.ZodString).min(1, `${field.name} is required`);
         } else {
           fieldSchema = fieldSchema.optional().or(z.literal(""));
         }
         break;
       
-      case "number":
+      case "NUMBER":
         fieldSchema = z.number({ invalid_type_error: `${field.name} must be a number` });
-        if (!field.required) {
+        if (!field.isRequired) {
           fieldSchema = fieldSchema.optional();
         }
         break;
 
-      case "checkbox":
+      case "CHECKBOX":
         fieldSchema = z.boolean();
-        if (!field.required) {
+        if (!field.isRequired) {
           fieldSchema = fieldSchema.optional();
         }
         break;
 
-      case "dropdown":
+      case "DROPDOWN":
         fieldSchema = z.string();
-        if (field.required) {
+        if (field.isRequired) {
           fieldSchema = (fieldSchema as z.ZodString).min(1, `${field.name} is required`);
         } else {
           fieldSchema = fieldSchema.optional().or(z.literal(""));
@@ -50,7 +50,7 @@ export function buildDynamicSchema(baseSchema: z.ZodObject<any, any>, customFiel
 
       default:
         fieldSchema = z.any();
-        if (!field.required) {
+        if (!field.isRequired) {
           fieldSchema = fieldSchema.optional();
         }
     }

@@ -92,7 +92,7 @@ export function InvoiceLineItems({ items, onChangeQuantity, onRemove, disabled }
                     <Minus className="h-3 w-3" />
                   </Button>
                   <Input
-                    type="number"
+                    type="NUMBER"
                     value={quantity}
                     className="h-7 w-12 text-center text-sm p-1 hide-arrows"
                     min={1}

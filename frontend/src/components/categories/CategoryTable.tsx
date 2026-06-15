@@ -93,8 +93,8 @@ export function CategoryTable({ data, isLoading = false, onDelete }: CategoryTab
                     actionLabel="Delete"
                   >
                     <DropdownMenuItem 
-                      className="text-destructive" 
-                      onSelect={(e: Event) => e.preventDefault()}
+                      variant="destructive"
+                      className="cursor-pointer" 
                     >
                       <Trash className="mr-2 h-4 w-4" />
                       Delete

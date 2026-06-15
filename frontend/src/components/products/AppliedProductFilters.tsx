@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { ProductUrlState } from "@/hooks/useProductUrlState";
 import { ApiCategory } from "@/services/category.service";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 
 interface AppliedProductFiltersProps {
   state: ProductUrlState;
@@ -56,7 +56,7 @@ export function AppliedProductFilters({ state, updateState, clearFilters, catego
       const name = fieldDef?.name || fieldId.replace(/_/g, ' ');
       
       let displayValue = state[key];
-      if (fieldDef?.type === 'checkbox') {
+      if (fieldDef?.type === "CHECKBOX") {
         displayValue = state[key] === 'true' ? 'Yes' : 'No';
       }
 

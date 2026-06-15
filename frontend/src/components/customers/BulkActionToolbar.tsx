@@ -76,7 +76,7 @@ export function BulkActionToolbar({
                 Export Selected
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAction("delete")} className="text-destructive">
+              <DropdownMenuItem onClick={() => onAction("delete")} variant="destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Selected
               </DropdownMenuItem>

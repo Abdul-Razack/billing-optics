@@ -55,7 +55,7 @@ export function BulkStockModal({
             <Label htmlFor="bulk-stock-value">New Minimum Stock Level</Label>
             <Input 
               id="bulk-stock-value"
-              type="number"
+              type="NUMBER"
               min="0"
               placeholder="e.g. 10"
               value={stockValue}

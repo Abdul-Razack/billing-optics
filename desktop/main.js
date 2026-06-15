@@ -386,11 +386,19 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
 
     let winPgPath = 'C:\\\\Program Files\\\\PostgreSQL\\\\16\\\\bin';
     if (require('os').platform() === 'win32') {
-      for (let v = 22; v >= 12; v--) {
-        const p = `C:\\\\Program Files\\\\PostgreSQL\\\\${v}\\\\bin`;
-        if (fs.existsSync(p)) {
-          winPgPath = p;
-          break;
+      try {
+        const psqlPath = require('child_process').execSync('where psql', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().split('\r\n')[0].trim();
+        if (psqlPath) {
+          winPgPath = path.dirname(psqlPath);
+        }
+      } catch (e) {
+        // Fallback to default paths
+        for (let v = 22; v >= 12; v--) {
+          const p = `C:\\\\Program Files\\\\PostgreSQL\\\\${v}\\\\bin`;
+          if (fs.existsSync(p)) {
+            winPgPath = p;
+            break;
+          }
         }
       }
     }

@@ -35,7 +35,7 @@ export default function CustomersPage() {
     isActiveParam !== undefined ? `isActive=${isActiveParam}` : null,
     "limit=5000"
   ].filter(Boolean).join("&");
-  const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiCustomer[] }>(`/customers?${customersUrl}`);
+  const { data: response, isLoading, isFetching, error, refetch } = useFetch<{ success: boolean, data: ApiCustomer[] }>(`/customers?${customersUrl}`);
   
   const allCustomers = response?.data || [];
   
@@ -95,6 +95,16 @@ export default function CustomersPage() {
     } finally {
       setIsBulkProcessing(false);
       setBulkAction(null);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await fetchClient(`/customers/${id}`, { method: "DELETE" });
+      toast.success("Customer deleted successfully.");
+      refetch();
+    } catch (e) {
+      toast.error("Failed to delete customer.");
     }
   };
 
@@ -230,7 +240,7 @@ export default function CustomersPage() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-2">
-              <CustomerSearch initialValue={state.q} onSearch={(q) => updateState({ q })} isSearching={isLoading} />
+              <CustomerSearch initialValue={state.q} onSearch={(q) => updateState({ q })} isSearching={isLoading || isFetching} />
               
               <Button 
                 variant="outline" 
@@ -258,7 +268,9 @@ export default function CustomersPage() {
           </div>
 
           {showAdvancedFilters && (
-            <CustomerFilters state={state} updateState={updateState} />
+            <div className="animate-in fade-in slide-in-from-top-2 duration-200 mt-2">
+              <CustomerFilters state={state} updateState={updateState} />
+            </div>
           )}
 
           <AppliedFilters state={state} updateState={updateState} />
@@ -286,6 +298,7 @@ export default function CustomersPage() {
               updateState={updateState}
               rowSelection={rowSelection}
               setRowSelection={setRowSelection}
+              onDelete={handleDelete}
             />
           )}
         </div>

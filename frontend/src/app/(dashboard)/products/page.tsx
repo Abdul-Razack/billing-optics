@@ -7,7 +7,7 @@ import { ProductListTable } from "@/components/products/ProductListTable";
 import { ProductService, ApiProduct } from "@/services/product.service";
 import { CategoryService, ApiCategory } from "@/services/category.service";
 import { SettingsService } from "@/services/settings.service";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 import { useFetch } from "@/hooks/useApi";
 import { useProductUrlState } from "@/hooks/useProductUrlState";
 import { StockSummary } from "@/components/products/StockSummary";
@@ -15,7 +15,7 @@ import { calculateStockStatus } from "@/lib/stock";
 import { exportToCSV } from "@/lib/export";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Upload, PackagePlus } from "lucide-react";
+import { Download, Upload, PackagePlus, Tags } from "lucide-react";
 import Link from "next/link";
 import {
   Dialog,
@@ -40,7 +40,7 @@ export default function ProductsPage() {
   const { state, updateState, clearFilters } = useProductUrlState();
   
   // We fetch ALL products, then filter locally to guarantee advanced filters work if backend lacks support
-  const { data: response, isLoading, error, refetch } = useFetch<{ success: boolean, data: ApiProduct[] }>("/products?limit=5000");
+  const { data: response, isLoading, isFetching, error, refetch } = useFetch<{ success: boolean, data: ApiProduct[] }>("/products?limit=5000");
   const { data: catResponse } = useFetch<{ success: boolean, data: ApiCategory[] }>("/categories");
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
 
@@ -314,6 +314,12 @@ export default function ProductsPage() {
         action={{ label: "Add Product", href: "/products/create" }} 
       >
         <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/categories">
+              <Tags className="mr-2 h-4 w-4" />
+              Categories
+            </Link>
+          </Button>
           <Button variant="outline" onClick={() => setIsExportModalOpen(true)}>
             <Download className="mr-2 h-4 w-4" /> Export
           </Button>
@@ -347,11 +353,12 @@ export default function ProductsPage() {
                 <ProductSearchInput 
                   initialValue={state.search} 
                   onSearch={(s) => updateState({ search: s })} 
-                  isSearching={isLoading}
+                  isSearching={isLoading || isFetching}
                 />
                 <ProductFilterDrawer 
                   state={state} 
                   updateState={updateState} 
+                  clearFilters={clearFilters}
                   categories={categories}
                   customFields={customFields}
                 />
@@ -433,7 +440,7 @@ export default function ProductsPage() {
               <label htmlFor="stockValue" className="text-sm font-medium">New Stock Quantity</label>
               <Input 
                 id="stockValue"
-                type="number"
+                type="NUMBER"
                 min="0"
                 value={newStockValue}
                 onChange={(e) => setNewStockValue(e.target.value)}

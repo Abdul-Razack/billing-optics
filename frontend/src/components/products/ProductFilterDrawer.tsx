@@ -1,22 +1,24 @@
 "use client";
 
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Filter, SlidersHorizontal } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Filter, SlidersHorizontal, RefreshCcw } from "lucide-react";
 import { ProductUrlState } from "@/hooks/useProductUrlState";
 import { ApiCategory } from "@/services/category.service";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 
 interface ProductFilterDrawerProps {
   state: ProductUrlState;
   updateState: (updates: Partial<ProductUrlState>) => void;
+  clearFilters: () => void;
   categories: ApiCategory[];
   customFields: CustomField[];
 }
 
-export function ProductFilterDrawer({ state, updateState, categories, customFields }: ProductFilterDrawerProps) {
+export function ProductFilterDrawer({ state, updateState, clearFilters, categories, customFields }: ProductFilterDrawerProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -25,10 +27,10 @@ export function ProductFilterDrawer({ state, updateState, categories, customFiel
           <span className="hidden sm:inline">Filters</span>
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md flex flex-col h-full">
+        <SheetHeader className="shrink-0">
           <SheetTitle className="flex items-center gap-2">
-            <SlidersHorizontal className="h-5 w-5" />
+            <SlidersHorizontal className="h-5 w-5 text-primary" />
             Filter Products
           </SheetTitle>
           <SheetDescription>
@@ -36,59 +38,62 @@ export function ProductFilterDrawer({ state, updateState, categories, customFiel
           </SheetDescription>
         </SheetHeader>
 
-        <div className="py-6 space-y-6">
-          <div className="space-y-3">
-            <h4 className="font-medium leading-none">Core Attributes</h4>
+        <div className="py-6 px-4 space-y-6 flex-1 overflow-y-auto pr-2">
+          <div className="space-y-4">
+            <h4 className="font-medium leading-none text-sm border-b pb-2">Core Attributes</h4>
             
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Category</Label>
-              <select 
-                className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={state.categoryId}
-                onChange={(e) => updateState({ categoryId: e.target.value })}
-              >
-                <option value="all">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id.toString()}>{cat.name}</option>
-                ))}
-              </select>
+              <Select value={state.categoryId} onValueChange={(val) => updateState({ categoryId: val || "all" })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Status</Label>
-              <select 
-                className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={state.status}
-                onChange={(e) => updateState({ status: e.target.value })}
-              >
-                <option value="all">All Statuses</option>
-                <option value="active">Active Only</option>
-                <option value="inactive">Inactive Only</option>
-              </select>
+              <Select value={state.status} onValueChange={(val) => updateState({ status: val || "all" })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active Only</SelectItem>
+                  <SelectItem value="inactive">Inactive Only</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Stock Status</Label>
-              <select 
-                className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={state.stockStatus}
-                onChange={(e) => updateState({ stockStatus: e.target.value })}
-              >
-                <option value="all">All Stock Statuses</option>
-                <option value="in-stock">In Stock</option>
-                <option value="low-stock">Low Stock</option>
-                <option value="out-of-stock">Out of Stock</option>
-              </select>
+              <Select value={state.stockStatus} onValueChange={(val) => updateState({ stockStatus: val || "all" })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Stock Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Stock Statuses</SelectItem>
+                  <SelectItem value="in-stock">In Stock</SelectItem>
+                  <SelectItem value="low-stock">Low Stock</SelectItem>
+                  <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="font-medium leading-none">Price Range</h4>
+          <div className="space-y-4">
+            <h4 className="font-medium leading-none text-sm border-b pb-2">Price Range</h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Min Price ($)</Label>
                 <Input 
-                  type="number" 
+                  type="NUMBER" 
                   min="0"
                   placeholder="0.00" 
                   value={state.minPrice}
@@ -98,7 +103,7 @@ export function ProductFilterDrawer({ state, updateState, categories, customFiel
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Max Price ($)</Label>
                 <Input 
-                  type="number" 
+                  type="NUMBER" 
                   min="0"
                   placeholder="Any" 
                   value={state.maxPrice}
@@ -109,38 +114,40 @@ export function ProductFilterDrawer({ state, updateState, categories, customFiel
           </div>
 
           {customFields.length > 0 && (
-            <div className="space-y-3 pt-2 border-t">
-              <h4 className="font-medium leading-none">Dynamic Attributes</h4>
+            <div className="space-y-4 pt-2">
+              <h4 className="font-medium leading-none text-sm border-b pb-2">Dynamic Attributes</h4>
               
               {customFields.map((field) => {
                 const key = `custom_${field.id}`;
                 return (
                   <div key={field.id} className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground capitalize">{field.name || field.id.replace(/_/g, ' ')}</Label>
-                    {field.type === 'dropdown' && field.options ? (
-                      <select 
-                        className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        value={state[key] || "all"}
-                        onChange={(e) => updateState({ [key]: e.target.value })}
-                      >
-                        <option value="all">Any</option>
-                        {field.options.map((opt: string) => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    ) : field.type === 'checkbox' ? (
-                       <select 
-                        className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        value={state[key] || "all"}
-                        onChange={(e) => updateState({ [key]: e.target.value })}
-                      >
-                        <option value="all">Any</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                      </select>
+                    {field.type === "DROPDOWN" && field.options ? (
+                      <Select value={state[key] || "all"} onValueChange={(val) => updateState({ [key]: val })}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          {field.options.map((opt: string) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : field.type === "CHECKBOX" ? (
+                      <Select value={state[key] || "all"} onValueChange={(val) => updateState({ [key]: val })}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="true">Yes</SelectItem>
+                          <SelectItem value="false">No</SelectItem>
+                        </SelectContent>
+                      </Select>
                     ) : (
                       <Input 
-                        type="text" 
+                        type="TEXT" 
                         placeholder={`Filter by ${field.name}...`} 
                         value={state[key] || ""}
                         onChange={(e) => updateState({ [key]: e.target.value })}
@@ -152,6 +159,14 @@ export function ProductFilterDrawer({ state, updateState, categories, customFiel
             </div>
           )}
         </div>
+
+        <SheetFooter className="shrink-0 pt-4 border-t gap-2 sm:gap-0">
+          <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Clear
+          </Button>
+          <SheetClose render={<Button className="w-full sm:w-auto">Show Results</Button>} />
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

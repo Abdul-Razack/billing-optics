@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Check, ChevronsUpDown, Package, Loader2, PlusCircle } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ProductService, ApiProduct } from "@/services/product.service";
+import { ShortcutService, Shortcut } from "@/services/shortcut.service";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Badge } from "@/components/ui/badge";
 
@@ -30,6 +32,11 @@ export function ProductOrderSelector({ onAdd, disabled }: ProductOrderSelectorPr
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [isLoading, setIsLoading] = useState(false);
+  const [shortcuts, setShortcuts] = useState<Shortcut[]>([]);
+
+  useEffect(() => {
+    ShortcutService.getAllShortcuts().then(data => setShortcuts(data)).catch(console.error);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -60,6 +67,31 @@ export function ProductOrderSelector({ onAdd, disabled }: ProductOrderSelectorPr
     setSearch("");
   };
 
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const term = search.trim().toUpperCase();
+      const shortcutMatch = shortcuts.find(s => s.shortcutKey === term);
+      
+      if (shortcutMatch) {
+        e.preventDefault();
+        try {
+          setIsLoading(true);
+          const product = await ProductService.getProductById(shortcutMatch.productId);
+          if (product && product.isActive && (product.stock ?? 1) > 0) {
+            handleSelect(product);
+            toast.success(`Added ${product.name} via shortcut '${term}'`);
+          } else {
+            toast.error("Shortcut product is out of stock or inactive.");
+          }
+        } catch (err) {
+          toast.error("Failed to load shortcut product");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -80,9 +112,10 @@ export function ProductOrderSelector({ onAdd, disabled }: ProductOrderSelectorPr
       <PopoverContent className="w-[300px] sm:w-[500px] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput 
-            placeholder="Search by name, SKU, barcode..." 
+            placeholder="Search by name, SKU, barcode, or Shortcut Key..." 
             value={search}
             onValueChange={setSearch}
+            onKeyDown={handleKeyDown}
           />
           <CommandList>
             <CommandEmpty>

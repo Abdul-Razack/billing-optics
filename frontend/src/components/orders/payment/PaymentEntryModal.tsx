@@ -106,7 +106,7 @@ export function PaymentEntryModal({ open, onOpenChange, invoice, initialIsFull, 
                 <span className="absolute left-3 top-2.5 text-gray-500">₹</span>
                 <Input 
                   id="amount" 
-                  type="number" 
+                  type="NUMBER" 
                   step="0.01" 
                   min="0.01" 
                   max={balanceDue / 100}

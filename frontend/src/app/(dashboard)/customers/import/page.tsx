@@ -21,8 +21,8 @@ import { fetchClient } from "@/lib/api-client";
 type ImportWizardStep = "upload" | "map" | "preview" | "importing" | "summary";
 
 const SYSTEM_FIELDS: ImportFieldDef[] = [
-  { id: "fullName", label: "Full Name", required: true },
-  { id: "phone", label: "Phone", required: true },
+  { id: "fullName", label: "Full Name", isRequired: true },
+  { id: "phone", label: "Phone", isRequired: true },
   { id: "email", label: "Email" },
   { id: "address", label: "Address" },
   { id: "notes", label: "Notes" },
@@ -50,7 +50,7 @@ export default function CustomerImportPage() {
         const dynamicFields = customFields.map(f => ({
           id: f.id,
           label: f.name,
-          required: f.required
+          isRequired: f.isRequired
         }));
         setAllFields([...SYSTEM_FIELDS, ...dynamicFields]);
       })
@@ -60,7 +60,7 @@ export default function CustomerImportPage() {
   const handleDownloadTemplate = () => {
     const columns = allFields.map(f => ({ header: f.label, key: f.id }));
     const sampleData = [
-      allFields.reduce((acc, f) => ({ ...acc, [f.id]: f.required ? "Sample Data" : "" }), {})
+      allFields.reduce((acc, f) => ({ ...acc, [f.id]: f.isRequired ? "Sample Data" : "" }), {})
     ];
     exportToCSV(sampleData, columns, "customer_import_template");
   };
@@ -81,7 +81,7 @@ export default function CustomerImportPage() {
     
     // Separate valid/invalid based on required fields
     const validRows = mappedData.filter(row => {
-      return allFields.filter(f => f.required).every(f => !!row[f.id]);
+      return allFields.filter(f => f.isRequired).every(f => !!row[f.id]);
     });
     const invalidCount = mappedData.length - validRows.length;
 
@@ -194,7 +194,7 @@ export default function CustomerImportPage() {
         {currentStep === "importing" && (
           <ImportProgress 
             current={importProgress} 
-            total={mappedData.filter(row => allFields.filter(f => f.required).every(f => !!row[f.id])).length} 
+            total={mappedData.filter(row => allFields.filter(f => f.isRequired).every(f => !!row[f.id])).length} 
           />
         )}
         {currentStep === "summary" && (

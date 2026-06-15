@@ -43,7 +43,7 @@ export function DynamicFieldPreview({ fieldConfig }: DynamicFieldPreviewProps) {
             )}
 
             {type === "NUMBER" && (
-              <Input type="number" placeholder={placeholder} defaultValue={defaultValue} readOnly />
+              <Input type="NUMBER" placeholder={placeholder} defaultValue={defaultValue} readOnly />
             )}
 
             {type === "TEXTAREA" && (

@@ -77,8 +77,7 @@ export function ProductListTable({
   const activeRowSelection = onRowSelectionChange ? rowSelection : internalRowSelection;
   const setActiveRowSelection = onRowSelectionChange || setInternalRowSelection;
 
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  
+
   // Persisted view mode
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   

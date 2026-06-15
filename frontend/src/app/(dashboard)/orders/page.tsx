@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
+import Link from "next/link";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { OrderTable } from "@/components/orders/OrderTable";
 import { OrderSkeleton } from "@/components/orders/OrderSkeleton";
@@ -15,6 +16,7 @@ export default function OrdersListingPage() {
   const [orders, setOrders] = useState<ApiInvoice[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [isProcessingBulk, setIsProcessingBulk] = useState(false);
   const [error, setError] = useState(false);
 
@@ -36,7 +38,8 @@ export default function OrdersListingPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const fetchOrders = async () => {
-    setIsLoading(true);
+    setIsFetching(true);
+    if (orders.length === 0) setIsLoading(true);
     setError(false);
     try {
       const { data, total } = await OrderService.getOrders({
@@ -55,6 +58,7 @@ export default function OrdersListingPage() {
       setError(true);
     } finally {
       setIsLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -129,6 +133,21 @@ export default function OrdersListingPage() {
         title="All Orders" 
         action={{ label: "Create Order", href: "/orders/create" }} 
       />
+
+      <div className="flex border-b border-border mb-6 mt-2">
+        <Link 
+          href="/orders" 
+          className="px-6 py-3 border-b-2 font-medium text-sm border-primary text-primary"
+        >
+          Orders
+        </Link>
+        <Link 
+          href="/invoices" 
+          className="px-6 py-3 border-b-2 border-transparent font-medium text-sm text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+        >
+          Invoices
+        </Link>
+      </div>
 
       <div className="flex flex-col gap-4 mb-6 mt-6">
         <OrderToolbar 

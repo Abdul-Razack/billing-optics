@@ -25,6 +25,8 @@ export const NAV_ITEMS = [
   { name: "Products", href: "/products", icon: Package, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
   { name: "Inventory", href: "/inventory", icon: Boxes, roles: ["ADMIN", "OPTOMETRIST"] },
   { name: "Prescriptions", href: "/prescriptions", icon: Stethoscope, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] }, // Note: cashier can view but not create
+  { name: "Lab Jobs", href: "/lab-jobs", icon: Boxes, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+  { name: "Vendors", href: "/vendors", icon: Users, roles: ["ADMIN", "OPTOMETRIST"] },
   { name: "Payments", href: "/payments", icon: CreditCard, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
   { name: "Reports", href: "/reports", icon: BarChart3, roles: ["ADMIN", "OPTOMETRIST"] },
   { name: "Users", href: "/users", icon: UserCog, roles: ["ADMIN"] },

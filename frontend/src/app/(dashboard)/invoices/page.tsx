@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
+import Link from "next/link";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { InvoiceTable } from "@/components/invoices/InvoiceTable";
 import { ApiInvoice, PaginatedApiInvoiceResponse } from "@/types/invoice";
@@ -67,6 +68,21 @@ export default function InvoicesPage() {
         action={{ label: "Create Invoice", href: "/orders/create" }} 
       />
 
+      <div className="flex border-b border-border mb-6">
+        <Link 
+          href="/orders" 
+          className="px-6 py-3 border-b-2 border-transparent font-medium text-sm text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+        >
+          Orders
+        </Link>
+        <Link 
+          href="/invoices" 
+          className="px-6 py-3 border-b-2 font-medium text-sm border-primary text-primary"
+        >
+          Invoices
+        </Link>
+      </div>
+
       {error ? (
         <div className="p-4 rounded bg-destructive/10 text-destructive border border-destructive/20 mb-4">
           Failed to load invoices. Please check your connection and try again.
@@ -109,7 +125,7 @@ export default function InvoicesPage() {
           </div>
 
           {showFilters && (
-            <div className="flex items-center gap-4 p-4 border border-border rounded-lg bg-card mb-4">
+            <div className="flex items-center gap-4 p-4 border border-border rounded-lg bg-card mb-4 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="space-y-1 w-full max-w-[200px]">
                 <label className="text-xs font-medium text-muted-foreground">Payment Status</label>
                 <Select value={state.paymentStatus} onValueChange={(val) => updateState({ paymentStatus: val || undefined })}>

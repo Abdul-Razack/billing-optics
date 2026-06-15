@@ -1,9 +1,9 @@
-export type CustomFieldType = "text" | "number" | "dropdown" | "checkbox" | "textarea";
+export type FieldType = "text" | "number" | "dropdown" | "checkbox" | "textarea";
 
 export interface CustomField {
   id: string;
   name: string;
-  type: CustomFieldType;
+  type: FieldType;
   options?: string[]; // For dropdown type
   required: boolean;
 }

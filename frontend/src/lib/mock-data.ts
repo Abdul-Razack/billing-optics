@@ -1,4 +1,5 @@
-import { Product, Category, CustomField } from "@/types/product";
+import { Product, Category } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 
 export const MOCK_CATEGORIES: Category[] = [
   { id: "cat_1", name: "Frames", description: "Spectacle frames", isActive: true },
@@ -8,10 +9,10 @@ export const MOCK_CATEGORIES: Category[] = [
 ];
 
 export const MOCK_CUSTOM_FIELDS: CustomField[] = [
-  { id: "cf_shape", name: "Shape", type: "dropdown", options: ["Round", "Square", "Aviator", "Cat Eye", "Rectangle"], required: false },
-  { id: "cf_material", name: "Material", type: "dropdown", options: ["Metal", "Plastic", "Titanium", "Wood"], required: true },
-  { id: "cf_color", name: "Color", type: "text", required: true },
-  { id: "cf_lensType", name: "Lens Type", type: "dropdown", options: ["Single Vision", "Bifocal", "Progressive"], required: false },
+  { key: "key", entityTarget: "PRODUCT" as any, isActive: true, createdAt: "2024-01-01", id: "cf_shape", name: "Shape", type: "DROPDOWN", options: ["Round", "Square", "Aviator", "Cat Eye", "Rectangle"], isRequired: false },
+  { key: "key", entityTarget: "PRODUCT" as any, isActive: true, createdAt: "2024-01-01", id: "cf_material", name: "Material", type: "DROPDOWN", options: ["Metal", "Plastic", "Titanium", "Wood"], isRequired: true },
+  { key: "key", entityTarget: "PRODUCT" as any, isActive: true, createdAt: "2024-01-01", id: "cf_color", name: "Color", type: "TEXT", isRequired: true },
+  { key: "key", entityTarget: "PRODUCT" as any, isActive: true, createdAt: "2024-01-01", id: "cf_lensType", name: "Lens Type", type: "DROPDOWN", options: ["Single Vision", "Bifocal", "Progressive"], isRequired: false },
 ];
 
 export const MOCK_PRODUCTS: Product[] = [

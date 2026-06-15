@@ -29,7 +29,7 @@ type FieldValues = z.infer<typeof fieldSchema>;
 interface DynamicFieldBuilderProps {
   initialData?: Partial<CustomField>;
   onConfigChange: (config: Partial<CustomField>) => void;
-  onSave: () => void;
+  onSave: (config: CustomField) => void;
   onCancel: () => void;
 }
 
@@ -83,8 +83,20 @@ export function DynamicFieldBuilder({ initialData, onConfigChange, onSave, onCan
   };
 
   const onSubmit = (values: FieldValues) => {
-    console.log("Mock Field Saved:", { ...values, options });
-    onSave();
+    const newField: CustomField = {
+      id: initialData?.id || `cf_${values.key}`,
+      key: values.key,
+      name: values.name,
+      type: values.type as FieldType,
+      entityTarget: values.entityTarget as any,
+      isRequired: values.isRequired,
+      isActive: values.isActive,
+      options: options,
+      defaultValue: values.defaultValue,
+      placeholder: values.placeholder,
+      createdAt: initialData?.createdAt || new Date().toISOString()
+    };
+    onSave(newField);
   };
 
   const needsOptions = form.watch("type") === "DROPDOWN" || form.watch("type") === "MULTI_SELECT";

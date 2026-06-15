@@ -8,3 +8,4 @@ export const paymentStatusEnum = pgEnum('payment_status', ['UNPAID', 'PARTIAL', 
 export const referenceTypeEnum = pgEnum('reference_type', ['INVOICE', 'PURCHASE', 'RETURN', 'ADJUSTMENT']);
 export const genderEnum = pgEnum('gender', ['MALE', 'FEMALE', 'OTHER']);
 export const deliveryStatusEnum = pgEnum('delivery_status', ['PENDING', 'READY', 'DELIVERED']);
+export const labJobStatusEnum = pgEnum('lab_job_status', ['PENDING', 'SENT_TO_LAB', 'PROCESSING', 'RECEIVED', 'READY', 'DELIVERED']);

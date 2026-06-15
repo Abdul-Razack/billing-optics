@@ -151,7 +151,7 @@ export function InvoiceTable({ data, isLoading, totalItems, state, updateState }
                 {invoice.status !== "CANCELLED" && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive">
+                    <DropdownMenuItem variant="destructive">
                       <XCircle className="mr-2 h-4 w-4" />
                       Cancel Invoice
                     </DropdownMenuItem>

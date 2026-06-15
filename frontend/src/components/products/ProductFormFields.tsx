@@ -84,7 +84,7 @@ export function ProductFormFields({ categories }: ProductFormFieldsProps) {
               <Label htmlFor="costPrice">Cost Price</Label>
               <Input 
                 id="costPrice" 
-                type="number" 
+                type="NUMBER" 
                 step="0.01" 
                 min="0"
                 {...register("costPrice", { valueAsNumber: true })} 
@@ -95,7 +95,7 @@ export function ProductFormFields({ categories }: ProductFormFieldsProps) {
               <Label htmlFor="sellingPrice">Selling Price <span className="text-destructive">*</span></Label>
               <Input 
                 id="sellingPrice" 
-                type="number" 
+                type="NUMBER" 
                 step="0.01" 
                 min="0"
                 {...register("sellingPrice", { valueAsNumber: true })} 
@@ -106,7 +106,7 @@ export function ProductFormFields({ categories }: ProductFormFieldsProps) {
               <Label htmlFor="gstPercent">GST (%)</Label>
               <Input 
                 id="gstPercent" 
-                type="number" 
+                type="NUMBER" 
                 min="0"
                 max="100"
                 {...register("gstPercent", { valueAsNumber: true })} 
@@ -117,7 +117,7 @@ export function ProductFormFields({ categories }: ProductFormFieldsProps) {
               <Label htmlFor="minStockAlert">Stock Quantity</Label>
               <Input 
                 id="minStockAlert" 
-                type="number" 
+                type="NUMBER" 
                 min="0"
                 {...register("minStockAlert", { valueAsNumber: true })} 
               />

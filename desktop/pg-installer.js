@@ -146,9 +146,9 @@ async function installPostgresLinux(adminPass, port, onProgress, onLog) {
     echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list &&
     apt-get update -y &&
     apt-get install -y postgresql-16 postgresql-client-16 postgresql-contrib &&
-    PG_CONF=$(ls /etc/postgresql/*/main/postgresql.conf | sort -V | tail -n 1) &&
-    if [ -z "$PG_CONF" ]; then
-      echo "[INSTALLER] postgresql.conf not found"
+    PG_CONF="/etc/postgresql/16/main/postgresql.conf" &&
+    if [ ! -f "$PG_CONF" ]; then
+      echo "[INSTALLER] postgresql.conf not found at $PG_CONF"
       exit 1
     fi &&
     echo "[INSTALLER] Using config: $PG_CONF" &&

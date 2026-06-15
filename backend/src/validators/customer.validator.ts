@@ -7,6 +7,10 @@ export const createCustomerSchema = z.object({
     phone: z.string().trim().min(3).max(20),
     email: z.string().trim().email().optional().or(z.literal('')),
     address: z.string().trim().max(500).optional().or(z.literal('')),
+    notes: z.string().trim().max(1000).optional().or(z.literal('')),
+    gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
+    isActive: z.boolean().optional(),
+    customFields: z.record(z.any()).optional(),
   })
 });
 

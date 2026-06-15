@@ -3,7 +3,7 @@
 import { useFormContext, Controller } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 import { DynamicFieldRenderer } from "./DynamicFieldRenderer";
 
 interface ProductCustomFieldsProps {
@@ -30,12 +30,12 @@ export function ProductCustomFields({ customFields }: ProductCustomFieldsProps) 
           {customFields.map((field) => (
             <div 
               key={field.id} 
-              className={field.type === "textarea" ? "md:col-span-2 lg:col-span-3 space-y-2" : "space-y-2"}
+              className={field.type === "TEXTAREA" ? "md:col-span-2 lg:col-span-3 space-y-2" : "space-y-2"}
             >
-              {field.type !== "checkbox" && (
+              {field.type !== "CHECKBOX" && (
                 <Label className="flex items-center gap-1">
                   {field.name} 
-                  {field.required && <span className="text-destructive">*</span>}
+                  {field.isRequired && <span className="text-destructive">*</span>}
                 </Label>
               )}
               <Controller

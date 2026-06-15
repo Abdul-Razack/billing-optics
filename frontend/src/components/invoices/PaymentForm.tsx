@@ -52,7 +52,7 @@ export function PaymentForm({
           <div className="relative">
             <span className="absolute left-2.5 top-2.5 text-muted-foreground text-sm">$</span>
             <Input 
-              type="number" 
+              type="NUMBER" 
               step="0.01" 
               className="pl-6" 
               value={amount} 

@@ -22,7 +22,7 @@ export function ImportPreview({ fields, data, onConfirm, onBack }: ImportPreview
   // Validate data against required fields and check duplicates
   const validatedData: (Record<string, any> & { _isValid: boolean; _missingFields: string[]; _isDuplicate: boolean; _duplicateFields: string[] })[] = data.map(row => {
     const missingFields = fields
-      .filter(f => f.required && !row[f.id])
+      .filter(f => f.isRequired && !row[f.id])
       .map(f => f.label);
     
     const duplicateFields = [];
@@ -89,7 +89,7 @@ export function ImportPreview({ fields, data, onConfirm, onBack }: ImportPreview
               <th className="px-4 py-3 font-medium w-8"></th>
               {fields.map(f => (
                 <th key={f.id} className="px-4 py-3 font-medium whitespace-nowrap">
-                  {f.label} {f.required && <span className="text-destructive">*</span>}
+                  {f.label} {f.isRequired && <span className="text-destructive">*</span>}
                 </th>
               ))}
             </tr>

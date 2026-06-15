@@ -18,7 +18,7 @@ import { useFetch } from "@/hooks/useApi";
 import { ProductService, ApiProduct } from "@/services/product.service";
 import { CategoryService, ApiCategory } from "@/services/category.service";
 import { SettingsService } from "@/services/settings.service";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -218,7 +218,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             const label = fieldDef?.name || key.replace(/_/g, ' ');
             let displayValue = String(value);
 
-            if (fieldDef?.type === "checkbox") {
+            if (fieldDef?.type === "CHECKBOX") {
               displayValue = value ? "Yes" : "No";
             } else if (value === null || value === undefined || value === "") {
               displayValue = "—";
@@ -292,7 +292,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <label htmlFor="stockValue" className="text-sm font-medium">New Stock Quantity</label>
               <Input 
                 id="stockValue"
-                type="number"
+                type="NUMBER"
                 min="0"
                 value={newStockValue}
                 onChange={(e) => setNewStockValue(e.target.value)}

@@ -21,6 +21,7 @@ export interface CreateProductInput {
   minStockAlert?: number;
   sku?: string;
   barcode?: string;
+  attributes?: Record<string, any>;
 }
 
 export interface UpdateProductInput {
@@ -32,6 +33,7 @@ export interface UpdateProductInput {
   gstPercent?: number;
   minStockAlert?: number;
   isActive?: boolean;
+  attributes?: Record<string, any>;
 }
 
 export class ProductService {
@@ -56,6 +58,7 @@ export class ProductService {
           minStockAlert: data.minStockAlert,
           sku,
           barcode,
+          attributes: data.attributes || {},
         })
         .returning();
 

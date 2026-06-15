@@ -197,7 +197,7 @@ export function StockAdjustmentForm({ product, isOpen, onClose, onSuccess }: Sto
             <div className="space-y-2">
               <Label>Quantity</Label>
               <Input 
-                type="number" 
+                type="NUMBER" 
                 min="1"
                 placeholder="e.g. 10" 
                 value={quantityStr}

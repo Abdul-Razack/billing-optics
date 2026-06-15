@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiCustomer } from "@/types/customer";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 import { CustomerService } from "@/services/customer.service";
 import { SettingsService } from "@/services/settings.service";
 import { DynamicFieldRenderer } from "@/components/products/DynamicFieldRenderer";
@@ -135,10 +135,10 @@ function CustomerFormInner({ initialData, customFields }: CustomerFormInnerProps
           <h3 className="text-lg font-medium border-b border-border pb-2 mb-4">Additional Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {customFields.map((field) => (
-              <div key={field.id} className={field.type === "textarea" ? "md:col-span-3 space-y-2" : "space-y-2"}>
-                {field.type !== "checkbox" && (
+              <div key={field.id} className={field.type === "TEXTAREA" ? "md:col-span-3 space-y-2" : "space-y-2"}>
+                {field.type !== "CHECKBOX" && (
                   <Label>
-                    {field.name} {field.required && <span className="text-destructive">*</span>}
+                    {field.name} {field.isRequired && <span className="text-destructive">*</span>}
                   </Label>
                 )}
                 <Controller

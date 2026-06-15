@@ -37,9 +37,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CustomerUrlState } from "@/hooks/useCustomerUrlState";
-import { SecureActionConfirm } from "@/components/shared/SecureActionConfirm";
-import { RequireRole } from "@/components/auth/RequireRole";
+import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { handleRowClick } from "@/lib/table-utils";
 
@@ -51,6 +60,84 @@ interface CustomerTableProps {
   updateState: (updates: Partial<CustomerUrlState>) => void;
   rowSelection: RowSelectionState;
   setRowSelection: OnChangeFn<RowSelectionState>;
+  onDelete: (id: number) => void;
+}
+
+function CustomerRowActions({ row, onDelete }: { row: ApiCustomer; onDelete: (id: number) => void }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link href={`/customers/${row.id}`}>
+                <Eye className="mr-2 h-4 w-4" /> View Details
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/customers/${row.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" /> Edit Customer
+              </Link>
+            </DropdownMenuItem>
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  variant="destructive"
+                  className="cursor-pointer" 
+                  onClick={(e: React.MouseEvent) => {
+                    setIsDeleteDialogOpen(true);
+                  }}
+                >
+                  <Trash className="mr-2 h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {isAdmin && (
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Trash className="h-5 w-5 text-destructive" />
+                Delete Customer?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {row.fullName}? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  setIsDeleteDialogOpen(false);
+                  onDelete(row.id);
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+    </div>
+  );
 }
 
 export function CustomerTable({ 
@@ -60,9 +147,12 @@ export function CustomerTable({
   state,
   updateState,
   rowSelection,
-  setRowSelection
+  setRowSelection,
+  onDelete
 }: CustomerTableProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
 
   // Parse sort from string "id-desc" to SortingState
   const sorting: SortingState = state.sort ? (() => {
@@ -156,54 +246,11 @@ export function CustomerTable({
     },
     {
       id: "actions",
-      cell: ({ row }) => {
-        const customer = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                  <Link href={`/customers/${customer.id}`}>
-                    <Eye className="mr-2 h-4 w-4" /> View Details
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/customers/${customer.id}/edit`}>
-                    <Edit className="mr-2 h-4 w-4" /> Edit Customer
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <RequireRole allowedRoles={["ADMIN"]}>
-                  <SecureActionConfirm
-                    title="Delete Customer?"
-                    description={`Are you sure you want to delete ${customer.fullName}? This action cannot be undone.`}
-                    onConfirm={() => {
-                      alert("Delete functionality pending implementation.");
-                    }}
-                    actionLabel="Delete"
-                  >
-                    <DropdownMenuItem 
-                      className="text-destructive" 
-                      onSelect={(e: Event) => e.preventDefault()}
-                    >
-                      <Trash className="mr-2 h-4 w-4" /> Delete
-                    </DropdownMenuItem>
-                  </SecureActionConfirm>
-                </RequireRole>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      cell: ({ row }) => (
+        <CustomerRowActions row={row.original} onDelete={onDelete} />
+      ),
     }
-  ], [updateState]);
+  ], [updateState, onDelete]);
 
   const table = useReactTable({
     data,

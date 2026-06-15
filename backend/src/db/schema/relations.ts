@@ -9,6 +9,9 @@ import { invoiceItems } from './invoiceItems';
 import { payments } from './payments';
 import { inventoryLedger } from './inventoryLedger';
 import { auditLogs } from './auditLogs';
+import { vendors } from './vendors';
+import { labJobs } from './labJobs';
+import { posShortcuts } from './posShortcuts';
 
 export const usersRelations = relations(users, ({ many }) => ({
   invoices: many(invoices),
@@ -44,6 +47,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   }),
   invoiceItems: many(invoiceItems),
   inventoryLedger: many(inventoryLedger),
+  posShortcuts: many(posShortcuts),
 }));
 
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
@@ -57,6 +61,7 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   }),
   items: many(invoiceItems),
   payments: many(payments),
+  labJobs: many(labJobs),
 }));
 
 export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
@@ -94,3 +99,26 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const vendorsRelations = relations(vendors, ({ many }) => ({
+  labJobs: many(labJobs),
+}));
+
+export const labJobsRelations = relations(labJobs, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [labJobs.invoiceId],
+    references: [invoices.id],
+  }),
+  vendor: one(vendors, {
+    fields: [labJobs.vendorId],
+    references: [vendors.id],
+  }),
+}));
+
+export const posShortcutsRelations = relations(posShortcuts, ({ one }) => ({
+  product: one(products, {
+    fields: [posShortcuts.productId],
+    references: [products.id],
+  }),
+}));
+

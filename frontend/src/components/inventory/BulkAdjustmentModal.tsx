@@ -224,7 +224,7 @@ export function BulkAdjustmentModal({ products, isOpen, onClose, onSuccess }: Bu
             <div className="space-y-2">
               <Label>Quantity to Apply</Label>
               <Input 
-                type="number" 
+                type="NUMBER" 
                 min="1"
                 placeholder="e.g. 10" 
                 value={quantityStr}

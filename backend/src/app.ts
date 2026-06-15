@@ -24,6 +24,9 @@ import { createHealthRoutes } from './routes/health.routes';
 import { createMaintenanceRoutes } from './routes/maintenance.routes';
 import { createLicenseRoutes } from './routes/license.routes';
 import { createAuditRoutes } from './routes/audit.routes';
+import { createVendorRoutes } from './routes/vendor.routes';
+import { createLabJobRoutes } from './routes/labJob.routes';
+import { createShortcutRoutes } from './routes/shortcut.routes';
 import { requireLicense } from './middleware/license.middleware';
 
 export function buildApp(context: BootstrapContext) {
@@ -66,6 +69,9 @@ export function buildApp(context: BootstrapContext) {
   app.use('/api/system-health', createHealthRoutes());
   app.use('/api/database-maintenance', createMaintenanceRoutes());
   app.use('/api/audit-logs', createAuditRoutes());
+  app.use('/api/vendors', createVendorRoutes());
+  app.use('/api/lab-jobs', createLabJobRoutes());
+  app.use('/api/shortcuts', createShortcutRoutes());
 
   // Global Error Handler
   app.use(errorMiddleware);

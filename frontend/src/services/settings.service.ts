@@ -1,5 +1,5 @@
 import { fetchClient } from "@/lib/api-client";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 
 export interface CustomFieldDefinitions {
   products: CustomField[];

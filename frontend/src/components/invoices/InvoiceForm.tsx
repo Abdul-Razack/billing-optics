@@ -168,7 +168,7 @@ export function InvoiceForm() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground">Order Discount (%)</label>
             <Input 
-              type="number" 
+              type="NUMBER" 
               min="0" 
               max="100" 
               value={discountPercent} 

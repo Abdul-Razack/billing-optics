@@ -8,7 +8,7 @@ import { toast } from "sonner";
 export interface ImportFieldDef {
   id: string;
   label: string;
-  required?: boolean;
+  isRequired?: boolean;
 }
 
 interface MappingTableProps {
@@ -86,7 +86,7 @@ export function MappingTable({ fields, headers, rawData, onComplete, onBack }: M
     toast.success("Mapping template saved successfully.");
   };
 
-  const isMappingValid = fields.filter(f => f.required).every(f => !!mapping[f.id]);
+  const isMappingValid = fields.filter(f => f.isRequired).every(f => !!mapping[f.id]);
 
   return (
     <div className="p-6">
@@ -109,7 +109,7 @@ export function MappingTable({ fields, headers, rawData, onComplete, onBack }: M
             <div className="col-span-1">
               <Label className="font-medium text-sm flex items-center">
                 {field.label}
-                {field.required && <span className="text-destructive ml-1">*</span>}
+                {field.isRequired && <span className="text-destructive ml-1">*</span>}
               </Label>
             </div>
             <div className="col-span-2">
@@ -117,7 +117,7 @@ export function MappingTable({ fields, headers, rawData, onComplete, onBack }: M
                 value={mapping[field.id] || "unmapped"} 
                 onValueChange={(val) => setMapping(prev => ({ ...prev, [field.id]: val === "unmapped" ? "" : String(val) }))}
               >
-                <SelectTrigger className={!mapping[field.id] && field.required ? "border-destructive/50" : ""}>
+                <SelectTrigger className={!mapping[field.id] && field.isRequired ? "border-destructive/50" : ""}>
                   <SelectValue placeholder="Select column..." />
                 </SelectTrigger>
                 <SelectContent>

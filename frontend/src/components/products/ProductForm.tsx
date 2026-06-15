@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { CategoryService, ApiCategory } from "@/services/category.service";
 import { ProductService, ApiProduct } from "@/services/product.service";
 import { SettingsService } from "@/services/settings.service";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 import { buildDynamicSchema } from "@/lib/dynamic-schema";
 
 import { ProductFormFields } from "./ProductFormFields";

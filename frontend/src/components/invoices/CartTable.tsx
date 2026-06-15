@@ -51,7 +51,7 @@ export function CartTable({ items, onUpdateQuantity, onUpdatePrice, onRemove }: 
               </TableCell>
               <TableCell>
                 <Input 
-                  type="number" 
+                  type="NUMBER" 
                   min="1" 
                   value={item.quantity} 
                   onChange={(e) => onUpdateQuantity(item.id, Number(e.target.value) || 1)}
@@ -62,7 +62,7 @@ export function CartTable({ items, onUpdateQuantity, onUpdatePrice, onRemove }: 
                 <div className="relative">
                   <span className="absolute left-2.5 top-1.5 text-muted-foreground text-sm">$</span>
                   <Input 
-                    type="number" 
+                    type="NUMBER" 
                     step="0.01" 
                     value={item.unitPrice} 
                     onChange={(e) => onUpdatePrice(item.id, Number(e.target.value) || 0)}

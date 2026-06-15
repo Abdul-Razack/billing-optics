@@ -1,6 +1,6 @@
 "use client";
 
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,7 +14,7 @@ interface DynamicFieldRendererProps {
 
 export function DynamicFieldRenderer({ fieldDef, value, onChange }: DynamicFieldRendererProps) {
   switch (fieldDef.type) {
-    case "text":
+    case "TEXT":
       return (
         <Input 
           type="text" 
@@ -23,7 +23,7 @@ export function DynamicFieldRenderer({ fieldDef, value, onChange }: DynamicField
           onChange={(e) => onChange(e.target.value)} 
         />
       );
-    case "number":
+    case "NUMBER":
       return (
         <Input 
           type="number" 
@@ -32,7 +32,7 @@ export function DynamicFieldRenderer({ fieldDef, value, onChange }: DynamicField
           onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined)} 
         />
       );
-    case "textarea":
+    case "TEXTAREA":
       return (
         <Textarea 
           placeholder={`Enter ${fieldDef.name.toLowerCase()}`}
@@ -41,7 +41,7 @@ export function DynamicFieldRenderer({ fieldDef, value, onChange }: DynamicField
           className="resize-none"
         />
       );
-    case "checkbox":
+    case "CHECKBOX":
       return (
         <div className="flex items-center space-x-2 pt-2">
           <Checkbox 
@@ -54,7 +54,7 @@ export function DynamicFieldRenderer({ fieldDef, value, onChange }: DynamicField
           </label>
         </div>
       );
-    case "dropdown":
+    case "DROPDOWN":
       return (
         <Select value={value || ""} onValueChange={(val) => { if (val) onChange(val); }}>
           <SelectTrigger>

@@ -61,7 +61,7 @@ export function PaymentForm() {
           <div className="relative">
             <span className="absolute left-3 top-2.5 text-muted-foreground">₹</span>
             <Input 
-              type="number" 
+              type="NUMBER" 
               step="0.01"
               {...form.register("amount", { valueAsNumber: true })}
               className={`pl-7 ${form.formState.errors.amount ? "border-destructive" : ""}`}

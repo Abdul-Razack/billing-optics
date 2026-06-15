@@ -1,9 +1,10 @@
-import { Customer, CustomerCustomField } from "@/types/customer";
+import { Customer } from "@/types/customer";
 
-export const MOCK_CUSTOMER_FIELDS: CustomerCustomField[] = [
-  { id: "cf_prefBrand", name: "Preferred Brand", type: "dropdown", options: ["Ray-Ban", "Oakley", "Zeiss", "Acuvue", "None"], required: false },
-  { id: "cf_faceShape", name: "Face Shape", type: "dropdown", options: ["Round", "Oval", "Square", "Heart", "Diamond"], required: false },
-  { id: "cf_loyalty", name: "Loyalty Member", type: "checkbox", required: false },
+import { CustomField } from "@/types/custom-field";
+export const MOCK_CUSTOMER_FIELDS: CustomField[] = [
+  { key: "key", entityTarget: "CUSTOMER" as any, isActive: true, createdAt: "2024-01-01", id: "cf_prefBrand", name: "Preferred Brand", type: "DROPDOWN", options: ["Ray-Ban", "Oakley", "Zeiss", "Acuvue", "None"], isRequired: false },
+  { key: "key", entityTarget: "CUSTOMER" as any, isActive: true, createdAt: "2024-01-01", id: "cf_faceShape", name: "Face Shape", type: "DROPDOWN", options: ["Round", "Oval", "Square", "Heart", "Diamond"], isRequired: false },
+  { key: "key", entityTarget: "CUSTOMER" as any, isActive: true, createdAt: "2024-01-01", id: "cf_loyalty", name: "Loyalty Member", type: "CHECKBOX", isRequired: false },
 ];
 
 export const MOCK_CUSTOMERS: Customer[] = [

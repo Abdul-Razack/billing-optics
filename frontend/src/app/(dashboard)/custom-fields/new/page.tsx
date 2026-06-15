@@ -7,6 +7,8 @@ import { DynamicFieldBuilder } from "@/components/custom-fields/DynamicFieldBuil
 import { DynamicFieldPreview } from "@/components/custom-fields/DynamicFieldPreview";
 import { CustomField } from "@/types/custom-field";
 import { useRouter } from "next/navigation";
+import { SettingsService } from "@/services/settings.service";
+import { toast } from "sonner";
 
 export default function NewCustomFieldPage() {
   const router = useRouter();
@@ -15,9 +17,29 @@ export default function NewCustomFieldPage() {
     type: "TEXT",
     entityTarget: "PRODUCT"
   });
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    router.push("/custom-fields");
+  const handleSave = async (newField: CustomField) => {
+    setIsSaving(true);
+    try {
+      const currentSettings = await SettingsService.getSettings();
+      const definitions = currentSettings.customFieldDefinitions || { products: [], customers: [] };
+      
+      if (newField.entityTarget === "PRODUCT") {
+        definitions.products = [...(definitions.products || []), newField];
+      } else {
+        definitions.customers = [...(definitions.customers || []), newField];
+      }
+      
+      await SettingsService.updateSettings({ customFieldDefinitions: definitions });
+      toast.success("Custom field created successfully!");
+      router.push("/custom-fields");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save custom field");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -29,7 +51,8 @@ export default function NewCustomFieldPage() {
       <ProductHeader title="Field Configuration" />
       
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[calc(100vh-220px)] min-h-[600px]">
-        <div className="h-full">
+        <div className="h-full relative">
+          {isSaving && <div className="absolute inset-0 z-10 bg-background/50 flex items-center justify-center">Saving...</div>}
           <DynamicFieldBuilder 
             onConfigChange={setConfig} 
             onSave={handleSave} 

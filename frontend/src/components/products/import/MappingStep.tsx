@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { SettingsService } from "@/services/settings.service";
-import { CustomField } from "@/types/product";
+import { CustomField } from "@/types/custom-field";
 import { MappedData } from "@/app/(dashboard)/products/import/page";
 
 interface MappingStepProps {
@@ -15,12 +15,12 @@ interface MappingStepProps {
 }
 
 const REQUIRED_FIELDS = [
-  { id: "sku", label: "SKU", required: true },
-  { id: "name", label: "Product Name", required: true },
-  { id: "category", label: "Category", required: true },
-  { id: "costPrice", label: "Cost Price", required: true },
-  { id: "sellingPrice", label: "Selling Price", required: true },
-  { id: "minStockAlert", label: "Min Stock Alert", required: true },
+  { id: "sku", label: "SKU", isRequired: true },
+  { id: "name", label: "Product Name", isRequired: true },
+  { id: "category", label: "Category", isRequired: true },
+  { id: "costPrice", label: "Cost Price", isRequired: true },
+  { id: "sellingPrice", label: "Selling Price", isRequired: true },
+  { id: "minStockAlert", label: "Min Stock Alert", isRequired: true },
 ];
 
 const getInitialMapping = (fields: typeof REQUIRED_FIELDS, headers: string[]) => {
@@ -73,7 +73,7 @@ export function MappingStep({ headers, rawData, onComplete, onBack }: MappingSte
       .catch(console.error);
   }, [headers]);
 
-  const allFields = [...REQUIRED_FIELDS, ...customFields.map(f => ({ id: f.id, label: f.name, required: f.required }))];
+  const allFields = [...REQUIRED_FIELDS, ...customFields.map(f => ({ id: f.id, label: f.name, isRequired: f.isRequired }))];
 
   const handleNext = () => {
     // Transform data
@@ -108,7 +108,7 @@ export function MappingStep({ headers, rawData, onComplete, onBack }: MappingSte
             <div className="col-span-1">
               <Label className="font-medium text-sm flex items-center">
                 {field.label}
-                {field.required && <span className="text-destructive ml-1">*</span>}
+                {field.isRequired && <span className="text-destructive ml-1">*</span>}
               </Label>
             </div>
             <div className="col-span-2">
@@ -116,7 +116,7 @@ export function MappingStep({ headers, rawData, onComplete, onBack }: MappingSte
                 value={mapping[field.id] || "unmapped"} 
                 onValueChange={(val) => setMapping(prev => ({ ...prev, [field.id]: val === "unmapped" ? "" : String(val) }))}
               >
-                <SelectTrigger className={!mapping[field.id] && field.required ? "border-destructive/50" : ""}>
+                <SelectTrigger className={!mapping[field.id] && field.isRequired ? "border-destructive/50" : ""}>
                   <SelectValue placeholder="Select column..." />
                 </SelectTrigger>
                 <SelectContent>

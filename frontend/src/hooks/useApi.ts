@@ -10,7 +10,9 @@ interface UseFetchOptions<T> {
 export function useFetch<T>(endpoint: string, options: UseFetchOptions<T> = {}) {
   const { enabled = true, onSuccess, onError } = options;
   const [data, setData] = useState<T | null>(null);
+  const dataRef = useRef<T | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(enabled);
+  const [isFetching, setIsFetching] = useState<boolean>(enabled);
   const [error, setError] = useState<Error | null>(null);
 
   // Store latest callbacks in refs to prevent infinite re-renders
@@ -25,7 +27,10 @@ export function useFetch<T>(endpoint: string, options: UseFetchOptions<T> = {}) 
 
   const fetchData = useCallback(async (abortController?: AbortController) => {
     await Promise.resolve(); // yield before any setState (React Compiler requirement)
-    setIsLoading(true);
+    setIsFetching(true);
+    if (!dataRef.current) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const result = await fetchClient<T>(endpoint, {
@@ -33,14 +38,17 @@ export function useFetch<T>(endpoint: string, options: UseFetchOptions<T> = {}) 
       });
       if (abortController?.signal.aborted) return;
       setData(result);
+      dataRef.current = result;
       onSuccessRef.current?.(result);
       setIsLoading(false);
+      setIsFetching(false);
     } catch (err: unknown) {
       const error = err as Error;
       if (error.name === "AbortError" || abortController?.signal.aborted) return;
       setError(error);
       onErrorRef.current?.(error);
       setIsLoading(false);
+      setIsFetching(false);
     }
   }, [endpoint]);
 
@@ -60,5 +68,5 @@ export function useFetch<T>(endpoint: string, options: UseFetchOptions<T> = {}) 
     };
   }, [fetchData, enabled]);
 
-  return { data, isLoading, error, refetch: () => fetchData() };
+  return { data, isLoading, isFetching, error, refetch: () => fetchData() };
 }
