@@ -29,6 +29,13 @@
       "when": 1781498243897,
       "tag": "0003_low_butterfly",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781532392590,
+      "tag": "0004_dapper_excalibur",
+      "breakpoints": true
     }
   ]
 }
