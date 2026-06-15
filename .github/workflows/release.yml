@@ -75,7 +75,7 @@ jobs:
         run: npm run build:frontend
         env:
           NODE_ENV: production
-          NEXT_PUBLIC_API_URL: http://localhost:5000/api
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
       - name: Prepare Backend Runtime Bundle
         shell: bash
@@ -232,7 +232,7 @@ jobs:
         run: npm run build:frontend
         env:
           NODE_ENV: production
-          NEXT_PUBLIC_API_URL: http://localhost:5000/api
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api
 
       - name: Prepare Backend Runtime Bundle
         run: |
