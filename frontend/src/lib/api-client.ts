@@ -7,7 +7,7 @@ async function getApiBaseUrl(): Promise<string> {
     try {
       const env = await (window as any).electron.getEnv();
       if (env && env.PORT) {
-        dynamicApiUrl = `http://localhost:${env.PORT}/api`;
+        dynamicApiUrl = `http://127.0.0.1:${env.PORT}/api`;
         return dynamicApiUrl;
       }
     } catch (err) {
@@ -15,7 +15,7 @@ async function getApiBaseUrl(): Promise<string> {
     }
   }
 
-  dynamicApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  dynamicApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000/api";
   return dynamicApiUrl;
 }
 
@@ -97,6 +97,7 @@ export async function fetchClient<T>(endpoint: string, options: FetchOptions = {
   const baseUrl = await getApiBaseUrl();
   const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
+  console.log("[browser] FETCH URL:", url);
   let response: Response;
   try {
     response = await fetch(url, config);
@@ -171,6 +172,7 @@ export async function downloadFile(endpoint: string, filename: string): Promise<
   const baseUrl = await getApiBaseUrl();
   const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
+  console.log("[browser] FETCH URL:", url);
   let response: Response;
   try {
     response = await fetch(url, { headers });

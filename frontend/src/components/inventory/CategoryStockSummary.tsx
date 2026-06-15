@@ -13,8 +13,8 @@ export function CategoryStockSummary({ products, categories, isLoading }: Catego
   // Compute category breakdown
   const categoryStats = categories.map(cat => {
     const catProducts = products.filter(p => p.categoryId === cat.id);
-    const totalStock = catProducts.reduce((sum, p) => sum + ((p as any).currentStock ?? 0), 0);
-    const value = catProducts.reduce((sum, p) => sum + (((p as any).currentStock ?? 0) * (p.costPrice || 0)), 0);
+    const totalStock = catProducts.reduce((sum, p) => sum + (p.stock ?? (p as any).currentStock ?? 0), 0);
+    const value = catProducts.reduce((sum, p) => sum + ((p.stock ?? (p as any).currentStock ?? 0) * (p.costPrice || 0)), 0);
     return {
       ...cat,
       productCount: catProducts.length,

@@ -69,7 +69,7 @@ export function InventoryActivityFeed({ products, isLoading }: InventoryActivity
         ) : (
           <div className="space-y-6">
             {recentActivity.map(product => {
-              const currentStock = (product as any).currentStock ?? 0;
+              const currentStock = product.stock ?? (product as any).currentStock ?? 0;
               const { status } = calculateStockStatus(currentStock, product.minStockAlert);
               const agoText = timeAgo(product.updatedAt || product.createdAt);
 

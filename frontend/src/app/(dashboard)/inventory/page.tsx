@@ -36,7 +36,7 @@ export default function InventoryOverviewPage() {
     let totalValueCents = 0;
 
     products.forEach(p => {
-      const currentStock = (p as any).currentStock ?? 0;
+      const currentStock = p.stock ?? (p as any).currentStock ?? 0;
       const { status } = calculateStockStatus(currentStock, p.minStockAlert);
       
       totalStockUnits += currentStock;
