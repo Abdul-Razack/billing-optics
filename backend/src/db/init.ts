@@ -9,43 +9,47 @@ export async function initializeDatabase() {
   try {
     console.log('[INIT] Checking database status...');
 
-    // Safety check: if the drizzle migration tracking table exists but the schema
-    // is out of sync (e.g. after db:push was used, or migration files were squashed),
-    // reset the tracking table so migrations can rerun cleanly.
-    // All migration SQL uses CREATE TABLE IF NOT EXISTS, so this is safe.
+    // Safety check: reset stale migration history so migrations rerun cleanly.
+    // We store migration tracking in the PUBLIC schema (not a separate 'drizzle' schema)
+    // because the app user (billing_app) only has access to the public schema.
     try {
+      // Step 1: Drop the old 'drizzle' schema if it exists (leftover from old system)
+      // The app user may not have permission to drop it, so we silently ignore errors.
+      await pool.query(`DROP SCHEMA IF EXISTS drizzle CASCADE`).catch(() => {});
+
+      // Step 2: Check if our migration tracking table exists in the public schema
       const trackingResult = await pool.query(`
         SELECT EXISTS (
           SELECT FROM information_schema.tables 
-          WHERE table_schema = 'drizzle' 
+          WHERE table_schema = 'public' 
           AND table_name = '__drizzle_migrations'
         ) as exists
       `);
       const trackingExists = trackingResult.rows[0]?.exists === true;
 
       if (trackingExists) {
-        // Check how many migrations are recorded vs how many we have
-        const recordedResult = await pool.query(`SELECT count(*) as count FROM drizzle.__drizzle_migrations`);
+        // Check how many migrations are recorded vs how many we have (should be exactly 1)
+        const recordedResult = await pool.query(`SELECT count(*) as count FROM public.__drizzle_migrations`);
         const recordedCount = parseInt(recordedResult.rows[0]?.count || '0', 10);
 
-        // We only have 1 migration now (the squashed 0000). If the DB has a different
-        // count, it means it was set up with the old multi-file system. Reset it.
+        // We only have 1 squashed migration. If the DB has a different count,
+        // reset it so migrations rerun cleanly (all SQL uses IF NOT EXISTS so it's safe).
         if (recordedCount !== 1) {
           console.log(`[INIT] Detected stale migration history (${recordedCount} records). Resetting for squashed schema...`);
-          await pool.query(`DROP SCHEMA IF EXISTS drizzle CASCADE`);
+          await pool.query(`DROP TABLE IF EXISTS public.__drizzle_migrations`);
           console.log('[INIT] Migration history reset successfully.');
         }
       }
     } catch (checkError: any) {
-      // If the check fails for any reason, we proceed normally.
-      // migrate() will handle setting up the drizzle schema if it doesn't exist.
       console.log('[INIT] Migration check skipped (safe to ignore):', checkError?.message);
     }
 
-    // Run migrations unconditionally (Drizzle manages state)
+    // Run migrations unconditionally.
+    // migrationsSchema: 'public' ensures the tracking table is created in the
+    // public schema, which billing_app already has full access to.
     console.log('[INIT] Running database migrations...');
     const migrationsFolder = path.resolve(__dirname, 'migrations');
-    await migrate(db, { migrationsFolder });
+    await migrate(db, { migrationsFolder, migrationsSchema: 'public', migrationsTable: '__drizzle_migrations' });
     console.log('[INIT] Migrations applied successfully.');
 
     // Check if it's a fresh installation to seed default data
