@@ -15,6 +15,7 @@ export interface ApiSettings {
   gstNumber: string | null;
   currency: string;
   timezone: string;
+  printerSize: string;
   customFieldDefinitions: CustomFieldDefinitions;
   createdAt: string;
   updatedAt: string;

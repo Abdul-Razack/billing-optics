@@ -24,11 +24,13 @@ import { PrintableReceipt } from "@/components/invoices/PrintableReceipt";
 import { PaymentSummaryCard } from "@/components/orders/payment/PaymentSummaryCard";
 import { PaymentHistoryList } from "@/components/orders/payment/PaymentHistoryList";
 import { PaymentEntryModal } from "@/components/orders/payment/PaymentEntryModal";
+import { SettingsService, ApiSettings } from "@/services/settings.service";
 
 export default function OrderDetailsPage() {
   const { id } = useParams() as { id: string };
   const [invoice, setInvoice] = useState<ApiInvoice | null>(null);
   const [customer, setCustomer] = useState<ApiCustomer | null>(null);
+  const [settings, setSettings] = useState<ApiSettings | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
   
@@ -67,6 +69,14 @@ export default function OrderDetailsPage() {
         
         // 3. (Removed) We no longer fetch live products for historical invoices
         // to ensure they remain immutable and do not crash on deleted products.
+        
+        // 4. Fetch store settings for printing headers
+        try {
+          const settingsData = await SettingsService.getSettings();
+          if (isMounted) setSettings(settingsData);
+        } catch (err) {
+          console.error("Failed to fetch settings", err);
+        }
         
       } catch (err) {
         if (isMounted) setError(true);
@@ -159,6 +169,7 @@ export default function OrderDetailsPage() {
                 invoice={invoice} 
                 customer={customer} 
                 lineItems={printableLineItems} 
+                settings={settings}
               />
               <div className="page-break" style={{ pageBreakBefore: 'always' }} />
               <PrintableReceipt
@@ -166,6 +177,7 @@ export default function OrderDetailsPage() {
                 invoice={invoice}
                 customer={customer}
                 lineItems={printableLineItems}
+                settings={settings}
               />
             </div>
             

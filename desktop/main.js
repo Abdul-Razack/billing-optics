@@ -128,11 +128,16 @@ function loadConfig() {
 
       const dbUrl = `postgresql://${parsedConfig.username}:${parsedConfig.password}@${parsedConfig.host}:${parsedConfig.port}/${parsedConfig.database}`;
 
+      if (parsedConfig.githubToken) {
+        process.env.GH_TOKEN = parsedConfig.githubToken;
+      }
+
       envConfig = {
         DATABASE_URL: dbUrl,
         JWT_SECRET: parsedConfig.jwtSecret,
         PORT: parsedConfig.appPort || 5000,
-        NODE_ENV: 'production'
+        NODE_ENV: 'production',
+        GH_TOKEN: parsedConfig.githubToken || ''
       };
 
       return true;
@@ -456,9 +461,13 @@ ipcMain.on('launch-app', () => {
     mainWindow.show();
     if (app.isPackaged) {
       log.info('Checking for updates on startup...');
-      autoUpdater.checkForUpdates().catch(err => {
-        log.error('Failed to check for updates:', err);
-      });
+      try {
+        autoUpdater.checkForUpdates().catch(err => {
+          log.error('Failed to check for updates:', err);
+        });
+      } catch (syncErr) {
+        log.warn('AutoUpdater failed to initialize synchronously. Ignoring.', syncErr);
+      }
     }
   });
 });
@@ -679,9 +688,13 @@ async function startServers(isOnboarding = false) {
       // Check for updates after the app is ready (silently)
       if (app.isPackaged) {
         log.info('Checking for updates on startup...');
-        autoUpdater.checkForUpdates().catch(err => {
-          log.error('Failed to check for updates:', err);
-        });
+        try {
+          autoUpdater.checkForUpdates().catch(err => {
+            log.error('Failed to check for updates:', err);
+          });
+        } catch (syncErr) {
+          log.warn('AutoUpdater failed to initialize synchronously. Ignoring.', syncErr);
+        }
       }
     });
   }

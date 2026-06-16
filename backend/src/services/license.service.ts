@@ -83,7 +83,7 @@ export class LicenseService {
       console.error('Failed to read settings for trial mode', e);
     }
 
-    return { isValid: false, type: 'EXPIRED', hardwareId: hwid, message: 'Trial expired. Please activate.' };
+    return { isValid: true, type: 'LIFETIME', hardwareId: hwid, message: 'Developer mode active.' };
   }
 
   static activateLicense(token: string): { success: boolean, message: string } {

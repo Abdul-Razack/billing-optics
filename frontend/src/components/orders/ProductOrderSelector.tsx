@@ -69,8 +69,11 @@ export function ProductOrderSelector({ onAdd, disabled }: ProductOrderSelectorPr
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      const term = search.trim().toUpperCase();
-      const shortcutMatch = shortcuts.find(s => s.shortcutKey === term);
+      const term = search.trim();
+      if (!term) return;
+
+      const termUpper = term.toUpperCase();
+      const shortcutMatch = shortcuts.find(s => s.shortcutKey === termUpper);
       
       if (shortcutMatch) {
         e.preventDefault();
@@ -79,7 +82,7 @@ export function ProductOrderSelector({ onAdd, disabled }: ProductOrderSelectorPr
           const product = await ProductService.getProductById(shortcutMatch.productId);
           if (product && product.isActive && (product.stock ?? 1) > 0) {
             handleSelect(product);
-            toast.success(`Added ${product.name} via shortcut '${term}'`);
+            toast.success(`Added ${product.name} via shortcut '${termUpper}'`);
           } else {
             toast.error("Shortcut product is out of stock or inactive.");
           }
@@ -87,6 +90,25 @@ export function ProductOrderSelector({ onAdd, disabled }: ProductOrderSelectorPr
           toast.error("Failed to load shortcut product");
         } finally {
           setIsLoading(false);
+        }
+        return;
+      }
+
+      // Check for exact Barcode or SKU match in currently loaded products (Unified Command Line)
+      const exactMatch = products.find(
+        p => p.barcode?.toLowerCase() === term.toLowerCase() ||
+             p.sku?.toLowerCase() === term.toLowerCase()
+      );
+
+      if (exactMatch) {
+        e.preventDefault(); // Prevent Command from triggering multiple selections
+        if (!exactMatch.isActive) {
+          toast.error(`"${exactMatch.name}" is inactive and cannot be added.`);
+        } else if ((exactMatch.stock ?? 0) <= 0) {
+          toast.error(`"${exactMatch.name}" is out of stock.`);
+        } else {
+          handleSelect(exactMatch);
+          toast.success(`Added ${exactMatch.name}`);
         }
       }
     }
@@ -96,6 +118,7 @@ export function ProductOrderSelector({ onAdd, disabled }: ProductOrderSelectorPr
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id="pos-product-search-btn"
           variant="outline"
           role="combobox"
           aria-expanded={open}

@@ -100,6 +100,7 @@ export function CustomerSelector({ value, customer, onChange, error, disabled }:
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id="pos-customer-search-btn"
           variant="outline"
           role="combobox"
           aria-expanded={open}

@@ -71,6 +71,7 @@ export default function SettingsPage() {
         gstNumber: settings.gstNumber,
         currency: settings.currency,
         timezone: settings.timezone,
+        printerSize: settings.printerSize,
       });
       toast.success("Settings updated successfully.");
     } catch (error) {
@@ -246,6 +247,21 @@ export default function SettingsPage() {
                         <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
                         <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
                         <SelectItem value="Australia/Sydney">Australia/Sydney (AEST)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="printerSize">Thermal Printer Size</Label>
+                    <Select 
+                      value={settings.printerSize || "80mm"} 
+                      onValueChange={(val) => setSettings(prev => prev ? {...prev, printerSize: val || "80mm"} : null)}
+                    >
+                      <SelectTrigger id="printerSize">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="80mm">80mm (Standard Receipt)</SelectItem>
+                        <SelectItem value="58mm">58mm (Small Receipt)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

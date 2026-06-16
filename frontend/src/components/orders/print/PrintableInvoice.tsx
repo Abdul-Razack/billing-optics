@@ -8,10 +8,11 @@ export interface PrintableInvoiceProps {
   invoice: ApiInvoice;
   customer: ApiCustomer | null;
   lineItems: InvoiceLineItem[];
+  settings?: any;
 }
 
 export const PrintableInvoice = forwardRef<HTMLDivElement, PrintableInvoiceProps>(
-  ({ invoice, customer, lineItems }, ref) => {
+  ({ invoice, customer, lineItems, settings }, ref) => {
     return (
       <div 
         ref={ref} 
@@ -37,10 +38,10 @@ export const PrintableInvoice = forwardRef<HTMLDivElement, PrintableInvoiceProps
         <div className="p-2 sm:p-4 pb-8">
           {/* Header Section */}
           <div className="text-center mb-4 border-b border-black pb-2 border-dashed">
-            <h1 className="text-lg font-bold uppercase mb-1">Billing Optics</h1>
-            <p className="text-[10px]">123 Optic Way, Vision City</p>
-            <p className="text-[10px]">Ph: +1 (555) 123-4567</p>
-            <p className="text-[10px]">TAX ID: BO-987654321</p>
+            <h1 className="text-lg font-bold uppercase mb-1">{settings?.businessName || "Billing Optics"}</h1>
+            <p className="text-[10px]">{settings?.address || "123 Optic Way, Vision City"}</p>
+            <p className="text-[10px]">Ph: {settings?.phone || "+1 (555) 123-4567"}</p>
+            <p className="text-[10px]">TAX ID: {settings?.gstNumber || "BO-987654321"}</p>
           </div>
 
           {/* Meta Info */}

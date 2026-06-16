@@ -51,16 +51,22 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
     const balanceDue = grandTotal - amountPaid;
 
     const payments = invoice.payments || [];
+    
+    const printerSize = settings?.printerSize || "80mm";
+    const is58mm = printerSize === "58mm";
+    const baseFontSize = is58mm ? "9px" : "11px";
+    const headerFontSize = is58mm ? "12px" : "14px";
+    const smallFontSize = is58mm ? "7px" : "9px";
 
     return (
       <div
         ref={ref}
         className="hidden print:block bg-white text-black font-mono mx-auto box-border"
-        style={{ color: "#000", fontSize: "11px", lineHeight: "1.4", width: "80mm", maxWidth: "80mm" }}
+        style={{ color: "#000", fontSize: baseFontSize, lineHeight: "1.4", width: printerSize, maxWidth: printerSize }}
       >
         {/* ── Header ── */}
         <div style={{ textAlign: "center", borderBottom: "1px dashed #000", paddingBottom: "8px", marginBottom: "8px" }}>
-          <div style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "2px" }}>
+          <div style={{ fontSize: headerFontSize, fontWeight: "bold", textTransform: "uppercase", marginBottom: "2px" }}>
             {settings?.businessName || "OPTICS POS"}
           </div>
           <div>{settings?.address || "123 Optic Way, Vision City"}</div>
@@ -109,7 +115,7 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
                   <tr key={item.id ?? idx}>
                     <td style={{ padding: "4px 4px 4px 0", verticalAlign: "top" }}>
                       <div style={{ fontWeight: "500", wordBreak: "break-word" }}>{name}</div>
-                      <div style={{ fontSize: "9px", color: "#555" }}>@ ${fmt(price)}</div>
+                      <div style={{ fontSize: smallFontSize, color: "#555" }}>@ ${fmt(price)}</div>
                     </td>
                     <td style={{ textAlign: "right", padding: "4px", verticalAlign: "top" }}>{qty}</td>
                     <td style={{ textAlign: "right", padding: "4px 0 4px 4px", verticalAlign: "top", fontWeight: "500" }}>
@@ -146,7 +152,7 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
           </div>
 
           {payments.length > 0 && (
-            <div style={{ fontSize: "9px", color: "#666", textAlign: "right" }}>
+            <div style={{ fontSize: smallFontSize, color: "#666", textAlign: "right" }}>
               via {payments.map(p => p.method || p.paymentMethod || "").join(", ")}
             </div>
           )}
@@ -164,24 +170,24 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
           <div style={{ fontWeight: "bold", textTransform: "uppercase", marginBottom: "4px" }}>
             Thank you for your business!
           </div>
-          <div style={{ fontSize: "9px", color: "#666" }}>
+          <div style={{ fontSize: smallFontSize, color: "#666" }}>
             Please retain this receipt for your records.{"\n"}Returns accepted within 15 days.
           </div>
         </div>
 
         <style dangerouslySetInnerHTML={{__html: `
-          @media print {
-            @page {
-              margin: 0;
-              size: 80mm auto;
-            }
-            body {
-              margin: 0;
-              padding: 0;
-              width: 80mm;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
+            @media print {
+              @page {
+                margin: 0;
+                size: ${printerSize} auto;
+              }
+              body {
+                margin: 0;
+                padding: 0;
+                width: ${printerSize};
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
           }
         `}} />
       </div>

@@ -15,20 +15,25 @@ import { OfferService } from "@/services/offer.service";
 import { ApiProduct, ProductService } from "@/services/product.service";
 import { CustomerService } from "@/services/customer.service";
 import { ApiCustomer } from "@/types/customer";
-import { PaymentMethod } from "@/types/order";
+import { PaymentMethod, ApiInvoice } from "@/types/order";
 import { Offer } from "@/types/offer";
 import { toast } from "sonner";
-import { Loader2, Receipt, Save, CheckCircle2, ScanLine } from "lucide-react";
+import { Loader2, Receipt, Save, CheckCircle2, ScanLine, Printer, ReceiptText, FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
+import { PrintableInvoice } from "@/components/orders/print/PrintableInvoice";
+import { PrintableReceipt } from "@/components/invoices/PrintableReceipt";
+import { useReactToPrint } from "react-to-print";
+import { SettingsService, ApiSettings } from "@/services/settings.service";
 
 export default function CreateOrderPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successId, setSuccessId] = useState<number | null>(null);
+  const [successInvoice, setSuccessInvoice] = useState<ApiInvoice | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
+  const [settings, setSettings] = useState<ApiSettings | null>(null);
 
   // Form State
   const [customerId, setCustomerId] = useState<number | undefined>(undefined);
@@ -83,6 +88,11 @@ export default function CreateOrderPage() {
         // Load active offers
         OfferService.getOffers({ status: 'ACTIVE' }).then(offers => {
           setAvailableOffers(offers);
+        }).catch(console.error);
+
+        // Load store settings for printing
+        SettingsService.getSettings().then(s => {
+          setSettings(s);
         }).catch(console.error);
 
       } catch (e) {
@@ -170,6 +180,33 @@ export default function CreateOrderPage() {
   const grandTotal = totals.grandTotal;
 
   const balanceDue = Math.max(0, grandTotal - Math.round(amountPaid * 100));
+
+  // Print Handlers
+  const printRef = useRef<HTMLDivElement>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  const handlePrintInvoice = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Invoice_${successInvoice?.invoiceNumber || "New"}`
+  });
+
+  const handlePrintReceipt = useReactToPrint({
+    contentRef: receiptRef,
+    documentTitle: `Receipt_${successInvoice?.invoiceNumber || "New"}`
+  });
+
+  const printableLineItems = useMemo(() => {
+    if (!successInvoice?.lines) return [];
+    return successInvoice.lines.map((line) => ({
+      product: {
+        id: line.productId,
+        name: line.productName || `Item ${line.productId}`,
+        sku: line.productSku,
+        sellingPrice: line.unitPrice,
+      } as any,
+      quantity: line.quantity,
+    }));
+  }, [successInvoice]);
 
   // Handlers
   const handleAddProduct = (product: ApiProduct) => {
@@ -266,6 +303,9 @@ export default function CreateOrderPage() {
       // Use the stable idempotency key that is tied to current cart state
       const idempotencyKey = sessionIdRef.current ?? `SESS-FALLBACK-${Date.now()}`;
       const newInvoice = await OrderService.createOrder(idempotencyKey, payload);
+      // Fetch the full invoice details immediately so we can print it
+      const fullInvoice = await OrderService.getOrderById(newInvoice.invoiceId);
+      
       toast.success("Order created successfully!");
       // Reset state immediately so useEffect doesn't re-save the draft
       setLineItems([]);
@@ -276,7 +316,7 @@ export default function CreateOrderPage() {
       setPaymentMethod("CASH");
       setSelectedOfferId(undefined);
       
-      setSuccessId(newInvoice.invoiceId);
+      setSuccessInvoice(fullInvoice);
       localStorage.removeItem("order_cart_draft");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to create order";
@@ -287,10 +327,103 @@ export default function CreateOrderPage() {
     }
   };
 
-  if (successId) {
+  // --- POS Hotkeys & Focus Management ---
+  
+  // Ref for the main product search to auto-focus it
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus search box after successfully adding a product
+  useEffect(() => {
+    if (lineItems.length > 0) {
+      // Find the input inside the ProductOrderSelector popover trigger or command input
+      // Since it's a popover, focusing the trigger button is the way to go
+      const searchTrigger = document.getElementById("pos-product-search-btn");
+      if (searchTrigger) {
+        // Small timeout ensures the DOM has updated and popover closed before refocusing
+        setTimeout(() => searchTrigger.focus(), 50);
+      }
+    }
+  }, [lineItems.length]); // Dependency is the length, so it runs after every addition
+
+  // Global F-Key Hotkeys
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Ignore if a modal/dialog is open (basic heuristic: check if body has pointer-events: none)
+      if (document.body.style.pointerEvents === 'none') return;
+      
+      // If we are on the Success Screen, listen for Print hotkeys
+      if (successInvoice) {
+        if (e.key.toLowerCase() === 'p') {
+          e.preventDefault();
+          handlePrintReceipt();
+        } else if (e.key === 'F12') {
+          e.preventDefault();
+          handlePrintInvoice();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          setSuccessInvoice(null); // Return to new order
+        }
+        return; // Don't process standard POS hotkeys if on success screen
+      }
+
+      if (isSubmitting) return;
+
+      switch (e.key) {
+        case "F2":
+          e.preventDefault();
+          const searchBtn = document.getElementById("pos-product-search-btn");
+          if (searchBtn) {
+            searchBtn.click(); // Opens the popover which auto-focuses its input
+          }
+          break;
+        case "F4":
+          e.preventDefault();
+          const customerBtn = document.getElementById("pos-customer-search-btn");
+          if (customerBtn) {
+            customerBtn.click();
+          }
+          break;
+        case "F8":
+          e.preventDefault();
+          const amountInput = document.getElementById("pos-amount-paid-input");
+          if (amountInput) {
+            amountInput.focus();
+            // Select all text so they can quickly type over it
+            if (amountInput instanceof HTMLInputElement) amountInput.select();
+          }
+          break;
+        case "F10":
+          e.preventDefault();
+          if (lineItems.length > 0) {
+            handleSubmit();
+          } else {
+            toast.error("Cart is empty");
+          }
+          break;
+        case "Escape":
+          // Only clear if they are not inside an input (Escape usually blurs inputs)
+          if (document.activeElement?.tagName !== 'INPUT' && lineItems.length > 0) {
+            e.preventDefault();
+            if (confirm("Clear current cart?")) {
+              setLineItems([]);
+              setAmountPaid(0);
+              setCustomerId(undefined);
+              setCustomer(null);
+              toast.info("Cart cleared");
+            }
+          }
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [isSubmitting, successInvoice, lineItems.length, handleSubmit, handlePrintReceipt, handlePrintInvoice]);
+
+  if (successInvoice) {
     return (
       <PageContainer title="Order Successful" description="The checkout session has completed.">
-        <div className="flex flex-col items-center justify-center p-12 bg-card border rounded-lg mt-12 text-center max-w-2xl mx-auto shadow-sm">
+        <div className="flex flex-col items-center justify-center p-12 bg-card border rounded-lg mt-12 text-center max-w-3xl mx-auto shadow-sm">
           <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
             <CheckCircle2 className="h-8 w-8" />
           </div>
@@ -298,18 +431,49 @@ export default function CreateOrderPage() {
           <p className="text-muted-foreground mb-8">
             The order has been successfully saved to the ledger and inventory has been deducted.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-            <Button asChild variant="outline" size="lg">
-              <Link href={`/orders/${successId}`}>
-                View Invoice
-              </Link>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mb-8">
+            <Button onClick={() => handlePrintReceipt()} size="lg" className="h-16 text-lg bg-emerald-600 hover:bg-emerald-700 relative">
+              <ReceiptText className="mr-2 h-6 w-6" />
+              Print Thermal Receipt
+              <span className="absolute right-4 text-xs font-mono opacity-80 border border-primary-foreground/30 px-1.5 py-0.5 rounded">[P]</span>
             </Button>
-            <Button onClick={() => {
-              setSuccessId(null);
-            }} size="lg">
-              Create Another Order
+            <Button onClick={() => handlePrintInvoice()} size="lg" variant="outline" className="h-16 text-lg relative">
+              <FileText className="mr-2 h-6 w-6" />
+              Print A4 Bill
+              <span className="absolute right-4 text-xs font-mono opacity-60 border border-current/30 px-1.5 py-0.5 rounded">[F12]</span>
             </Button>
           </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center pt-4 border-t border-border">
+            <Button asChild variant="ghost">
+              <Link href={`/orders/${successInvoice.id}`}>
+                View Invoice Details
+              </Link>
+            </Button>
+            <Button onClick={() => setSuccessInvoice(null)} variant="secondary">
+              Start New Order [ESC]
+            </Button>
+          </div>
+        </div>
+
+        {/* Hidden Print Wrapper */}
+        <div className="hidden print:block absolute top-0 left-0 w-full bg-white z-[9999]">
+          <PrintableInvoice 
+            ref={printRef}
+            invoice={successInvoice} 
+            customer={null} 
+            lineItems={printableLineItems} 
+            settings={settings}
+          />
+          <div className="page-break" style={{ pageBreakBefore: 'always' }} />
+          <PrintableReceipt
+            ref={receiptRef}
+            invoice={successInvoice}
+            customer={null}
+            lineItems={printableLineItems}
+            settings={settings}
+          />
         </div>
       </PageContainer>
     );
@@ -505,7 +669,7 @@ export default function CreateOrderPage() {
                   </div>
                   
                   <div className="flex justify-between items-center text-sm mt-4">
-                    <span className="text-muted-foreground">Amount Paid</span>
+                    <span className="text-muted-foreground">Amount Paid [F8]</span>
                     <span className={`font-medium ${Math.round(amountPaid * 100) > grandTotal ? 'text-destructive' : 'text-emerald-600'}`}>
                       {formatCurrency(Math.round(amountPaid * 100))}
                     </span>
@@ -524,7 +688,7 @@ export default function CreateOrderPage() {
               </CardContent>
               <div className="p-6 bg-card rounded-b-lg">
                 <Button 
-                  className="w-full h-12 text-lg" 
+                  className="w-full h-12 text-lg relative" 
                   size="lg" 
                   disabled={isSubmitting || lineItems.length === 0}
                   onClick={handleSubmit}
@@ -538,6 +702,7 @@ export default function CreateOrderPage() {
                     <>
                       <Save className="mr-2 h-5 w-5" />
                       Complete Checkout
+                      <span className="absolute right-4 text-xs font-mono opacity-60 border border-primary-foreground/30 px-1.5 py-0.5 rounded">[F10]</span>
                     </>
                   )}
                 </Button>
