@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
@@ -12,20 +12,22 @@ import { InvoiceLineItems, InvoiceLineItem } from "@/components/orders/InvoiceLi
 import { PaymentSection } from "@/components/orders/PaymentSection";
 import { OrderService } from "@/services/order.service";
 import { OfferService } from "@/services/offer.service";
-import { ApiProduct } from "@/services/product.service";
+import { ApiProduct, ProductService } from "@/services/product.service";
 import { CustomerService } from "@/services/customer.service";
 import { ApiCustomer } from "@/types/customer";
 import { PaymentMethod } from "@/types/order";
 import { Offer } from "@/types/offer";
 import { toast } from "sonner";
-import { Loader2, Receipt, Save, CheckCircle2 } from "lucide-react";
+import { Loader2, Receipt, Save, CheckCircle2, ScanLine } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 
 export default function CreateOrderPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successId, setSuccessId] = useState<number | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
 
   // Form State
@@ -180,6 +182,41 @@ export default function CreateOrderPage() {
     });
   };
 
+  // Global barcode scanner handler — fires when the hook detects a physical scanner input
+  const handleBarcodeScan = useCallback(async (barcode: string) => {
+    if (isSubmitting) return;
+    setIsScanning(true);
+    try {
+      const results = await ProductService.getProducts({ search: barcode });
+      // Find an exact barcode or SKU match (case-insensitive)
+      const match = results.find(
+        p => p.barcode?.toLowerCase() === barcode.toLowerCase() ||
+             p.sku?.toLowerCase() === barcode.toLowerCase()
+      );
+      if (!match) {
+        toast.error(`Barcode "${barcode}" not found in inventory.`, { duration: 2500 });
+        return;
+      }
+      if (!match.isActive) {
+        toast.error(`"${match.name}" is inactive and cannot be added.`, { duration: 2500 });
+        return;
+      }
+      if ((match.stock ?? 0) <= 0) {
+        toast.error(`"${match.name}" is out of stock.`, { duration: 2500 });
+        return;
+      }
+      handleAddProduct(match);
+      toast.success(`✓ ${match.name} added to cart`, { duration: 1500 });
+    } catch (err) {
+      toast.error("Scanner error: failed to fetch product.");
+    } finally {
+      setIsScanning(false);
+    }
+  }, [isSubmitting]);
+
+  // Attach the global scanner listener
+  useBarcodeScanner({ onScan: handleBarcodeScan, disabled: isSubmitting });
+
   const handleUpdateQuantity = (productId: number, qty: number) => {
     setLineItems((prev) => prev.map(i => i.product.id === productId ? { ...i, quantity: qty } : i));
   };
@@ -312,7 +349,20 @@ export default function CreateOrderPage() {
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg">Order Items</CardTitle>
-                <CardDescription>Search and add products to the invoice.</CardDescription>
+                <CardDescription>Search manually or scan a barcode to add products.</CardDescription>
+              </div>
+              {/* Scanner status indicator */}
+              <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
+                isScanning
+                  ? "bg-amber-100 text-amber-700 border border-amber-200"
+                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              }`}>
+                {isScanning ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <ScanLine className="h-3 w-3" />
+                )}
+                {isScanning ? "Looking up..." : "Scanner Active"}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
