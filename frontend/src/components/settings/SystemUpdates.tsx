@@ -98,7 +98,20 @@ export function SystemUpdates() {
     if (!isDesktop) return;
     try {
       setStatus("checking");
-      await (window as any).electron.checkForUpdates();
+      const result = await (window as any).electron.checkForUpdates();
+      
+      if (result && result.success === false) {
+        setStatus("error");
+        setErrorMessage(result.error || "Update check failed.");
+        return;
+      }
+      
+      // If success is true, but we don't have an onUpdateNotAvailable listener,
+      // we'll just reset to idle after a few seconds if no "available" event fired.
+      setTimeout(() => {
+        setStatus(prev => prev === "checking" ? "idle" : prev);
+      }, 5000);
+      
     } catch (error) {
       setStatus("error");
       setErrorMessage("Failed to reach update servers.");

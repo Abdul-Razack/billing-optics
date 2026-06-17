@@ -88,8 +88,13 @@ export async function fetchClient<T>(endpoint: string, options: FetchOptions = {
   };
 
   if (data) {
-    mergedHeaders["Content-Type"] = "application/json";
-    config.body = JSON.stringify(data);
+    if (data instanceof FormData) {
+      delete mergedHeaders["Content-Type"];
+      config.body = data;
+    } else {
+      mergedHeaders["Content-Type"] = "application/json";
+      config.body = JSON.stringify(data);
+    }
   }
 
   config.headers = mergedHeaders;
