@@ -58,25 +58,25 @@ export function BulkActionToolbar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => onAction("activate")}>
+              <DropdownMenuItem onSelect={() => onAction("activate")}>
                 <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
                 Activate
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction("deactivate")}>
+              <DropdownMenuItem onSelect={() => onAction("deactivate")}>
                 <XCircle className="mr-2 h-4 w-4 text-orange-600" />
                 Deactivate
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction("tags")} disabled>
+              <DropdownMenuItem onSelect={() => onAction("tags")} disabled>
                 <Tags className="mr-2 h-4 w-4" />
                 Assign Tags
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAction("export")}>
+              <DropdownMenuItem onSelect={() => onAction("export")}>
                 <Download className="mr-2 h-4 w-4" />
                 Export Selected
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAction("delete")} variant="destructive">
+              <DropdownMenuItem onSelect={() => onAction("delete")} variant="destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Selected
               </DropdownMenuItem>
