@@ -162,7 +162,7 @@ export function SystemUpdates() {
               </div>
               <Button size="sm" onClick={() => {
                 setStatus("downloading");
-                if (isDesktop) (window as any).electron.updater.downloadUpdate();
+                if (isDesktop) (window as any).electron.downloadUpdate();
               }}>
                 Download Now
               </Button>

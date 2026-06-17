@@ -693,18 +693,11 @@ async function startServers(isOnboarding = false) {
     mainWindow.once('ready-to-show', () => {
       if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
       mainWindow.show();
+      // Disable autoDownload. The user must manually click download.
+      autoUpdater.autoDownload = false;
       
-      // Check for updates after the app is ready (silently)
-      if (app.isPackaged) {
-        log.info('Checking for updates on startup...');
-        try {
-          autoUpdater.checkForUpdates().catch(err => {
-            log.error('Failed to check for updates:', err);
-          });
-        } catch (syncErr) {
-          log.warn('AutoUpdater failed to initialize synchronously. Ignoring.', syncErr);
-        }
-      }
+      // Removed the automatic background update check on startup.
+      // Updates will only be checked when the user manually clicks the button.
     });
   }
 }
@@ -721,6 +714,20 @@ ipcMain.handle('check-for-updates', async () => {
     }
   }
   return { success: false, error: 'Cannot check for updates in development mode' };
+});
+
+ipcMain.handle('download-update', async () => {
+  if (app.isPackaged) {
+    try {
+      // Because autoDownload is false, this must be called explicitly
+      autoUpdater.downloadUpdate();
+      return { success: true };
+    } catch (error) {
+      log.error('Manual update download failed', error);
+      return { success: false, error: error.message };
+    }
+  }
+  return { success: false, error: 'Cannot download updates in development mode' };
 });
 
 ipcMain.handle('install-update', () => {
