@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electron', {
   // Update system
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  cancelDownload: () => ipcRenderer.invoke('cancel-download'),
   installUpdate: () => ipcRenderer.invoke('install-update'),
   
   // Event listeners

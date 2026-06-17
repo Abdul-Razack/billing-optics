@@ -17,7 +17,7 @@ const waitOn = require('wait-on');
 const isDevEnv = !app.isPackaged;
 const sharedDbConfigPath = isDevEnv ? '../shared/src/db-config.js' : './shared/src/db-config.js';
 const { DEFAULT_CONFIG } = require(sharedDbConfigPath);
-const { autoUpdater } = require('electron-updater');
+const { autoUpdater, CancellationToken } = require('electron-updater');
 const log = require('electron-log');
 
 // Setup logging
@@ -716,11 +716,13 @@ ipcMain.handle('check-for-updates', async () => {
   return { success: false, error: 'Cannot check for updates in development mode' };
 });
 
+let downloadCancellationToken = null;
+
 ipcMain.handle('download-update', async () => {
   if (app.isPackaged) {
     try {
-      // Because autoDownload is false, this must be called explicitly
-      autoUpdater.downloadUpdate();
+      downloadCancellationToken = new CancellationToken();
+      autoUpdater.downloadUpdate(downloadCancellationToken);
       return { success: true };
     } catch (error) {
       log.error('Manual update download failed', error);
@@ -728,6 +730,16 @@ ipcMain.handle('download-update', async () => {
     }
   }
   return { success: false, error: 'Cannot download updates in development mode' };
+});
+
+ipcMain.handle('cancel-download', () => {
+  if (downloadCancellationToken) {
+    downloadCancellationToken.cancel();
+    downloadCancellationToken = null;
+    log.info('Update download cancelled by user.');
+    return { success: true };
+  }
+  return { success: false, error: 'No active download to cancel' };
 });
 
 ipcMain.handle('install-update', () => {

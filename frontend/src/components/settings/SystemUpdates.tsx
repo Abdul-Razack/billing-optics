@@ -170,13 +170,25 @@ export function SystemUpdates() {
           )}
 
           {status === "downloading" && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm items-center">
                 <span className="font-medium text-blue-600">Downloading update...</span>
-                <span>{progress}%</span>
+                <span className="font-medium">{progress}%</span>
               </div>
               <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progress}%` }}></div>
+              </div>
+              <div className="flex justify-end">
+                <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700" onClick={async () => {
+                  if (isDesktop) {
+                    await (window as any).electron.cancelDownload();
+                    setStatus("idle");
+                    setProgress(0);
+                    toast.info("Update download cancelled.");
+                  }
+                }}>
+                  Cancel Download
+                </Button>
               </div>
             </div>
           )}
