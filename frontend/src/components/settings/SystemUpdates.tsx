@@ -21,6 +21,7 @@ export function SystemUpdates() {
     // Inject a mock electron updater if we're in the browser to demo the functionality
     if (!isActualDesktop && !(window as any).electron) {
       const listeners = {} as Record<string, any>;
+      let downloadInterval: NodeJS.Timeout | null = null;
       (window as any).electron = {
         onUpdateAvailable: (cb: any) => { listeners.available = cb; return () => {}; },
         onUpdateProgress: (cb: any) => { listeners.progress = cb; return () => {}; },
@@ -29,20 +30,28 @@ export function SystemUpdates() {
         checkForUpdates: async () => {
           setTimeout(() => {
             if (listeners.available) listeners.available({ version: "1.1.0" });
-            
-            // Auto start download simulation
-            let p = 0;
-            const int = setInterval(() => {
-              p += 10;
-              if (listeners.progress) listeners.progress({ percent: p });
-              if (p >= 100) {
-                clearInterval(int);
-                setTimeout(() => {
-                  if (listeners.downloaded) listeners.downloaded();
-                }, 500);
-              }
-            }, 300);
           }, 1500);
+          return { success: true };
+        },
+        downloadUpdate: async () => {
+          let p = 0;
+          downloadInterval = setInterval(() => {
+            p += 10;
+            if (listeners.progress) listeners.progress({ percent: p });
+            if (p >= 100) {
+              if (downloadInterval) clearInterval(downloadInterval);
+              setTimeout(() => {
+                if (listeners.downloaded) listeners.downloaded();
+              }, 500);
+            }
+          }, 300);
+          return { success: true };
+        },
+        cancelDownload: async () => {
+          if (downloadInterval) {
+            clearInterval(downloadInterval);
+            downloadInterval = null;
+          }
           return { success: true };
         },
         installUpdate: () => {
