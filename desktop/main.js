@@ -5,12 +5,12 @@ const fs = require('fs');
 process.on('uncaughtException', (err) => {
   fs.writeFileSync(path.join(app.getPath('userData'), 'crash.log'), err.stack || err.message || String(err));
   console.error("FATAL CRASH:", err);
-  process.exit(1);
+  // process.exit(1); // Removed to prevent background errors from crashing the UI
 });
 process.on('unhandledRejection', (err) => {
   fs.writeFileSync(path.join(app.getPath('userData'), 'rejection.log'), err ? (err.stack || err.message) : 'Unknown rejection');
   console.error("FATAL REJECTION:", err);
-  process.exit(1);
+  // process.exit(1); // Removed to prevent background auto-updater network errors from crashing the app
 });
 const { exec } = require('child_process');
 const waitOn = require('wait-on');
@@ -640,9 +640,18 @@ async function startServers(isOnboarding = false) {
       await nextApp.prepare();
       const handle = nextApp.getRequestHandler();
       
-      http.createServer((req, res) => {
+      // Get a guaranteed free port to avoid EADDRINUSE crash
+      frontendPort = await getFreePort();
+      
+      const server = http.createServer((req, res) => {
         handle(req, res);
-      }).listen(frontendPort, () => {
+      });
+      
+      server.on('error', (err) => {
+        console.error('[Frontend ERR] Server error:', err);
+      });
+      
+      server.listen(frontendPort, () => {
         console.log(`[Frontend] Started successfully on port ${frontendPort}`);
       });
     } catch (err) {
