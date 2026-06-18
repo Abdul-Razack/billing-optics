@@ -37,4 +37,8 @@ export class ReportService {
   static async getPaymentSummary(startDate: Date, endDate: Date) {
     return await ReportRepository.getPaymentTotalsByMethod(startDate, endDate);
   }
+
+  static async getDailyStatement(date: Date) {
+    return await ReportRepository.getDailyStatement(date);
+  }
 }

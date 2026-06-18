@@ -48,5 +48,13 @@ export function createReportRoutes() {
     authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST),
     ReportController.getCustomerReport
   );
+  
+  router.get(
+    '/daily-statement',
+    authenticate,
+    authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+    ReportController.getDailyStatement
+  );
+
   return router;
 }

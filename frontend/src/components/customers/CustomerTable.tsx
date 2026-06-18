@@ -224,6 +224,29 @@ export function CustomerTable({
       },
     },
     {
+      accessorKey: "labels",
+      header: "Labels",
+      cell: ({ row }) => {
+        const labels = row.original.labels || [];
+        return (
+          <div className="flex gap-1 flex-wrap max-w-[150px]">
+            {labels.length > 0 ? labels.map(l => (
+              <span key={l} className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                {l}
+              </span>
+            )) : <span className="text-muted-foreground text-sm">-</span>}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "loyaltyPoints",
+      header: "Points",
+      cell: ({ row }) => (
+        <div className="font-semibold text-primary">{row.original.loyaltyPoints || 0}</div>
+      ),
+    },
+    {
       accessorKey: "createdAt",
       header: ({ column }) => (
         <Button

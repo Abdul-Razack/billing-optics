@@ -41,10 +41,10 @@ export function PrescriptionHistoryTimeline({ prescriptions }: PrescriptionHisto
                   <div className="flex items-center gap-3">
                     <span className="font-semibold text-foreground">{new Date(rx.createdAt).toLocaleDateString()}</span>
                     {isLatest && <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Current Active</Badge>}
-                    {!rx.isActive && !isLatest && <Badge variant="secondary">Archived</Badge>}
+                    {!isLatest && <Badge variant="secondary">Archived</Badge>}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Rx ID: {rx.id.toUpperCase()} • Recorded by {rx.createdBy}
+                    Rx ID: {rx.id}
                   </p>
                 </div>
                 <Button variant="outline" size="sm" asChild>
@@ -58,10 +58,10 @@ export function PrescriptionHistoryTimeline({ prescriptions }: PrescriptionHisto
                   <div>
                     <h5 className="text-xs font-semibold text-blue-800 mb-3 border-b border-blue-100 pb-1">RIGHT EYE (OD)</h5>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                      <div><span className="text-muted-foreground text-xs block mb-1">SPH</span>{rx.rightEye.sphere || "—"}</div>
-                      <div><span className="text-muted-foreground text-xs block mb-1">CYL</span>{rx.rightEye.cylinder || "—"}</div>
-                      <div><span className="text-muted-foreground text-xs block mb-1">AXIS</span>{rx.rightEye.axis || "—"}</div>
-                      <div><span className="text-muted-foreground text-xs block mb-1">ADD</span>{rx.rightEye.addPower || "—"}</div>
+                      <div><span className="text-muted-foreground text-xs block mb-1">SPH</span>{rx.tests?.[0]?.rightEyeDv?.sph || "—"}</div>
+                      <div><span className="text-muted-foreground text-xs block mb-1">CYL</span>{rx.tests?.[0]?.rightEyeDv?.cyl || "—"}</div>
+                      <div><span className="text-muted-foreground text-xs block mb-1">AXIS</span>{rx.tests?.[0]?.rightEyeDv?.axis || "—"}</div>
+                      <div><span className="text-muted-foreground text-xs block mb-1">ADD</span>{rx.tests?.[0]?.rightEyeAdd || "—"}</div>
                     </div>
                   </div>
                   
@@ -69,10 +69,10 @@ export function PrescriptionHistoryTimeline({ prescriptions }: PrescriptionHisto
                   <div>
                     <h5 className="text-xs font-semibold text-green-800 mb-3 border-b border-green-100 pb-1">LEFT EYE (OS)</h5>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                      <div><span className="text-muted-foreground text-xs block mb-1">SPH</span>{rx.leftEye.sphere || "—"}</div>
-                      <div><span className="text-muted-foreground text-xs block mb-1">CYL</span>{rx.leftEye.cylinder || "—"}</div>
-                      <div><span className="text-muted-foreground text-xs block mb-1">AXIS</span>{rx.leftEye.axis || "—"}</div>
-                      <div><span className="text-muted-foreground text-xs block mb-1">ADD</span>{rx.leftEye.addPower || "—"}</div>
+                      <div><span className="text-muted-foreground text-xs block mb-1">SPH</span>{rx.tests?.[0]?.leftEyeDv?.sph || "—"}</div>
+                      <div><span className="text-muted-foreground text-xs block mb-1">CYL</span>{rx.tests?.[0]?.leftEyeDv?.cyl || "—"}</div>
+                      <div><span className="text-muted-foreground text-xs block mb-1">AXIS</span>{rx.tests?.[0]?.leftEyeDv?.axis || "—"}</div>
+                      <div><span className="text-muted-foreground text-xs block mb-1">ADD</span>{rx.tests?.[0]?.leftEyeAdd || "—"}</div>
                     </div>
                   </div>
                 </div>

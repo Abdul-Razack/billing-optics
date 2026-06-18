@@ -118,4 +118,47 @@ export class CustomerController {
       next(error);
     }
   }
+
+  static async getBirthdays(req: Request, res: Response, next: NextFunction) {
+    try {
+      const month = req.query.month ? parseInt(req.query.month as string, 10) : new Date().getMonth() + 1;
+      const result = await customerService.getBirthdays(month);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAnniversaries(req: Request, res: Response, next: NextFunction) {
+    try {
+      const month = parseInt(req.query.month as string, 10);
+      if (isNaN(month) || month < 1 || month > 12) {
+        return res.status(400).json({ success: false, message: 'Invalid month parameter' });
+      }
+      const data = await customerService.getAnniversaries(month);
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getTopReferrers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+      const data = await customerService.getTopReferrers(limit);
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getLoyaltyLeaderboard(req: Request, res: Response, next: NextFunction) {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+      const data = await customerService.getLoyaltyLeaderboard(limit);
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

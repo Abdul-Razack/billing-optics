@@ -9,6 +9,12 @@ export interface ApiCustomer {
   address: string | null;
   notes: string | null;
   customFields: Record<string, any>;
+  dateOfBirth?: string | null;
+  anniversaryDate?: string | null;
+  isDnd: boolean;
+  labels: string[];
+  loyaltyPoints: number;
+  referredBy?: number | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

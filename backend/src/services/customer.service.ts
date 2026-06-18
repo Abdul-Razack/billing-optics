@@ -18,6 +18,12 @@ export class CustomerService {
       gender: data.gender,
       isActive: data.isActive ?? true,
       customFields: data.customFields || {},
+      dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
+      anniversaryDate: data.anniversaryDate ? new Date(data.anniversaryDate) : undefined,
+      isDnd: data.isDnd ?? false,
+      labels: data.labels || [],
+      loyaltyPoints: data.loyaltyPoints ?? 0,
+      referredBy: data.referredBy,
     };
     return await CustomerRepository.create(dbData);
   }
@@ -38,32 +44,39 @@ export class CustomerService {
       const allPrescriptions = await CustomerRepository.findPrescriptionsByCustomerId(id);
       
       const prescriptionCount = allPrescriptions.length;
-      const latestPrescription = allPrescriptions.length > 0 ? {
+      const latestTest = allPrescriptions.length > 0 && allPrescriptions[0].tests && allPrescriptions[0].tests.length > 0
+        ? allPrescriptions[0].tests[0]
+        : null;
+
+      const latestPrescription = latestTest ? {
         id: allPrescriptions[0].id.toString(),
         rightEye: {
-          sphere: allPrescriptions[0].rightEyeSph ? String(allPrescriptions[0].rightEyeSph) : "",
-          cylinder: allPrescriptions[0].rightEyeCyl ? String(allPrescriptions[0].rightEyeCyl) : "",
-          axis: allPrescriptions[0].rightEyeAxis ? String(allPrescriptions[0].rightEyeAxis) : "",
-          addPower: allPrescriptions[0].addPower ? String(allPrescriptions[0].addPower) : "",
+          sphere: latestTest.rightEyeDvSph ? String(latestTest.rightEyeDvSph) : "",
+          cylinder: latestTest.rightEyeDvCyl ? String(latestTest.rightEyeDvCyl) : "",
+          axis: latestTest.rightEyeDvAxis ? String(latestTest.rightEyeDvAxis) : "",
+          addPower: latestTest.rightEyeAdd ? String(latestTest.rightEyeAdd) : "",
         },
         leftEye: {
-          sphere: allPrescriptions[0].leftEyeSph ? String(allPrescriptions[0].leftEyeSph) : "",
-          cylinder: allPrescriptions[0].leftEyeCyl ? String(allPrescriptions[0].leftEyeCyl) : "",
-          axis: allPrescriptions[0].leftEyeAxis ? String(allPrescriptions[0].leftEyeAxis) : "",
-          addPower: allPrescriptions[0].addPower ? String(allPrescriptions[0].addPower) : "",
+          sphere: latestTest.leftEyeDvSph ? String(latestTest.leftEyeDvSph) : "",
+          cylinder: latestTest.leftEyeDvCyl ? String(latestTest.leftEyeDvCyl) : "",
+          axis: latestTest.leftEyeDvAxis ? String(latestTest.leftEyeDvAxis) : "",
+          addPower: latestTest.leftEyeAdd ? String(latestTest.leftEyeAdd) : "",
         },
-        pd: allPrescriptions[0].pd ? String(allPrescriptions[0].pd) : "",
+        pd: latestTest.rightEyePd ? String(latestTest.rightEyePd) : "",
         notes: allPrescriptions[0].notes || "",
         createdAt: allPrescriptions[0].createdAt.toISOString(),
       } : null;
 
-      const recentHistory = allPrescriptions.slice(0, 5).map(p => ({
-        id: p.id.toString(),
-        createdAt: p.createdAt.toISOString(),
-        notes: p.notes,
-        pd: p.pd ? String(p.pd) : "",
-        addPower: p.addPower ? String(p.addPower) : "",
-      }));
+      const recentHistory = allPrescriptions.slice(0, 5).map((p: any) => {
+        const test = p.tests && p.tests.length > 0 ? p.tests[0] : null;
+        return {
+          id: p.id.toString(),
+          createdAt: p.createdAt.toISOString(),
+          notes: p.notes,
+          pd: test && test.rightEyePd ? String(test.rightEyePd) : "",
+          addPower: test && test.rightEyeAdd ? String(test.rightEyeAdd) : "",
+        };
+      });
 
       result = {
         ...result,
@@ -92,6 +105,13 @@ export class CustomerService {
     if (data.gender !== undefined) dbData.gender = data.gender;
     if (data.isActive !== undefined) dbData.isActive = data.isActive;
     if (data.customFields !== undefined) dbData.customFields = data.customFields;
+    
+    if (data.dateOfBirth !== undefined) dbData.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth) : null;
+    if (data.anniversaryDate !== undefined) dbData.anniversaryDate = data.anniversaryDate ? new Date(data.anniversaryDate) : null;
+    if (data.isDnd !== undefined) dbData.isDnd = data.isDnd;
+    if (data.labels !== undefined) dbData.labels = data.labels;
+    if (data.loyaltyPoints !== undefined) dbData.loyaltyPoints = data.loyaltyPoints;
+    if (data.referredBy !== undefined) dbData.referredBy = data.referredBy;
 
     return await CustomerRepository.update(id, dbData);
   }
@@ -110,16 +130,37 @@ export class CustomerService {
     return await CustomerRepository.addPrescription({
       customerId,
       createdBy: data.createdBy,
-      rightEyeSph: rightEye.sphere?.toString(),
-      rightEyeCyl: rightEye.cylinder?.toString(),
-      rightEyeAxis: rightEye.axis ? parseInt(rightEye.axis, 10) : null,
-      leftEyeSph: leftEye.sphere?.toString(),
-      leftEyeCyl: leftEye.cylinder?.toString(),
-      leftEyeAxis: leftEye.axis ? parseInt(leftEye.axis, 10) : null,
-      addPower: data.addPower || rightEye.addPower || leftEye.addPower || null,
-      pd: data.pd?.toString(),
       notes: data.notes,
-    });
+      tests: [{
+        testType: 'SPECTACLE',
+        rightEyeDvSph: rightEye.sphere?.toString(),
+        rightEyeDvCyl: rightEye.cylinder?.toString(),
+        rightEyeDvAxis: rightEye.axis ? parseInt(rightEye.axis, 10) : null,
+        leftEyeDvSph: leftEye.sphere?.toString(),
+        leftEyeDvCyl: leftEye.cylinder?.toString(),
+        leftEyeDvAxis: leftEye.axis ? parseInt(leftEye.axis, 10) : null,
+        rightEyeAdd: data.addPower || rightEye.addPower || leftEye.addPower || null,
+        leftEyeAdd: data.addPower || rightEye.addPower || leftEye.addPower || null,
+        rightEyePd: data.pd?.toString(),
+        leftEyePd: data.pd?.toString(),
+      }],
+    } as any);
+  }
+
+  async getBirthdays(month: number) {
+    return await CustomerRepository.findBirthdays(month);
+  }
+
+  async getAnniversaries(month: number) {
+    return await CustomerRepository.findAnniversaries(month);
+  }
+
+  async getTopReferrers(limit?: number) {
+    return await CustomerRepository.findTopReferrers(limit);
+  }
+
+  async getLoyaltyLeaderboard(limit?: number) {
+    return await CustomerRepository.findLoyaltyLeaderboard(limit);
   }
 }
 

@@ -28,6 +28,12 @@ export function createPrescriptionRoutes() {
     authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
     PrescriptionController.getPrescriptionById
   );
+
+  router.get(
+    '/:id/history',
+    authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER),
+    PrescriptionController.getPrescriptionHistory
+  );
   
   router.get(
     '/customer/:customerId',

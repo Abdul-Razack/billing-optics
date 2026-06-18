@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { customers } from './customers';
-import { prescriptions } from './prescriptions';
+import { prescriptions, prescriptionTests } from './prescriptions';
 import { categories } from './categories';
 import { products } from './products';
 import { invoices } from './invoices';
@@ -13,6 +13,8 @@ import { vendors } from './vendors';
 import { labJobs } from './labJobs';
 import { posShortcuts } from './posShortcuts';
 import { offers } from './offers';
+import { patients } from './patients';
+import { doctors } from './doctors';
 
 export const usersRelations = relations(users, ({ many }) => ({
   invoices: many(invoices),
@@ -24,16 +26,45 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const customersRelations = relations(customers, ({ many }) => ({
   invoices: many(invoices),
   prescriptions: many(prescriptions),
+  patients: many(patients),
 }));
 
-export const prescriptionsRelations = relations(prescriptions, ({ one }) => ({
+export const patientsRelations = relations(patients, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [patients.customerId],
+    references: [customers.id],
+  }),
+  prescriptions: many(prescriptions),
+}));
+
+export const doctorsRelations = relations(doctors, ({ many }) => ({
+  prescriptions: many(prescriptions),
+}));
+
+export const prescriptionsRelations = relations(prescriptions, ({ one, many }) => ({
   customer: one(customers, {
     fields: [prescriptions.customerId],
     references: [customers.id],
   }),
+  patient: one(patients, {
+    fields: [prescriptions.patientId],
+    references: [patients.id],
+  }),
+  doctor: one(doctors, {
+    fields: [prescriptions.doctorId],
+    references: [doctors.id],
+  }),
   creator: one(users, {
     fields: [prescriptions.createdBy],
     references: [users.id],
+  }),
+  tests: many(prescriptionTests),
+}));
+
+export const prescriptionTestsRelations = relations(prescriptionTests, ({ one }) => ({
+  prescription: one(prescriptions, {
+    fields: [prescriptionTests.prescriptionId],
+    references: [prescriptions.id],
   }),
 }));
 

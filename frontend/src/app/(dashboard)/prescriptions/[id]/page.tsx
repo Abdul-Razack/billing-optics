@@ -59,7 +59,7 @@ export default function PrescriptionDetailPage({ params }: { params: Promise<{ i
   }
 
   return (
-    <PageContainer title="Prescription Details" description={`Viewing Rx ${prescription.id.toUpperCase()}`}>
+    <PageContainer title="Prescription Details" description={`Viewing Rx ${prescription.id}`}>
       <div className="mb-6">
         <Button variant="ghost" asChild className="-ml-4 text-muted-foreground hover:text-foreground">
           <Link href="/prescriptions">
@@ -86,10 +86,10 @@ export default function PrescriptionDetailPage({ params }: { params: Promise<{ i
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                  <div><span className="text-sm text-muted-foreground block mb-1">Sphere (SPH)</span><span className="text-xl font-medium">{prescription.rightEye.sphere || "—"}</span></div>
-                  <div><span className="text-sm text-muted-foreground block mb-1">Cylinder (CYL)</span><span className="text-xl font-medium">{prescription.rightEye.cylinder || "—"}</span></div>
-                  <div><span className="text-sm text-muted-foreground block mb-1">Axis</span><span className="text-xl font-medium">{prescription.rightEye.axis || "—"}</span></div>
-                  <div><span className="text-sm text-muted-foreground block mb-1">Add Power</span><span className="text-xl font-medium">{prescription.rightEye.addPower || "—"}</span></div>
+                  <div><span className="text-sm text-muted-foreground block mb-1">Sphere (SPH)</span><span className="text-xl font-medium">{prescription.tests?.[0]?.rightEyeDv?.sph || "—"}</span></div>
+                  <div><span className="text-sm text-muted-foreground block mb-1">Cylinder (CYL)</span><span className="text-xl font-medium">{prescription.tests?.[0]?.rightEyeDv?.cyl || "—"}</span></div>
+                  <div><span className="text-sm text-muted-foreground block mb-1">Axis</span><span className="text-xl font-medium">{prescription.tests?.[0]?.rightEyeDv?.axis || "—"}</span></div>
+                  <div><span className="text-sm text-muted-foreground block mb-1">Add Power</span><span className="text-xl font-medium">{prescription.tests?.[0]?.rightEyeAdd || "—"}</span></div>
                 </div>
               </div>
             </div>
@@ -100,10 +100,10 @@ export default function PrescriptionDetailPage({ params }: { params: Promise<{ i
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                  <div><span className="text-sm text-muted-foreground block mb-1">Sphere (SPH)</span><span className="text-xl font-medium">{prescription.leftEye.sphere || "—"}</span></div>
-                  <div><span className="text-sm text-muted-foreground block mb-1">Cylinder (CYL)</span><span className="text-xl font-medium">{prescription.leftEye.cylinder || "—"}</span></div>
-                  <div><span className="text-sm text-muted-foreground block mb-1">Axis</span><span className="text-xl font-medium">{prescription.leftEye.axis || "—"}</span></div>
-                  <div><span className="text-sm text-muted-foreground block mb-1">Add Power</span><span className="text-xl font-medium">{prescription.leftEye.addPower || "—"}</span></div>
+                  <div><span className="text-sm text-muted-foreground block mb-1">Sphere (SPH)</span><span className="text-xl font-medium">{prescription.tests?.[0]?.leftEyeDv?.sph || "—"}</span></div>
+                  <div><span className="text-sm text-muted-foreground block mb-1">Cylinder (CYL)</span><span className="text-xl font-medium">{prescription.tests?.[0]?.leftEyeDv?.cyl || "—"}</span></div>
+                  <div><span className="text-sm text-muted-foreground block mb-1">Axis</span><span className="text-xl font-medium">{prescription.tests?.[0]?.leftEyeDv?.axis || "—"}</span></div>
+                  <div><span className="text-sm text-muted-foreground block mb-1">Add Power</span><span className="text-xl font-medium">{prescription.tests?.[0]?.leftEyeAdd || "—"}</span></div>
                 </div>
               </div>
             </div>
@@ -114,7 +114,7 @@ export default function PrescriptionDetailPage({ params }: { params: Promise<{ i
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <span className="text-sm text-muted-foreground block mb-1">Pupillary Distance (PD)</span>
-                <span className="text-lg font-medium">{prescription.pd}</span>
+                <span className="text-lg font-medium">{prescription.tests?.[0]?.rightEyePd || prescription.tests?.[0]?.leftEyePd || "—"}</span>
               </div>
               <div className="md:col-span-2">
                 <span className="text-sm text-muted-foreground block mb-1">Clinical Notes</span>

@@ -127,13 +127,13 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Right Eye (OD)</p>
-                      <p className="font-medium">SPH: {customer.latestPrescription.rightEye.sphere}</p>
-                      {customer.latestPrescription.rightEye.cylinder && <p>CYL: {customer.latestPrescription.rightEye.cylinder}</p>}
+                      <p className="font-medium">SPH: {customer.latestPrescription.tests?.[0]?.rightEyeDv?.sph || "—"}</p>
+                      {customer.latestPrescription.tests?.[0]?.rightEyeDv?.cyl && <p>CYL: {customer.latestPrescription.tests[0].rightEyeDv.cyl}</p>}
                     </div>
                     <div>
                       <p className="text-muted-foreground">Left Eye (OS)</p>
-                      <p className="font-medium">SPH: {customer.latestPrescription.leftEye.sphere}</p>
-                      {customer.latestPrescription.leftEye.cylinder && <p>CYL: {customer.latestPrescription.leftEye.cylinder}</p>}
+                      <p className="font-medium">SPH: {customer.latestPrescription.tests?.[0]?.leftEyeDv?.sph || "—"}</p>
+                      {customer.latestPrescription.tests?.[0]?.leftEyeDv?.cyl && <p>CYL: {customer.latestPrescription.tests[0].leftEyeDv.cyl}</p>}
                     </div>
                   </div>
                   <div className="pt-2 border-t text-xs text-muted-foreground">
@@ -211,8 +211,8 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
                         <p className="text-sm text-muted-foreground">{new Date(rx.createdAt).toLocaleDateString()}</p>
                       </div>
                       <div className="text-sm text-right">
-                        {rx.pd && <p>PD: {rx.pd}</p>}
-                        {rx.rightEye?.addPower && <p>ADD: {rx.rightEye.addPower}</p>}
+                        {(rx.tests?.[0]?.rightEyePd || rx.tests?.[0]?.leftEyePd) && <p>PD: {rx.tests[0].rightEyePd || rx.tests[0].leftEyePd}</p>}
+                        {rx.tests?.[0]?.rightEyeAdd && <p>ADD: {rx.tests[0].rightEyeAdd}</p>}
                       </div>
                     </div>
                     {rx.notes && (

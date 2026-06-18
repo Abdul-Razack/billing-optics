@@ -1,5 +1,5 @@
 import { db } from '../config/db';
-import { invoices, invoiceItems, payments, products, inventoryLedger } from '../db/schema';
+import { invoices, invoiceItems, payments, products, inventoryLedger, visitorLogs } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { InventoryRepository } from '../repositories/inventory.repository';
@@ -10,6 +10,7 @@ export interface CheckoutDTO {
   items: {
     productId: number;
     quantity: number;
+    employeeName?: string;
   }[];
   payments?: {
     method: 'CASH' | 'CARD' | 'UPI' | 'BANK_TRANSFER';
@@ -18,6 +19,7 @@ export interface CheckoutDTO {
   }[];
   offerId?: number;
   manualDiscount?: number;
+  loyaltyPointsRedeemed?: number;
 }
 
 export const processCheckout = async (data: CheckoutDTO & { requestId?: string }) => {
@@ -29,7 +31,7 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
     }
   }
 
-  return await db.transaction(async (tx) => {
+  const checkoutResult = await db.transaction(async (tx) => {
     // 1. Calculate totals and deduct stock
     let subtotal = 0;
     let taxTotal = 0;
@@ -53,10 +55,14 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
       subtotal += itemTotal;
       taxTotal += itemTax;
 
+      const snapshotName = item.employeeName 
+        ? `${product.name} (Emp: ${item.employeeName})`
+        : product.name;
+
       itemsToInsert.push({
         productId: item.productId,
         quantity: item.quantity,
-        snapshotName: product.name,
+        snapshotName,
         snapshotSku: product.sku || '',
         snapshotPrice: product.sellingPrice,
         snapshotCostPrice: product.costPrice || 0,
@@ -99,6 +105,34 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
       discountTotal = subtotal + taxTotal; // Discount cannot exceed total
     }
 
+    let notesExtra = '';
+    // Process Loyalty Points Redemption
+    if (data.loyaltyPointsRedeemed && data.customerId) {
+      const { customers } = require('../db/schema/customers');
+      const [customer] = await tx.select().from(customers).where(eq(customers.id, data.customerId));
+      
+      if (!customer || customer.loyaltyPoints < data.loyaltyPointsRedeemed) {
+        throw new ValidationError("Insufficient loyalty points");
+      }
+      
+      // 1 point = ₹1 (100 paise)
+      const pointsValueInPaise = data.loyaltyPointsRedeemed * 100;
+      
+      // We add this to the total discount
+      discountTotal += pointsValueInPaise;
+      
+      // Deduct points from customer immediately
+      await tx.update(customers)
+        .set({ loyaltyPoints: sql`${customers.loyaltyPoints} - ${data.loyaltyPointsRedeemed}` })
+        .where(eq(customers.id, data.customerId));
+        
+      notesExtra = ` (Redeemed ${data.loyaltyPointsRedeemed} pts)`;
+    }
+
+    if (discountTotal > (subtotal + taxTotal)) {
+      discountTotal = subtotal + taxTotal;
+    }
+
     const grandTotal = subtotal + taxTotal - discountTotal;
 
     // Validate payments
@@ -127,6 +161,7 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
       grandTotal,
       amountPaid: 0,
       paymentStatus: 'UNPAID',
+      notes: notesExtra || null,
     }).returning();
 
     // 3. Create items
@@ -160,6 +195,50 @@ export const processCheckout = async (data: CheckoutDTO & { requestId?: string }
         .where(eq(invoices.id, newInvoice.id));
     }
 
+    // 6. Loyalty Program & Referrals
+    if (data.customerId && grandTotal > 0) {
+      const { customers } = require('../db/schema/customers');
+      
+      const earnedPoints = Math.floor(grandTotal / 100);
+      if (earnedPoints > 0) {
+        await tx.update(customers)
+          .set({ loyaltyPoints: sql`${customers.loyaltyPoints} + ${earnedPoints}` })
+          .where(eq(customers.id, data.customerId));
+      }
+
+      // Check if first purchase for referral bonus
+      const [invoiceCountRes] = await tx.select({ count: sql<number>`count(*)` })
+        .from(invoices)
+        .where(eq(invoices.customerId, data.customerId));
+      
+      if (Number(invoiceCountRes?.count) === 1) { // This is their first invoice
+        const [customer] = await tx.select().from(customers).where(eq(customers.id, data.customerId));
+        if (customer && customer.referredBy) {
+          // Award 50 points to referrer
+          await tx.update(customers)
+            .set({ loyaltyPoints: sql`${customers.loyaltyPoints} + 50` })
+            .where(eq(customers.id, customer.referredBy));
+        }
+      }
+    }
+
     return { success: true, invoiceId: newInvoice.id };
   });
+
+  // After the transaction commits: upsert today's visitor count (+1).
+  // This runs OUTSIDE the transaction so a visitor-log failure never rolls back a sale.
+  const todayISO = new Date().toISOString().split('T')[0];
+  try {
+    await db
+      .insert(visitorLogs)
+      .values({ logDate: todayISO, count: 1, notes: 'Auto: invoice created', createdBy: data.createdBy })
+      .onConflictDoUpdate({
+        target: visitorLogs.logDate,
+        set: { count: sql`${visitorLogs.count} + 1` },
+      });
+  } catch {
+    // Non-critical — never block a checkout because visitor log failed
+  }
+
+  return checkoutResult;
 };

@@ -51,7 +51,7 @@ export default function CustomerPrescriptionsHistoryPage({ params }: { params: P
     return <PageContainer title="Not Found"><div className="p-8">Customer not found.</div></PageContainer>;
   }
 
-  const activePrescription = customerHistory.find(p => p.isActive) || customerHistory[0];
+  const latestPrescription = customerHistory[0];
 
   return (
     <PageContainer title="Patient History" description={`Optical records for ${customer.fullName}`}>
@@ -66,7 +66,7 @@ export default function CustomerPrescriptionsHistoryPage({ params }: { params: P
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
-          <CustomerPrescriptionCard customer={customer} latestPrescription={activePrescription} />
+          <CustomerPrescriptionCard customer={customer} latestPrescription={latestPrescription} />
         </div>
         
         <div className="lg:col-span-2 space-y-6">

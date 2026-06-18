@@ -7,10 +7,15 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useFetch } from "@/hooks/useApi";
+import { fetchClient } from "@/lib/api-client";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 import { CategoryService, ApiCategory } from "@/services/category.service";
 import { ProductService, ApiProduct } from "@/services/product.service";
-import { SettingsService } from "@/services/settings.service";
 import { InventoryService } from "@/services/inventory.service";
 import { CustomField } from "@/types/custom-field";
 import { buildDynamicSchema } from "@/lib/dynamic-schema";
@@ -41,10 +46,9 @@ const productSchema = z.object({
 interface ProductFormInnerProps {
   initialData?: ApiProduct;
   categories: ApiCategory[];
-  customFields: CustomField[];
 }
 
-function ProductFormInner({ initialData, categories, customFields }: ProductFormInnerProps) {
+function ProductFormInner({ initialData, categories }: ProductFormInnerProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +57,7 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
   const nextActionRef = useRef<"redirect" | "reset">("redirect");
 
   const isEditMode = !!initialData;
-  const dynamicSchema = buildDynamicSchema(productSchema, customFields);
+  const dynamicSchema = buildDynamicSchema(productSchema, []); // Relaxed for dynamic fields
   type DynamicProductValues = z.infer<typeof dynamicSchema>;
 
   const form = useForm<DynamicProductValues>({
@@ -75,6 +79,37 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
   });
 
   const { formState: { isDirty } } = form;
+  
+  const selectedCategoryId = form.watch("categoryId");
+  const { data: attributesResponse, refetch: refetchAttributes } = useFetch<{ success: boolean, data: any[] }>(
+    `/product-attributes/categories/${selectedCategoryId || '0'}/attributes`,
+    { enabled: !!selectedCategoryId }
+  );
+  const categoryAttributes = attributesResponse?.data || [];
+
+  const [inlineOptionModal, setInlineOptionModal] = useState<{ isOpen: boolean, fieldId: number | null, value: string }>({ isOpen: false, fieldId: null, value: "" });
+
+  const handleAddInlineOption = async () => {
+    if (!inlineOptionModal.value || !inlineOptionModal.fieldId) return;
+    try {
+      await fetchClient(`/product-attributes/attributes/${inlineOptionModal.fieldId}/options`, {
+        method: "POST",
+        body: JSON.stringify({ value: inlineOptionModal.value })
+      });
+      toast.success("Option added successfully");
+      
+      // Select it automatically in the form
+      const fieldDef = categoryAttributes.find(a => a.id === inlineOptionModal.fieldId);
+      if (fieldDef) {
+        form.setValue(`customFields.${fieldDef.name}` as any, inlineOptionModal.value, { shouldDirty: true });
+      }
+      
+      setInlineOptionModal({ isOpen: false, fieldId: null, value: "" });
+      refetchAttributes();
+    } catch (e) {
+      toast.error("Failed to add option");
+    }
+  };
 
   const onSubmit = async (values: DynamicProductValues) => {
     setIsSaving(true);
@@ -158,8 +193,11 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
             <div className="xl:col-span-2 space-y-8">
               <ProductFormFields categories={categories} isEditMode={isEditMode} />
               
-              {customFields.length > 0 && (
-                <ProductCustomFields customFields={customFields} />
+              {categoryAttributes.length > 0 && (
+                <ProductCustomFields 
+                  customFields={categoryAttributes} 
+                  onAddOption={(fieldId) => setInlineOptionModal({ isOpen: true, fieldId, value: "" })}
+                />
               )}
             </div>
 
@@ -180,6 +218,36 @@ function ProductFormInner({ initialData, categories, customFields }: ProductForm
           )}
         </form>
       </FormProvider>
+
+      <Dialog open={inlineOptionModal.isOpen} onOpenChange={(open) => setInlineOptionModal(prev => ({ ...prev, isOpen: open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Option</DialogTitle>
+            <DialogDescription>Create a new dropdown option. It will be saved permanently for future use.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Option Value</Label>
+              <Input 
+                autoFocus
+                placeholder="e.g. Neon Green" 
+                value={inlineOptionModal.value}
+                onChange={(e) => setInlineOptionModal(prev => ({...prev, value: e.target.value}))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddInlineOption();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInlineOptionModal({ isOpen: false, fieldId: null, value: "" })}>Cancel</Button>
+            <Button onClick={handleAddInlineOption}>Save Option</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -190,19 +258,13 @@ export interface ProductFormProps {
 
 export function ProductForm({ initialData }: ProductFormProps) {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
-  const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [catData, settingsData] = await Promise.all([
-          CategoryService.getCategories(),
-          SettingsService.getSettings()
-        ]);
-        
+        const catData = await CategoryService.getCategories();
         setCategories(catData);
-        setCustomFields(settingsData.customFieldDefinitions?.products || []);
       } catch (err) {
         console.error("Failed to load form data", err);
       } finally {
@@ -220,5 +282,5 @@ export function ProductForm({ initialData }: ProductFormProps) {
     );
   }
 
-  return <ProductFormInner initialData={initialData} categories={categories} customFields={customFields} />;
+  return <ProductFormInner initialData={initialData} categories={categories} />;
 }

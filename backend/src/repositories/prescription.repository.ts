@@ -1,7 +1,9 @@
 import { eq, sql, ilike, or, and, desc, asc } from 'drizzle-orm';
 import { db } from '../config/db';
-import { prescriptions } from '../db/schema/prescriptions';
+import { prescriptions, prescriptionTests } from '../db/schema/prescriptions';
 import { customers } from '../db/schema/customers';
+import { patients } from '../db/schema/patients';
+import { doctors } from '../db/schema/doctors';
 import { users } from '../db/schema/users';
 import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
@@ -19,6 +21,7 @@ export class PrescriptionRepository {
       const searchTerm = `%${search}%`;
       conditions.push(
         or(
+          ilike(patients.name, searchTerm),
           ilike(customers.fullName, searchTerm),
           ilike(customers.phone, searchTerm)
         )
@@ -32,69 +35,30 @@ export class PrescriptionRepository {
       orderBy = asc(prescriptions.createdAt);
     }
 
-    const results = await db.select({
-      id: prescriptions.id,
-      customerId: prescriptions.customerId,
-      customerName: customers.fullName,
-      customerPhone: customers.phone,
-      rightEyeSph: prescriptions.rightEyeSph,
-      rightEyeCyl: prescriptions.rightEyeCyl,
-      rightEyeAxis: prescriptions.rightEyeAxis,
-      leftEyeSph: prescriptions.leftEyeSph,
-      leftEyeCyl: prescriptions.leftEyeCyl,
-      leftEyeAxis: prescriptions.leftEyeAxis,
-      addPower: prescriptions.addPower,
-      pd: prescriptions.pd,
-      notes: prescriptions.notes,
-      creatorId: users.id,
-      creatorName: users.fullName,
-      createdAt: prescriptions.createdAt,
-      updatedAt: prescriptions.updatedAt,
-    })
-    .from(prescriptions)
-    .innerJoin(customers, eq(prescriptions.customerId, customers.id))
-    .innerJoin(users, eq(prescriptions.createdBy, users.id))
-    .where(whereClause)
-    .orderBy(orderBy)
-    .limit(limit)
-    .offset(offset);
+    const results = await db.query.prescriptions.findMany({
+      where: whereClause,
+      orderBy: orderBy,
+      limit: limit,
+      offset: offset,
+      with: {
+        tests: true,
+        customer: true,
+        patient: true,
+        doctor: true,
+        creator: true,
+      }
+    });
 
     const [countResult] = await db.select({
       total: sql<number>`count(*)::int`
     })
     .from(prescriptions)
-    .innerJoin(customers, eq(prescriptions.customerId, customers.id))
+    .leftJoin(customers, eq(prescriptions.customerId, customers.id))
+    .leftJoin(patients, eq(prescriptions.patientId, patients.id))
     .where(whereClause);
 
-    const formattedData = results.map(r => ({
-      id: r.id.toString(),
-      customerId: r.customerId.toString(),
-      customer: {
-        id: r.customerId,
-        name: r.customerName,
-        phone: r.customerPhone,
-      },
-      rightEye: {
-        sphere: r.rightEyeSph ? String(r.rightEyeSph) : "",
-        cylinder: r.rightEyeCyl ? String(r.rightEyeCyl) : "",
-        axis: r.rightEyeAxis ? String(r.rightEyeAxis) : "",
-        addPower: r.addPower ? String(r.addPower) : "",
-      },
-      leftEye: {
-        sphere: r.leftEyeSph ? String(r.leftEyeSph) : "",
-        cylinder: r.leftEyeCyl ? String(r.leftEyeCyl) : "",
-        axis: r.leftEyeAxis ? String(r.leftEyeAxis) : "",
-        addPower: r.addPower ? String(r.addPower) : "",
-      },
-      pd: r.pd ? String(r.pd) : "",
-      notes: r.notes || "",
-      createdBy: r.creatorName || "",
-      createdAt: r.createdAt.toISOString(),
-      isActive: true,
-    }));
-
     return buildPaginatedResponse(
-      formattedData,
+      results.map(r => this.formatRecord(r)),
       countResult.total || 0,
       page,
       limit
@@ -102,157 +66,213 @@ export class PrescriptionRepository {
   }
 
   static async getPrescriptionById(id: number) {
-    const [result] = await db.select({
-      id: prescriptions.id,
-      customerId: prescriptions.customerId,
-      customerName: customers.fullName,
-      customerPhone: customers.phone,
-      rightEyeSph: prescriptions.rightEyeSph,
-      rightEyeCyl: prescriptions.rightEyeCyl,
-      rightEyeAxis: prescriptions.rightEyeAxis,
-      leftEyeSph: prescriptions.leftEyeSph,
-      leftEyeCyl: prescriptions.leftEyeCyl,
-      leftEyeAxis: prescriptions.leftEyeAxis,
-      addPower: prescriptions.addPower,
-      pd: prescriptions.pd,
-      notes: prescriptions.notes,
-      creatorId: users.id,
-      creatorName: users.fullName,
-      createdAt: prescriptions.createdAt,
-      updatedAt: prescriptions.updatedAt,
-    })
-    .from(prescriptions)
-    .innerJoin(customers, eq(prescriptions.customerId, customers.id))
-    .innerJoin(users, eq(prescriptions.createdBy, users.id))
-    .where(eq(prescriptions.id, id))
-    .limit(1);
+    const result = await db.query.prescriptions.findFirst({
+      where: eq(prescriptions.id, id),
+      with: {
+        tests: true,
+        customer: true,
+        patient: true,
+        doctor: true,
+        creator: true,
+      }
+    });
 
     if (!result) return undefined;
-
-    return {
-      id: result.id.toString(),
-      customerId: result.customerId.toString(),
-      customer: {
-        id: result.customerId,
-        name: result.customerName,
-        phone: result.customerPhone,
-      },
-      rightEye: {
-        sphere: result.rightEyeSph ? String(result.rightEyeSph) : "",
-        cylinder: result.rightEyeCyl ? String(result.rightEyeCyl) : "",
-        axis: result.rightEyeAxis ? String(result.rightEyeAxis) : "",
-        addPower: result.addPower ? String(result.addPower) : "",
-      },
-      leftEye: {
-        sphere: result.leftEyeSph ? String(result.leftEyeSph) : "",
-        cylinder: result.leftEyeCyl ? String(result.leftEyeCyl) : "",
-        axis: result.leftEyeAxis ? String(result.leftEyeAxis) : "",
-        addPower: result.addPower ? String(result.addPower) : "",
-      },
-      pd: result.pd ? String(result.pd) : "",
-      notes: result.notes || "",
-      createdBy: result.creatorName || "",
-      createdAt: result.createdAt.toISOString(),
-      isActive: true,
-    };
+    return this.formatRecord(result);
   }
 
   static async getPrescriptionsByCustomerId(customerId: number) {
-    const results = await db.select({
-      id: prescriptions.id,
-      customerId: prescriptions.customerId,
-      customerName: customers.fullName,
-      customerPhone: customers.phone,
-      rightEyeSph: prescriptions.rightEyeSph,
-      rightEyeCyl: prescriptions.rightEyeCyl,
-      rightEyeAxis: prescriptions.rightEyeAxis,
-      leftEyeSph: prescriptions.leftEyeSph,
-      leftEyeCyl: prescriptions.leftEyeCyl,
-      leftEyeAxis: prescriptions.leftEyeAxis,
-      addPower: prescriptions.addPower,
-      pd: prescriptions.pd,
-      notes: prescriptions.notes,
-      creatorId: users.id,
-      creatorName: users.fullName,
-      createdAt: prescriptions.createdAt,
-      updatedAt: prescriptions.updatedAt,
-    })
-    .from(prescriptions)
-    .innerJoin(customers, eq(prescriptions.customerId, customers.id))
-    .innerJoin(users, eq(prescriptions.createdBy, users.id))
-    .where(eq(prescriptions.customerId, customerId))
-    .orderBy(desc(prescriptions.createdAt));
+    const results = await db.query.prescriptions.findMany({
+      where: eq(prescriptions.customerId, customerId),
+      orderBy: desc(prescriptions.createdAt),
+      with: {
+        tests: true,
+        customer: true,
+        patient: true,
+        doctor: true,
+        creator: true,
+      }
+    });
 
-    return results.map(result => ({
-      id: result.id.toString(),
-      customerId: result.customerId.toString(),
-      customer: {
-        id: result.customerId,
-        name: result.customerName,
-        phone: result.customerPhone,
-      },
-      rightEye: {
-        sphere: result.rightEyeSph ? String(result.rightEyeSph) : "",
-        cylinder: result.rightEyeCyl ? String(result.rightEyeCyl) : "",
-        axis: result.rightEyeAxis ? String(result.rightEyeAxis) : "",
-        addPower: result.addPower ? String(result.addPower) : "",
-      },
-      leftEye: {
-        sphere: result.leftEyeSph ? String(result.leftEyeSph) : "",
-        cylinder: result.leftEyeCyl ? String(result.leftEyeCyl) : "",
-        axis: result.leftEyeAxis ? String(result.leftEyeAxis) : "",
-        addPower: result.addPower ? String(result.addPower) : "",
-      },
-      pd: result.pd ? String(result.pd) : "",
-      notes: result.notes || "",
-      createdBy: result.creatorName || "",
-      createdAt: result.createdAt.toISOString(),
-      isActive: true,
-    }));
+    return results.map(r => this.formatRecord(r));
   }
 
   static async createPrescription(data: any) {
-    const rightEye = data.rightEye || {};
-    const leftEye = data.leftEye || {};
-    // Grab the add power from either eye
-    const addPower = rightEye.addPower || leftEye.addPower || null;
-
     const mappedData = {
-      customerId: data.customerId,
+      customerId: data.customerId || null,
+      patientId: data.patientId || null,
+      doctorId: data.doctorId || null,
       createdBy: data.createdBy,
-      rightEyeSph: rightEye.sphere || null,
-      rightEyeCyl: rightEye.cylinder || null,
-      rightEyeAxis: rightEye.axis ? parseInt(rightEye.axis, 10) : null,
-      leftEyeSph: leftEye.sphere || null,
-      leftEyeCyl: leftEye.cylinder || null,
-      leftEyeAxis: leftEye.axis ? parseInt(leftEye.axis, 10) : null,
-      addPower: addPower,
-      pd: data.pd || null,
+      
+      prescriptionType: data.prescriptionType || 'EYEWEAR',
+      cardDescription: data.cardDescription || null,
+      countInRecords: data.countInRecords !== undefined ? data.countInRecords : true,
+
+      lensTypes: data.lensTypes || [],
       notes: data.notes || null,
     };
-    const [result] = await db.insert(prescriptions).values(mappedData).returning();
-    return this.getPrescriptionById(result.id);
+    
+    return await db.transaction(async (tx) => {
+      const [result] = await tx.insert(prescriptions).values(mappedData).returning();
+      
+      if (data.tests && data.tests.length > 0) {
+        const testsToInsert = data.tests.map((test: any) => this.mapTestInput(test, result.id));
+        await tx.insert(prescriptionTests).values(testsToInsert);
+      }
+
+      const created = await tx.query.prescriptions.findFirst({
+        where: eq(prescriptions.id, result.id),
+        with: {
+          tests: true,
+          customer: true,
+          patient: true,
+          doctor: true,
+          creator: true,
+        }
+      });
+      return created ? this.formatRecord(created) : null;
+    });
   }
 
   static async updatePrescription(id: number, data: any) {
-    const rightEye = data.rightEye || {};
-    const leftEye = data.leftEye || {};
-    const addPower = rightEye.addPower || leftEye.addPower || undefined;
-
     const mappedData: any = {};
-    if (data.customerId !== undefined) mappedData.customerId = data.customerId;
-    if (rightEye.sphere !== undefined) mappedData.rightEyeSph = rightEye.sphere || null;
-    if (rightEye.cylinder !== undefined) mappedData.rightEyeCyl = rightEye.cylinder || null;
-    if (rightEye.axis !== undefined) mappedData.rightEyeAxis = rightEye.axis ? parseInt(rightEye.axis, 10) : null;
-    if (leftEye.sphere !== undefined) mappedData.leftEyeSph = leftEye.sphere || null;
-    if (leftEye.cylinder !== undefined) mappedData.leftEyeCyl = leftEye.cylinder || null;
-    if (leftEye.axis !== undefined) mappedData.leftEyeAxis = leftEye.axis ? parseInt(leftEye.axis, 10) : null;
-    if (addPower !== undefined) mappedData.addPower = addPower || null;
-    if (data.pd !== undefined) mappedData.pd = data.pd || null;
+    if (data.customerId !== undefined) mappedData.customerId = data.customerId || null;
+    if (data.patientId !== undefined) mappedData.patientId = data.patientId || null;
+    if (data.doctorId !== undefined) mappedData.doctorId = data.doctorId || null;
+    
+    if (data.prescriptionType !== undefined) mappedData.prescriptionType = data.prescriptionType;
+    if (data.cardDescription !== undefined) mappedData.cardDescription = data.cardDescription;
+    if (data.countInRecords !== undefined) mappedData.countInRecords = data.countInRecords;
+
+    if (data.lensTypes !== undefined) mappedData.lensTypes = data.lensTypes || [];
     if (data.notes !== undefined) mappedData.notes = data.notes || null;
 
-    const [result] = await db.update(prescriptions).set(mappedData).where(eq(prescriptions.id, id)).returning();
-    if (!result) return undefined;
-    return this.getPrescriptionById(result.id);
+    return await db.transaction(async (tx) => {
+      if (Object.keys(mappedData).length > 0) {
+        await tx.update(prescriptions).set(mappedData).where(eq(prescriptions.id, id));
+      }
+
+      if (data.tests !== undefined) {
+        await tx.delete(prescriptionTests).where(eq(prescriptionTests.prescriptionId, id));
+        if (data.tests.length > 0) {
+          const testsToInsert = data.tests.map((test: any) => this.mapTestInput(test, id));
+          await tx.insert(prescriptionTests).values(testsToInsert);
+        }
+      }
+
+      const updated = await tx.query.prescriptions.findFirst({
+        where: eq(prescriptions.id, id),
+        with: {
+          tests: true,
+          customer: true,
+          patient: true,
+          doctor: true,
+          creator: true,
+        }
+      });
+      return updated ? this.formatRecord(updated) : null;
+    });
+  }
+
+  private static mapTestInput(test: any, prescriptionId: number) {
+    const rDv = test.rightEyeDv || {};
+    const rNv = test.rightEyeNv || {};
+    const lDv = test.leftEyeDv || {};
+    const lNv = test.leftEyeNv || {};
+
+    return {
+      prescriptionId,
+      testType: test.testType,
+
+      rightEyeDvSph: rDv.sph || null,
+      rightEyeDvCyl: rDv.cyl || null,
+      rightEyeDvAxis: rDv.axis ? parseInt(rDv.axis, 10) : null,
+      rightEyeDvVa: rDv.va || null,
+
+      rightEyeNvSph: rNv.sph || null,
+      rightEyeNvCyl: rNv.cyl || null,
+      rightEyeNvAxis: rNv.axis ? parseInt(rNv.axis, 10) : null,
+      rightEyeNvVa: rNv.va || null,
+
+      rightEyeAdd: test.rightEyeAdd || null,
+      rightEyePd: test.rightEyePd || null,
+
+      leftEyeDvSph: lDv.sph || null,
+      leftEyeDvCyl: lDv.cyl || null,
+      leftEyeDvAxis: lDv.axis ? parseInt(lDv.axis, 10) : null,
+      leftEyeDvVa: lDv.va || null,
+
+      leftEyeNvSph: lNv.sph || null,
+      leftEyeNvCyl: lNv.cyl || null,
+      leftEyeNvAxis: lNv.axis ? parseInt(lNv.axis, 10) : null,
+      leftEyeNvVa: lNv.va || null,
+
+      leftEyeAdd: test.leftEyeAdd || null,
+      leftEyePd: test.leftEyePd || null,
+    };
+  }
+
+  private static formatRecord(r: any) {
+    return {
+      id: r.id.toString(),
+      prescriptionType: r.prescriptionType,
+      cardDescription: r.cardDescription,
+      countInRecords: r.countInRecords,
+      customerId: r.customerId ? r.customerId.toString() : null,
+      customer: r.customer ? {
+        id: r.customer.id,
+        name: r.customer.fullName,
+        phone: r.customer.phone,
+      } : null,
+      patientId: r.patientId ? r.patientId.toString() : null,
+      patient: r.patient ? {
+        id: r.patient.id,
+        name: r.patient.name,
+        age: r.patient.dateOfBirth ? Math.floor((new Date().getTime() - new Date(r.patient.dateOfBirth).getTime()) / 31557600000) : null,
+        gender: r.patient.gender,
+      } : null,
+      doctorId: r.doctorId ? r.doctorId.toString() : null,
+      doctor: r.doctor ? {
+        id: r.doctor.id,
+        name: r.doctor.name,
+      } : null,
+      lensTypes: r.lensTypes || [],
+      notes: r.notes || "",
+      tests: (r.tests || []).map((t: any) => ({
+        id: t.id,
+        testType: t.testType,
+        rightEyeDv: {
+          sph: t.rightEyeDvSph ? String(t.rightEyeDvSph) : "",
+          cyl: t.rightEyeDvCyl ? String(t.rightEyeDvCyl) : "",
+          axis: t.rightEyeDvAxis ? String(t.rightEyeDvAxis) : "",
+          va: t.rightEyeDvVa || "",
+        },
+        rightEyeNv: {
+          sph: t.rightEyeNvSph ? String(t.rightEyeNvSph) : "",
+          cyl: t.rightEyeNvCyl ? String(t.rightEyeNvCyl) : "",
+          axis: t.rightEyeNvAxis ? String(t.rightEyeNvAxis) : "",
+          va: t.rightEyeNvVa || "",
+        },
+        rightEyeAdd: t.rightEyeAdd ? String(t.rightEyeAdd) : "",
+        rightEyePd: t.rightEyePd ? String(t.rightEyePd) : "",
+        leftEyeDv: {
+          sph: t.leftEyeDvSph ? String(t.leftEyeDvSph) : "",
+          cyl: t.leftEyeDvCyl ? String(t.leftEyeDvCyl) : "",
+          axis: t.leftEyeDvAxis ? String(t.leftEyeDvAxis) : "",
+          va: t.leftEyeDvVa || "",
+        },
+        leftEyeNv: {
+          sph: t.leftEyeNvSph ? String(t.leftEyeNvSph) : "",
+          cyl: t.leftEyeNvCyl ? String(t.leftEyeNvCyl) : "",
+          axis: t.leftEyeNvAxis ? String(t.leftEyeNvAxis) : "",
+          va: t.leftEyeNvVa || "",
+        },
+        leftEyeAdd: t.leftEyeAdd ? String(t.leftEyeAdd) : "",
+        leftEyePd: t.leftEyePd ? String(t.leftEyePd) : "",
+      })),
+      createdBy: r.creator ? r.creator.fullName : "",
+      createdAt: r.createdAt.toISOString(),
+      isActive: true,
+    };
   }
 }

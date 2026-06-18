@@ -6,7 +6,6 @@ import { ProductHeader } from "@/components/products/ProductHeader";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { SystemUpdates } from "@/components/settings/SystemUpdates";
 import { PosShortcuts } from "@/components/settings/PosShortcuts";
-import { OffersSettings } from "@/components/settings/OffersSettings";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,6 +71,7 @@ export default function SettingsPage() {
         currency: settings.currency,
         timezone: settings.timezone,
         printerSize: settings.printerSize,
+        multiBranchEnabled: settings.multiBranchEnabled,
       });
       toast.success("Settings updated successfully.");
     } catch (error) {
@@ -137,11 +137,21 @@ export default function SettingsPage() {
             >
               POS Shortcuts
             </button>
+
+            {settings.multiBranchEnabled && (
+              <button 
+                onClick={() => router.push("/settings/locations")}
+                className="px-4 py-2 rounded-md font-medium text-sm text-left transition-colors whitespace-nowrap text-teal-600/70 dark:text-teal-400/70 hover:bg-muted hover:text-teal-600 dark:hover:text-teal-400 flex items-center justify-between"
+              >
+                <span>Branches & Locations</span>
+                <ChevronRight className="h-4 w-4 opacity-50" />
+              </button>
+            )}
             <button 
-              onClick={() => setActiveTab("offers")}
-              className={`px-4 py-2 rounded-md font-medium text-sm text-left transition-colors whitespace-nowrap ${activeTab === "offers" ? "bg-muted text-purple-600 dark:bg-muted/50 dark:text-purple-400" : "text-purple-600/70 dark:text-purple-400/70 hover:bg-muted hover:text-purple-600 dark:hover:text-purple-400"}`}
+              onClick={() => router.push("/settings/product-attributes")}
+              className="px-4 py-2 rounded-md font-medium text-sm text-left transition-colors whitespace-nowrap text-orange-600/70 dark:text-orange-400/70 hover:bg-muted hover:text-orange-600 dark:hover:text-orange-400"
             >
-              Offers & Promotions
+              Product Attributes
             </button>
             <button 
               onClick={() => setActiveTab("system-updates")}
@@ -278,6 +288,16 @@ export default function SettingsPage() {
                 onSave={handleSave}
               >
                 <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">Multi-Store / Branch Mode</Label>
+                      <p className="text-sm text-muted-foreground">Activate features to manage inventory and sales across multiple branches.</p>
+                    </div>
+                    <Switch 
+                      checked={settings.multiBranchEnabled}
+                      onCheckedChange={(val) => setSettings(prev => prev ? {...prev, multiBranchEnabled: val} : null)}
+                    />
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Low Stock Alerts</Label>
@@ -427,11 +447,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {activeTab === "offers" && (
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <OffersSettings />
-            </div>
-          )}
+
         </div>
       </div>
     </PageContainer>

@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../config/db';
-import { products, categories } from '../db/schema';
+import { products, categories, vendors, labJobs, invoices, customers } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { parse } from 'csv-parse';
 import * as fs from 'fs';
-import { customers } from '../db/schema/customers';
 
 import { ValidationError, AppError } from '../utils/errors';
 
@@ -225,6 +224,191 @@ export class BulkController {
         try { fs.unlinkSync(req.file.path); } catch (e) {}
       }
       return next(new AppError(500, 'Failed to process Customer CSV file', error.message));
+    }
+  }
+
+  static async uploadVendors(req: Request, res: Response, next: NextFunction) {
+    if (!req.file) {
+      return next(new ValidationError('No CSV file provided'));
+    }
+
+    try {
+      const results: any[] = [];
+      const parser = fs.createReadStream(req.file.path).pipe(
+        parse({ columns: true, skip_empty_lines: true, trim: true })
+      );
+
+      for await (const row of parser) {
+        results.push(row);
+      }
+
+      fs.unlinkSync(req.file.path);
+
+      let imported = 0;
+      let skipped = 0;
+      let errors = [];
+
+      for (const [index, row] of results.entries()) {
+        try {
+          const name = row.name || row.Name;
+          if (!name) {
+            errors.push(`Row ${index + 1}: Missing Vendor Name`);
+            skipped++;
+            continue;
+          }
+
+          const contactPerson = row.contactPerson || row['Contact Person'] || null;
+          const phone = row.phone || row.Phone || null;
+          const email = row.email || row.Email || null;
+          const address = row.address || row.Address || null;
+
+          await db.insert(vendors).values({
+            name,
+            contactPerson,
+            phone,
+            email,
+            address,
+            isActive: true
+          });
+
+          imported++;
+        } catch (e: any) {
+          errors.push(`Row ${index + 1}: ${e.message}`);
+          skipped++;
+        }
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          imported,
+          skipped,
+          errors
+        }
+      });
+    } catch (error: any) {
+      console.error('Vendor CSV Processing Error:', error);
+      if (req.file) {
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
+      }
+      return next(new AppError(500, 'Failed to process Vendor CSV file', error.message));
+    }
+  }
+
+  static async uploadLabJobs(req: Request, res: Response, next: NextFunction) {
+    if (!req.file) {
+      return next(new ValidationError('No CSV file provided'));
+    }
+
+    try {
+      const results: any[] = [];
+      const parser = fs.createReadStream(req.file.path).pipe(
+        parse({ columns: true, skip_empty_lines: true, trim: true })
+      );
+
+      for await (const row of parser) {
+        results.push(row);
+      }
+
+      fs.unlinkSync(req.file.path);
+
+      let imported = 0;
+      let skipped = 0;
+      let errors = [];
+
+      // Pre-fetch invoices mapping (invoiceNumber -> id)
+      const allInvoices = await db.select({ id: invoices.id, invoiceNumber: invoices.invoiceNumber }).from(invoices);
+      const invoiceMap = new Map(allInvoices.map(i => [i.invoiceNumber.toLowerCase(), i.id]));
+
+      // Pre-fetch vendors mapping (name -> id)
+      const allVendors = await db.select({ id: vendors.id, name: vendors.name }).from(vendors);
+      const vendorMap = new Map(allVendors.map(v => [v.name.toLowerCase(), v.id]));
+
+      for (const [index, row] of results.entries()) {
+        try {
+          const jobTitle = row.jobTitle || row['Job Title'];
+          if (!jobTitle) {
+            errors.push(`Row ${index + 1}: Missing Job Title`);
+            skipped++;
+            continue;
+          }
+
+          const invoiceNumberRaw = row.invoiceNumber || row['Invoice Number'];
+          if (!invoiceNumberRaw) {
+            errors.push(`Row ${index + 1}: Missing Invoice Number`);
+            skipped++;
+            continue;
+          }
+
+          const invId = invoiceMap.get(invoiceNumberRaw.toLowerCase());
+          if (!invId) {
+            errors.push(`Row ${index + 1}: Invoice Number '${invoiceNumberRaw}' not found in database`);
+            skipped++;
+            continue;
+          }
+
+          // Vendor resolution
+          let vendorId = null;
+          const vendorNameRaw = row.vendorName || row['Vendor Name'];
+          if (vendorNameRaw) {
+            const vLower = vendorNameRaw.toLowerCase();
+            if (vendorMap.has(vLower)) {
+              vendorId = vendorMap.get(vLower);
+            } else {
+              // Create vendor automatically
+              const [newVendor] = await db.insert(vendors).values({ name: vendorNameRaw }).returning({ id: vendors.id });
+              vendorMap.set(vLower, newVendor.id);
+              vendorId = newVendor.id;
+            }
+          }
+
+          const statusRaw = (row.status || row.Status || 'PENDING').toUpperCase();
+          const validStatuses = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'DELIVERED', 'CANCELLED'];
+          const status = validStatuses.includes(statusRaw) ? statusRaw : 'PENDING';
+
+          const parseDate = (d: string) => {
+            if (!d) return null;
+            const pd = new Date(d);
+            return isNaN(pd.getTime()) ? null : pd.toISOString();
+          };
+
+          const expectedDate = parseDate(row.expectedDate || row['Expected Date']);
+          const sentDate = parseDate(row.sentDate || row['Sent Date']);
+          const receivedDate = parseDate(row.receivedDate || row['Received Date']);
+          const notes = row.notes || row.Notes || null;
+
+          await db.insert(labJobs).values({
+            jobTitle,
+            invoiceId: invId,
+            vendorId,
+            status: status as any,
+            notes,
+            expectedDate,
+            sentDate,
+            receivedDate
+          });
+
+          imported++;
+        } catch (e: any) {
+          errors.push(`Row ${index + 1}: ${e.message}`);
+          skipped++;
+        }
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          imported,
+          skipped,
+          errors
+        }
+      });
+    } catch (error: any) {
+      console.error('Lab Job CSV Processing Error:', error);
+      if (req.file) {
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
+      }
+      return next(new AppError(500, 'Failed to process Lab Job CSV file', error.message));
     }
   }
 }

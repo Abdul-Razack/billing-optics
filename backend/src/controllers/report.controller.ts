@@ -91,4 +91,16 @@ export class ReportController {
       next(error);
     }
   }
+
+  static async getDailyStatement(req: Request, res: Response, next: NextFunction) {
+    try {
+      const dateStr = req.query.date as string;
+      const date = dateStr ? new Date(dateStr) : new Date();
+
+      const result = await ReportService.getDailyStatement(date);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

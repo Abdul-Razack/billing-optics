@@ -23,6 +23,19 @@ export const CategoryService = {
     return response.data;
   },
 
+  updateCategory: async (id: number, data: Partial<ApiCategory>): Promise<ApiCategory> => {
+    const response = await fetchClient<{ success: boolean, data: ApiCategory }>(`/categories/${id}`, {
+      method: "PUT",
+      data,
+    });
+    return response.data;
+  },
+
+  getCategory: async (id: number): Promise<ApiCategory> => {
+    const response = await fetchClient<{ success: boolean, data: ApiCategory }>(`/categories/${id}`);
+    return response.data;
+  },
+
   deleteCategory: async (id: number): Promise<void> => {
     await fetchClient(`/categories/${id}`, { method: "DELETE" });
   }

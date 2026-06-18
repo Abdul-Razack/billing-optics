@@ -25,6 +25,7 @@ export const checkoutSchema = z.object({
       z.object({
         productId: z.number().int().positive(),
         quantity: z.number().int().positive().max(10000, 'Quantity too large'),
+        employeeName: z.string().trim().max(100).optional(),
       })
     ).min(1, 'At least one item is required').max(500, 'Too many items'),
     payments: z.array(

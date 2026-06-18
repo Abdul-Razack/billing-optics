@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import UpdateBanner from "@/components/system/UpdateBanner";
+import { BranchProvider } from "@/contexts/BranchContext";
 
 export default function DashboardLayout({
   children,
@@ -9,10 +10,12 @@ export default function DashboardLayout({
 }>) {
   return (
     <ProtectedRoute>
-      <AppShell>
-        {children}
-        <UpdateBanner />
-      </AppShell>
+      <BranchProvider>
+        <AppShell>
+          {children}
+          <UpdateBanner />
+        </AppShell>
+      </BranchProvider>
     </ProtectedRoute>
   );
 }

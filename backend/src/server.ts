@@ -2,6 +2,11 @@ import { buildApp } from './app';
 import env from './config/env';
 import { pool } from './config/db';
 import { bootstrap } from './bootstrap';
+import { createSettingsRoutes } from './routes/settings.routes';
+import { createPurchaseRoutes } from './routes/purchase.routes';
+import { createBarcodeRoutes } from './routes/barcode.routes';
+import { createSystemRoutes } from './routes/system.routes';
+import { createExportRoutes } from './routes/export.routes';
 
 const port = env.PORT;
 

@@ -1,4 +1,4 @@
-import { pgTable, bigserial, varchar, timestamp, check, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, bigserial, varchar, timestamp, check, jsonb, boolean } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const settings = pgTable('settings', {
@@ -11,6 +11,7 @@ export const settings = pgTable('settings', {
   currency: varchar('currency', { length: 10 }).notNull().default('INR'),
   timezone: varchar('timezone', { length: 50 }).notNull().default('Asia/Kolkata'),
   printerSize: varchar('printer_size', { length: 20 }).notNull().default('80mm'),
+  multiBranchEnabled: boolean('multi_branch_enabled').notNull().default(false),
   customFieldDefinitions: jsonb('custom_field_definitions').default('{"products": [], "customers": []}'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')

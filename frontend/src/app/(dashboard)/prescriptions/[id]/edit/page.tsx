@@ -44,7 +44,7 @@ export default function EditPrescriptionPage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <PageContainer title="Edit Prescription" description={`Modifying Rx ${prescription.id.toUpperCase()}`}>
+    <PageContainer title="Edit Prescription" description={`Modifying Rx ${prescription.id}`}>
       <ProductHeader title="Edit Prescription">
         <Button variant="outline" asChild>
           <Link href={`/prescriptions/${prescription.id}`}>Back to Details</Link>

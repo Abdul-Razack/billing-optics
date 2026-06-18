@@ -5,10 +5,14 @@ import { users } from './users';
 import { offers } from './offers';
 import { paymentStatusEnum, deliveryStatusEnum } from './enums';
 
+import { locations } from './locations';
+
 export const invoices = pgTable('invoices', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
   requestId: varchar('request_id', { length: 255 }).unique(),
   invoiceNumber: varchar('invoice_number', { length: 100 }).notNull().unique(),
+  locationId: bigint('location_id', { mode: 'number' })
+    .references(() => locations.id, { onDelete: 'restrict' }),
   customerId: bigint('customer_id', { mode: 'number' })
     .references(() => customers.id, { onDelete: 'restrict' }),
   createdBy: bigint('created_by', { mode: 'number' })

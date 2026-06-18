@@ -17,13 +17,17 @@ import { CategoryService } from "@/services/category.service";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Category Name is required"),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   isActive: z.boolean(),
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
 
-export function CategoryForm() {
+interface CategoryFormProps {
+  initialData?: any; // ApiCategory
+}
+
+export function CategoryForm({ initialData }: CategoryFormProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,9 +35,9 @@ export function CategoryForm() {
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
-      name: "",
-      description: "",
-      isActive: true,
+      name: initialData?.name || "",
+      description: initialData?.description || "",
+      isActive: initialData?.isActive ?? true,
     },
   });
 
@@ -41,7 +45,17 @@ export function CategoryForm() {
     setIsSaving(true);
     setError(null);
     try {
-      await CategoryService.createCategory(values);
+      const payload = {
+        ...values,
+        description: values.description || undefined,
+      };
+      
+      if (initialData) {
+        // Assume updateCategory exists on CategoryService, or fallback to fetchClient
+        await CategoryService.updateCategory(initialData.id, payload);
+      } else {
+        await CategoryService.createCategory(payload);
+      }
       router.push("/categories");
       router.refresh(); // Refresh list
     } catch (err: any) {
@@ -61,7 +75,7 @@ export function CategoryForm() {
             </Link>
           </Button>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Create Category
+            {initialData ? "Edit Category" : "Create Category"}
           </h1>
         </div>
         <div className="flex items-center space-x-2">

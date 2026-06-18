@@ -25,6 +25,11 @@ const baseCustomerSchema = z.object({
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   address: z.string().optional(),
   notes: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  anniversaryDate: z.string().optional(),
+  isDnd: z.boolean().default(false),
+  labels: z.string().optional(), // We'll parse this to array on submit
+  referredBy: z.number().optional(),
   isActive: z.boolean().default(true),
   customFields: z.record(z.any()).optional(),
 });
@@ -51,6 +56,11 @@ function CustomerFormInner({ initialData, customFields }: CustomerFormInnerProps
       email: initialData?.email || "",
       address: initialData?.address || "",
       notes: initialData?.notes || "",
+      dateOfBirth: initialData?.dateOfBirth ? new Date(initialData.dateOfBirth).toISOString().split('T')[0] : "",
+      anniversaryDate: initialData?.anniversaryDate ? new Date(initialData.anniversaryDate).toISOString().split('T')[0] : "",
+      isDnd: initialData?.isDnd ?? false,
+      labels: initialData?.labels ? initialData.labels.join(", ") : "",
+      referredBy: initialData?.referredBy || undefined,
       isActive: initialData?.isActive ?? true,
       customFields: initialData?.customFields || {},
     },
@@ -77,6 +87,26 @@ function CustomerFormInner({ initialData, customFields }: CustomerFormInnerProps
       
       if (values.notes && values.notes.trim() !== "") {
         payload.notes = values.notes.trim();
+      }
+
+      if (values.dateOfBirth) {
+        payload.dateOfBirth = new Date(values.dateOfBirth).toISOString();
+      }
+
+      if (values.anniversaryDate) {
+        payload.anniversaryDate = new Date(values.anniversaryDate).toISOString();
+      }
+
+      if (values.labels && values.labels.trim() !== "") {
+        payload.labels = values.labels.split(",").map((s: string) => s.trim()).filter((s: string) => s !== "");
+      } else {
+        payload.labels = [];
+      }
+
+      payload.isDnd = values.isDnd;
+      
+      if (values.referredBy) {
+        payload.referredBy = values.referredBy;
       }
 
       if (isEditMode && initialData) {
@@ -129,6 +159,35 @@ function CustomerFormInner({ initialData, customFields }: CustomerFormInnerProps
         <Textarea {...form.register("notes")} placeholder="Special preferences or notes..." className="min-h-[80px]" />
       </div>
 
+      {/* CRM Features */}
+      <div>
+        <h3 className="text-lg font-medium border-b border-border pb-2 mb-4">Marketing & CRM</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label>Date of Birth</Label>
+            <Input {...form.register("dateOfBirth")} type="date" />
+          </div>
+          <div className="space-y-2">
+            <Label>Anniversary Date</Label>
+            <Input {...form.register("anniversaryDate")} type="date" />
+          </div>
+          <div className="space-y-2">
+            <Label>Customer Labels</Label>
+            <Input {...form.register("labels")} placeholder="VIP, Retail, Wholesale (comma separated)" />
+          </div>
+          <div className="space-y-2">
+            <Label>Referred By (Customer ID)</Label>
+            <Input 
+              {...form.register("referredBy", { 
+                setValueAs: v => v === "" ? undefined : parseInt(v, 10) 
+              })} 
+              type="number" 
+              placeholder="123" 
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Dynamic Fields */}
       {customFields.length > 0 && (
         <div>
@@ -159,18 +218,34 @@ function CustomerFormInner({ initialData, customFields }: CustomerFormInnerProps
       )}
 
       {/* Status */}
-      <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-card">
-        <div className="space-y-0.5">
-          <Label>Active Status</Label>
-          <p className="text-xs text-muted-foreground">Inactive customers will not be available for new transactions.</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-card">
+          <div className="space-y-0.5">
+            <Label>Do Not Disturb (DND)</Label>
+            <p className="text-xs text-muted-foreground">Opt out of promotional marketing messages (SMS/Email).</p>
+          </div>
+          <Controller
+            control={form.control}
+            name="isDnd"
+            render={({ field }) => (
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+            )}
+          />
         </div>
-        <Controller
-          control={form.control}
-          name="isActive"
-          render={({ field }) => (
-            <Switch checked={field.value} onCheckedChange={field.onChange} />
-          )}
-        />
+
+        <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-card">
+          <div className="space-y-0.5">
+            <Label>Active Status</Label>
+            <p className="text-xs text-muted-foreground">Inactive customers will not be available for new transactions.</p>
+          </div>
+          <Controller
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+            )}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end space-x-4">

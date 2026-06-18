@@ -20,16 +20,14 @@ export function PrescriptionHeader({ prescription, children }: PrescriptionHeade
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-semibold tracking-tight text-foreground">Prescription Data</h1>
-            <Badge variant={prescription.isActive ? "default" : "secondary"} className={prescription.isActive ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}>
-              {prescription.isActive ? "Active" : "Archived"}
+            <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
+              Active
             </Badge>
           </div>
           <div className="flex items-center gap-4 mt-1.5 text-sm text-muted-foreground">
-            <span>Rx ID: <span className="font-medium text-foreground">{prescription.id.toUpperCase()}</span></span>
+            <span>Rx ID: <span className="font-medium text-foreground">{String(prescription.id).toUpperCase()}</span></span>
             <span>•</span>
             <span>Recorded on: {new Date(prescription.createdAt).toLocaleDateString()}</span>
-            <span>•</span>
-            <span>By: {prescription.createdBy}</span>
           </div>
         </div>
       </div>

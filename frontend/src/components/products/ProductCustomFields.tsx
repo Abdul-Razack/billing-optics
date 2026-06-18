@@ -3,14 +3,14 @@
 import { useFormContext, Controller } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { CustomField } from "@/types/custom-field";
 import { DynamicFieldRenderer } from "./DynamicFieldRenderer";
 
 interface ProductCustomFieldsProps {
-  customFields: CustomField[];
+  customFields: any[]; // Using any for product_attribute_definitions
+  onAddOption?: (fieldId: number) => void;
 }
 
-export function ProductCustomFields({ customFields }: ProductCustomFieldsProps) {
+export function ProductCustomFields({ customFields, onAddOption }: ProductCustomFieldsProps) {
   const { control } = useFormContext();
 
   if (!customFields || customFields.length === 0) {
@@ -20,9 +20,9 @@ export function ProductCustomFields({ customFields }: ProductCustomFieldsProps) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Additional Attributes</CardTitle>
+        <CardTitle>Category Attributes</CardTitle>
         <CardDescription>
-          Dynamic fields defined in settings for your product catalog.
+          Dynamic fields specifically required for this category of product.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -30,22 +30,23 @@ export function ProductCustomFields({ customFields }: ProductCustomFieldsProps) 
           {customFields.map((field) => (
             <div 
               key={field.id} 
-              className={field.type === "TEXTAREA" ? "md:col-span-2 lg:col-span-3 space-y-2" : "space-y-2"}
+              className={field.inputType === "TEXTAREA" ? "md:col-span-2 lg:col-span-3 space-y-2" : "space-y-2"}
             >
-              {field.type !== "CHECKBOX" && (
+              {field.inputType !== "BOOLEAN" && (
                 <Label className="flex items-center gap-1">
-                  {field.name} 
+                  {field.label} 
                   {field.isRequired && <span className="text-destructive">*</span>}
                 </Label>
               )}
               <Controller
                 control={control}
-                name={`customFields.${field.id}`}
+                name={`customFields.${field.name}`}
                 render={({ field: controllerField }) => (
                   <DynamicFieldRenderer 
                     fieldDef={field}
                     value={controllerField.value}
                     onChange={controllerField.onChange}
+                    onAddOption={onAddOption}
                   />
                 )}
               />

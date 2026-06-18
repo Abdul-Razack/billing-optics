@@ -20,6 +20,29 @@ export class CategoryController {
     }
   }
 
+  static async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const result = await categoryService.getById(id);
+      if (!result) {
+        return res.status(404).json({ success: false, error: 'Category not found' });
+      }
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const result = await categoryService.update(id, req.body);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);

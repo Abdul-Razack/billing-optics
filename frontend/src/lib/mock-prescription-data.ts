@@ -1,6 +1,6 @@
 import { Prescription } from "@/types/prescription";
 
-export const MOCK_PRESCRIPTIONS: Prescription[] = [
+export const MOCK_PRESCRIPTIONS: any[] = [
   {
     id: "rx_1",
     customerId: "cust_1", // John Doe

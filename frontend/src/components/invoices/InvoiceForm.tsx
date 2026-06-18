@@ -7,16 +7,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { InvoiceItem, PaymentMethod } from "@/types/invoice";
 import { Product } from "@/types/product";
-import { MOCK_CUSTOMERS } from "@/lib/mock-customer-data";
+import { fetchClient } from "@/lib/api-client";
 import { ProductSelector } from "./ProductSelector";
 import { CartTable } from "./CartTable";
 import { InvoiceSummary } from "./InvoiceSummary";
 import { PaymentForm } from "./PaymentForm";
 import { OrderService } from "@/services/order.service";
 import { CheckCircle } from "lucide-react";
+import { useBranch } from "@/contexts/BranchContext";
 
 export function InvoiceForm() {
   const router = useRouter();
+  const { activeBranch } = useBranch();
   // Initialised in useEffect to keep impure Date.now()/Math.random() calls
   // out of the render phase (React Compiler requirement).
   const sessionIdRef = React.useRef<string | null>(null);
@@ -26,10 +28,26 @@ export function InvoiceForm() {
     }
   }, []);
 
+  // Data State
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchClient<{ data: any[] }>("/customers?limit=100").then(res => {
+      if (res.data) setCustomers(res.data);
+    });
+    fetchClient<{ data: any[] }>("/offers").then(res => {
+      if (res.data) setOffers(res.data);
+    });
+  }, []);
+
   // POS State
-  const [customerId, setCustomerId] = useState<string>("");
+  const [customerId, setCustomerId] = useState<string>("walkin");
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
+  
+  const [offerId, setOfferId] = useState<string>("none");
+  const [loyaltyPointsRedeemed, setLoyaltyPointsRedeemed] = useState<number>(0);
   
   // Payment State
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
@@ -43,8 +61,24 @@ export function InvoiceForm() {
     // In a real app we'd fetch GST % from the product. Mocking a flat 10% for demonstration.
     return sum + (item.total * 0.1);
   }, 0);
-  const discountTotal = (subtotal + gstTotal) * (discountPercent / 100);
-  const grandTotal = subtotal + gstTotal - discountTotal;
+  
+  const selectedOffer = offers.find(o => o.id.toString() === offerId);
+  const selectedCustomer = customers.find(c => c.id.toString() === customerId);
+
+  let offerDiscountValue = 0;
+  if (selectedOffer) {
+    if (selectedOffer.type === 'PERCENTAGE') {
+       offerDiscountValue = (subtotal + gstTotal) * (selectedOffer.value / 100);
+    } else {
+       offerDiscountValue = selectedOffer.value; // Flat
+    }
+  }
+  
+  const manualDiscount = (subtotal + gstTotal) * (discountPercent / 100);
+  const pointsDiscount = loyaltyPointsRedeemed; // 1 pt = 1 rs
+  
+  const discountTotal = manualDiscount + offerDiscountValue + pointsDiscount;
+  const grandTotal = Math.max(0, subtotal + gstTotal - discountTotal);
 
   // Handlers
   const handleAddProduct = (product: Product) => {
@@ -96,10 +130,13 @@ export function InvoiceForm() {
     try {
       const payload = {
         customerId: customerId !== "walkin" ? parseInt(customerId) : undefined,
+        locationId: activeBranch?.id ?? undefined,
         items: items.map(i => ({
           productId: Number(i.productId),
           quantity: i.quantity
         })),
+        offerId: offerId !== "none" ? parseInt(offerId) : undefined,
+        loyaltyPointsRedeemed: loyaltyPointsRedeemed > 0 ? loyaltyPointsRedeemed : undefined,
         payments: paymentAmount > 0 ? [{
           method: paymentMethod,
           amount: Math.round(paymentAmount * 100),
@@ -131,8 +168,10 @@ export function InvoiceForm() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="walkin">Walk-in Customer</SelectItem>
-                  {MOCK_CUSTOMERS.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.fullName} ({c.phone})</SelectItem>
+                  {customers.map(c => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.fullName} ({c.phone}) {c.loyaltyPoints > 0 ? `- ${c.loyaltyPoints} pts` : ''}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -165,15 +204,58 @@ export function InvoiceForm() {
         />
 
         <div className="bg-card rounded-lg border border-border shadow-sm p-5 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">Order Discount (%)</label>
-            <Input 
-              type="NUMBER" 
-              min="0" 
-              max="100" 
-              value={discountPercent} 
-              onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Order Discount (%)</label>
+              <Input 
+                type="NUMBER" 
+                min="0" 
+                max="100" 
+                value={discountPercent} 
+                onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Apply Offer/Coupon</label>
+              <Select value={offerId} onValueChange={(v) => { if (v) setOfferId(v); }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No Offer Selected" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Offer Selected</SelectItem>
+                  {offers.filter(o => o.isActive).map(o => (
+                    <SelectItem key={o.id} value={o.id.toString()}>
+                      {o.name} ({o.type === 'PERCENTAGE' ? `${o.value}%` : `₹${o.value}`})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedCustomer && selectedCustomer.loyaltyPoints > 0 && (
+              <div className="space-y-2 p-3 bg-muted rounded-md border">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-primary">Redeem Loyalty Points</label>
+                  <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-1 rounded-full">
+                    {selectedCustomer.loyaltyPoints} pts available
+                  </span>
+                </div>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  max={selectedCustomer.loyaltyPoints} 
+                  value={loyaltyPointsRedeemed || ""} 
+                  onChange={(e) => {
+                    let val = Number(e.target.value) || 0;
+                    if (val > selectedCustomer.loyaltyPoints) val = selectedCustomer.loyaltyPoints;
+                    setLoyaltyPointsRedeemed(val);
+                  }}
+                  placeholder={`Max ${selectedCustomer.loyaltyPoints}`}
+                />
+                <p className="text-[10px] text-muted-foreground">1 Point = ₹1 Discount</p>
+              </div>
+            )}
           </div>
         </div>
 

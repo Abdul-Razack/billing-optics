@@ -72,28 +72,13 @@ export function PrescriptionTable({ data }: PrescriptionTableProps) {
         return <div className="text-muted-foreground">{date.toLocaleDateString()}</div>;
       }
     },
-    {
-      accessorKey: "createdBy",
-      header: "Optometrist",
-      cell: ({ row }) => <div className="text-muted-foreground">{row.getValue("createdBy")}</div>
-    },
+
     {
       accessorKey: "pd",
       header: "PD",
       cell: ({ row }) => <div>{row.getValue("pd")}</div>
     },
-    {
-      accessorKey: "isActive",
-      header: "Status",
-      cell: ({ row }) => {
-        const isActive = row.getValue("isActive");
-        return (
-          <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}>
-            {isActive ? "Active" : "Archived"}
-          </Badge>
-        );
-      }
-    },
+
     {
       id: "actions",
       cell: ({ row }) => {

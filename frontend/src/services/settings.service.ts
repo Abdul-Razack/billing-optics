@@ -16,6 +16,7 @@ export interface ApiSettings {
   currency: string;
   timezone: string;
   printerSize: string;
+  multiBranchEnabled: boolean;
   customFieldDefinitions: CustomFieldDefinitions;
   createdAt: string;
   updatedAt: string;

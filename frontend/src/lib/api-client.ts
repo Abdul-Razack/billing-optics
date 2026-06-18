@@ -84,7 +84,7 @@ export async function fetchClient<T>(endpoint: string, options: FetchOptions = {
 
   const config: RequestInit = {
     ...rest,
-    method: data ? "POST" : rest.method || "GET",
+    method: rest.method ? rest.method : (data ? "POST" : "GET"),
   };
 
   if (data) {
@@ -199,4 +199,15 @@ export async function downloadFile(endpoint: string, filename: string): Promise<
   a.click();
   a.remove();
   window.URL.revokeObjectURL(downloadUrl);
+}
+
+/**
+ * Builds a query string from a plain object, skipping undefined/null values.
+ * e.g. { page: 1, search: "abc" } => "?page=1&search=abc"
+ */
+export function buildQueryString(params?: Record<string, any>): string {
+  if (!params) return "";
+  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== "");
+  if (entries.length === 0) return "";
+  return "?" + entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join("&");
 }

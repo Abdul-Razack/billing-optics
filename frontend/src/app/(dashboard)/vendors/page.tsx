@@ -3,8 +3,9 @@
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useFetch } from "@/hooks/useApi";
 import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
+import { Users, Upload } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
+import Link from "next/link";
 
 export default function VendorsPage() {
   const { data: response, isLoading, error } = useFetch<{ success: boolean, data: any[] }>("/vendors");
@@ -14,7 +15,15 @@ export default function VendorsPage() {
     <PageContainer title="Vendors" description="Manage your lab suppliers and manufacturers.">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Vendors</h1>
-        <Button>Add Vendor</Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" asChild>
+            <Link href="/vendors/import">
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Link>
+          </Button>
+          <Button>Add Vendor</Button>
+        </div>
       </div>
 
       {isLoading ? (

@@ -72,12 +72,13 @@ export default function CustomersPage() {
             await fetchClient(`/customers/${id}`, { method: "DELETE" });
           } else {
             await fetchClient(`/customers/${id}`, { 
-              method: "PATCH", 
+              method: "PUT", 
               data: { isActive: bulkAction === "activate" } 
             });
           }
           successCount++;
         } catch (e) {
+          console.error(`Failed to process customer ${id}:`, e);
           failureCount++;
         }
       }));

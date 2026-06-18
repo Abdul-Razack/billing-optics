@@ -28,6 +28,12 @@ import { createVendorRoutes } from './routes/vendor.routes';
 import { createLabJobRoutes } from './routes/labJob.routes';
 import { createShortcutRoutes } from './routes/shortcut.routes';
 import { createOfferRoutes } from './routes/offer.routes';
+import { createPurchaseRoutes } from './routes/purchase.routes';
+import { createBarcodeRoutes } from './routes/barcode.routes';
+import { createProductAttributeRoutes } from './routes/productAttribute.routes';
+import { createSalesReturnRoutes } from './routes/salesReturn.routes';
+import { createVisitorLogRoutes } from './routes/visitorLog.routes';
+import { createLocationRoutes } from './routes/location.routes';
 import { requireLicense } from './middleware/license.middleware';
 
 export function buildApp(context: BootstrapContext) {
@@ -74,6 +80,12 @@ export function buildApp(context: BootstrapContext) {
   app.use('/api/lab-jobs', createLabJobRoutes());
   app.use('/api/shortcuts', createShortcutRoutes());
   app.use('/api/offers', createOfferRoutes());
+  app.use('/api/purchases', createPurchaseRoutes());
+  app.use('/api/barcodes', createBarcodeRoutes());
+  app.use('/api/product-attributes', createProductAttributeRoutes());
+  app.use('/api/sales-returns', createSalesReturnRoutes());
+  app.use('/api/visitor-logs', createVisitorLogRoutes());
+  app.use('/api/locations', createLocationRoutes());
 
   // Global Error Handler
   app.use(errorMiddleware);

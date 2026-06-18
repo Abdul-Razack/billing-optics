@@ -385,4 +385,45 @@ export class ReportRepository {
       topCustomersData
     };
   }
+
+  static async getDailyStatement(date: Date) {
+    const { salesReturns } = require('../db/schema');
+    const start = startOfDay(date);
+    const end = endOfDay(date);
+
+    // Sales for the day
+    const [salesData] = await db
+      .select({
+        totalSales: sql<number>`COALESCE(SUM(${invoices.grandTotal}), 0)`.mapWith(Number),
+        totalInvoices: sql<number>`COUNT(${invoices.id})`.mapWith(Number),
+      })
+      .from(invoices)
+      .where(between(invoices.createdAt, start, end));
+
+    // Payments collected
+    const paymentsData = await db
+      .select({
+        method: payments.paymentMethod,
+        amount: sql<number>`COALESCE(SUM(${payments.amount}), 0)`.mapWith(Number),
+      })
+      .from(payments)
+      .where(between(payments.createdAt, start, end))
+      .groupBy(payments.paymentMethod);
+
+    // Returns processed
+    const [returnsData] = await db
+      .select({
+        totalRefunds: sql<number>`COALESCE(SUM(${salesReturns.totalRefundAmount}), 0)`.mapWith(Number),
+        totalReturns: sql<number>`COUNT(${salesReturns.id})`.mapWith(Number),
+      })
+      .from(salesReturns)
+      .where(between(salesReturns.createdAt, start, end));
+
+    return {
+      date: format(date, 'yyyy-MM-dd'),
+      sales: salesData,
+      payments: paymentsData,
+      returns: returnsData,
+    };
+  }
 }

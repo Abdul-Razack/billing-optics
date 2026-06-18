@@ -10,7 +10,9 @@ export function createCategoryRoutes() {
   const router = Router();
   
   router.get('/', authenticate, CategoryController.getAll);
+  router.get('/:id', authenticate, CategoryController.getById);
   router.post('/', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validate(createCategorySchema), CategoryController.create);
+  router.put('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validate(createCategorySchema), CategoryController.update);
   router.delete('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), CategoryController.delete);
   return router;
 }

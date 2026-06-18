@@ -1,4 +1,4 @@
-import { eq, desc, or, ilike, and, sql } from 'drizzle-orm';
+import { eq, desc, or, ilike, and, sql, inArray } from 'drizzle-orm';
 import { db } from '../config/db';
 import { customers } from '../db/schema/customers';
 import { prescriptions } from '../db/schema/prescriptions';
@@ -77,16 +77,83 @@ export class CustomerRepository {
     return buildPaginatedResponse(dataResult, countResult[0].count, page, limit);
   }
 
-  static async addPrescription(data: typeof prescriptions.$inferInsert, dbClient: DbOrTx = db) {
-    const [result] = await dbClient.insert(prescriptions).values(data).returning();
+  static async addPrescription(data: any, dbClient: DbOrTx = db) {
+    const { tests, ...prescriptionData } = data;
+    const [result] = await dbClient.insert(prescriptions).values(prescriptionData).returning();
+    
+    if (tests && tests.length > 0) {
+      const testsToInsert = tests.map((t: any) => ({
+        ...t,
+        prescriptionId: result.id
+      }));
+      await dbClient.insert(require('../db/schema/prescriptions').prescriptionTests).values(testsToInsert);
+    }
+    
     return result;
   }
 
   static async findPrescriptionsByCustomerId(customerId: number, dbClient: DbOrTx = db) {
+    return await dbClient.query.prescriptions.findMany({
+      where: eq(prescriptions.customerId, customerId),
+      orderBy: desc(prescriptions.createdAt),
+      with: {
+        tests: true
+      }
+    });
+  }
+
+  static async findBirthdays(month: number, dbClient: DbOrTx = db) {
     return await dbClient
       .select()
-      .from(prescriptions)
-      .where(eq(prescriptions.customerId, customerId))
-      .orderBy(desc(prescriptions.createdAt));
+      .from(customers)
+      .where(sql`EXTRACT(MONTH FROM ${customers.dateOfBirth}) = ${month}`)
+      .orderBy(sql`EXTRACT(DAY FROM ${customers.dateOfBirth})`);
+  }
+
+  static async findAnniversaries(month: number, dbClient: DbOrTx = db) {
+    return await dbClient
+      .select()
+      .from(customers)
+      .where(sql`EXTRACT(MONTH FROM ${customers.anniversaryDate}) = ${month}`)
+      .orderBy(sql`EXTRACT(DAY FROM ${customers.anniversaryDate})`);
+  }
+
+  static async findTopReferrers(limit: number = 10, dbClient: DbOrTx = db) {
+    const referralCounts = await dbClient
+      .select({
+        id: customers.referredBy,
+        referralCount: sql<number>`cast(count(*) as integer)`
+      })
+      .from(customers)
+      .where(sql`${customers.referredBy} IS NOT NULL`)
+      .groupBy(customers.referredBy)
+      .orderBy(desc(sql`count(*)`))
+      .limit(limit);
+
+    if (referralCounts.length === 0) return [];
+    
+    const referrerIds = referralCounts.map(r => Number(r.id));
+    const referrers = await dbClient
+      .select()
+      .from(customers)
+      .where(inArray(customers.id, referrerIds));
+      
+    // Return mapped array retaining the sorted order
+    return referralCounts.map(r => {
+      const customer = referrers.find(c => c.id === Number(r.id));
+      return {
+        ...customer,
+        referralCount: r.referralCount
+      };
+    }).filter(r => r.id); // Remove any nulls if mapping fails
+  }
+
+  static async findLoyaltyLeaderboard(limit: number = 50, dbClient: DbOrTx = db) {
+    return await dbClient
+      .select()
+      .from(customers)
+      .where(sql`${customers.loyaltyPoints} > 0`)
+      .orderBy(desc(customers.loyaltyPoints))
+      .limit(limit);
   }
 }

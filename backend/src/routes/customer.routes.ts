@@ -37,6 +37,10 @@ export function createCustomerRoutes() {
   router.post('/bulk', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), upload.single('file'), BulkController.uploadCustomers);
   
   router.get('/', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), validate(getCustomersSchema), CustomerController.getAll);
+  router.get('/birthdays', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), CustomerController.getBirthdays);
+  router.get('/anniversaries', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), CustomerController.getAnniversaries);
+  router.get('/reports/referrals', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), CustomerController.getTopReferrers);
+  router.get('/reports/loyalty', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), CustomerController.getLoyaltyLeaderboard);
   router.get('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), CustomerController.getById);
   
   router.post(

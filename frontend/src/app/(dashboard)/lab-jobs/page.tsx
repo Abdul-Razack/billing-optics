@@ -3,8 +3,9 @@
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useFetch } from "@/hooks/useApi";
 import { Button } from "@/components/ui/button";
-import { Boxes } from "lucide-react";
+import { Boxes, Upload } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
+import Link from "next/link";
 
 export default function LabJobsPage() {
   const { data: response, isLoading, error } = useFetch<{ success: boolean, data: any[] }>("/lab-jobs");
@@ -14,7 +15,15 @@ export default function LabJobsPage() {
     <PageContainer title="Lab Jobs" description="Track the manufacturing status of customer orders.">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Lab Jobs</h1>
-        <Button>New Lab Job</Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" asChild>
+            <Link href="/lab-jobs/import">
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Link>
+          </Button>
+          <Button>New Lab Job</Button>
+        </div>
       </div>
 
       {isLoading ? (

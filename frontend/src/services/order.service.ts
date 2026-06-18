@@ -7,6 +7,7 @@ export interface CheckoutPayload {
   customerId?: number;
   items: { productId: number; quantity: number }[];
   offerId?: number;
+  loyaltyPointsRedeemed?: number;
   payments?: {
     method: PaymentMethod;
     amount: number;

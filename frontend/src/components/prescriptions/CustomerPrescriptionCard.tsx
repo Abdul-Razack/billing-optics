@@ -47,15 +47,15 @@ export function CustomerPrescriptionCard({ customer, latestPrescription }: Custo
               <div className="bg-blue-50/50 rounded p-3 border border-blue-100">
                 <div className="text-xs font-semibold text-blue-900 mb-2">RIGHT EYE (OD)</div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div><span className="text-muted-foreground text-xs block">SPH</span>{latestPrescription.rightEye.sphere || "—"}</div>
-                  <div><span className="text-muted-foreground text-xs block">CYL</span>{latestPrescription.rightEye.cylinder || "—"}</div>
+                  <div><span className="text-muted-foreground text-xs block">SPH</span>{latestPrescription.tests?.[0]?.rightEyeDv?.sph || "—"}</div>
+                  <div><span className="text-muted-foreground text-xs block">CYL</span>{latestPrescription.tests?.[0]?.rightEyeDv?.cyl || "—"}</div>
                 </div>
               </div>
               <div className="bg-green-50/50 rounded p-3 border border-green-100">
                 <div className="text-xs font-semibold text-green-900 mb-2">LEFT EYE (OS)</div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div><span className="text-muted-foreground text-xs block">SPH</span>{latestPrescription.leftEye.sphere || "—"}</div>
-                  <div><span className="text-muted-foreground text-xs block">CYL</span>{latestPrescription.leftEye.cylinder || "—"}</div>
+                  <div><span className="text-muted-foreground text-xs block">SPH</span>{latestPrescription.tests?.[0]?.leftEyeDv?.sph || "—"}</div>
+                  <div><span className="text-muted-foreground text-xs block">CYL</span>{latestPrescription.tests?.[0]?.leftEyeDv?.cyl || "—"}</div>
                 </div>
               </div>
             </div>

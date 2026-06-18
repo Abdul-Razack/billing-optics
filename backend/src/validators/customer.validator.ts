@@ -11,6 +11,11 @@ export const createCustomerSchema = z.object({
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
     isActive: z.boolean().optional(),
     customFields: z.record(z.any()).optional(),
+    dateOfBirth: z.string().datetime().optional().or(z.literal('')),
+    anniversaryDate: z.string().datetime().optional().or(z.literal('')),
+    isDnd: z.boolean().optional(),
+    labels: z.array(z.string()).optional(),
+    referredBy: z.number().int().positive().optional(),
   })
 });
 
