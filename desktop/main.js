@@ -334,18 +334,20 @@ ipcMain.on('start-setup', async (event, companyData, dbConfig) => {
 
       console.log('[INSTALLER] Starting database provisioning');
 
-      // Create Database
-      const dbRes = await superuserClient.query(`SELECT datname FROM pg_catalog.pg_database WHERE datname = $1`, [targetDbName]);
-      if (dbRes.rows.length === 0) {
-        await superuserClient.query(`CREATE DATABASE ${targetDbName}`);
-      }
-
       // Create User
       const roleRes = await superuserClient.query(`SELECT rolname FROM pg_roles WHERE rolname = $1`, [targetAppUser]);
       if (roleRes.rows.length === 0) {
         await superuserClient.query(`CREATE USER ${targetAppUser} WITH ENCRYPTED PASSWORD '${appPassword}'`);
       } else {
         await superuserClient.query(`ALTER USER ${targetAppUser} WITH ENCRYPTED PASSWORD '${appPassword}'`);
+      }
+
+      // Create Database
+      const dbRes = await superuserClient.query(`SELECT datname FROM pg_catalog.pg_database WHERE datname = $1`, [targetDbName]);
+      if (dbRes.rows.length === 0) {
+        await superuserClient.query(`CREATE DATABASE ${targetDbName} OWNER ${targetAppUser}`);
+      } else {
+        await superuserClient.query(`ALTER DATABASE ${targetDbName} OWNER TO ${targetAppUser}`);
       }
 
       await superuserClient.query(`GRANT ALL PRIVILEGES ON DATABASE ${targetDbName} TO ${targetAppUser}`);
