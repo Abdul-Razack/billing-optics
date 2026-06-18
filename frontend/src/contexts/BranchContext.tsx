@@ -18,6 +18,7 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     const savedBranch = localStorage.getItem("activeBranch");
     if (savedBranch) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setActiveBranchState(JSON.parse(savedBranch));
       } catch (e) {
         console.error("Failed to parse saved branch from localStorage");

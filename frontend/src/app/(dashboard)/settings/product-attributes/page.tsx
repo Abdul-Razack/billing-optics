@@ -87,6 +87,7 @@ export default function ProductAttributesSettingsPage() {
 
   useEffect(() => {
     if (categories.length > 0 && !selectedCategory) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCategory(categories[0]);
     }
   }, [categories, selectedCategory]);
@@ -140,7 +141,7 @@ export default function ProductAttributesSettingsPage() {
               ) : attributes.length === 0 ? (
                 <div className="p-12 text-center border border-dashed rounded-lg bg-muted/30">
                   <h3 className="text-lg font-medium mb-2">No fields defined</h3>
-                  <p className="text-sm text-muted-foreground mb-4">You haven't defined any custom fields for {selectedCategory.name} yet.</p>
+                  <p className="text-sm text-muted-foreground mb-4">You haven&apos;t defined any custom fields for {selectedCategory.name} yet.</p>
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(true)}>Create First Field</Button>
                 </div>
               ) : (
