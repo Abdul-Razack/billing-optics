@@ -28,6 +28,7 @@ export default function DailyStatementPage() {
   }, [date]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStatement();
   }, [fetchStatement]);
 

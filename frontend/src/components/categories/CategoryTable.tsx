@@ -108,7 +108,7 @@ function CategoryActionsCell({ category, onDelete }: { category: ApiCategory, on
               Delete Category?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{category.name}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

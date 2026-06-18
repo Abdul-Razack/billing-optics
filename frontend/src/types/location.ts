@@ -17,4 +17,4 @@ export interface CreateLocationDto {
   isActive?: boolean;
 }
 
-export interface UpdateLocationDto extends Partial<CreateLocationDto> {}
+export type UpdateLocationDto = Partial<CreateLocationDto>;

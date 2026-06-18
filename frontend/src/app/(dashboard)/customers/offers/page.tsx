@@ -41,8 +41,8 @@ export default function OffersPage() {
     }
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOffers();
   }, []);
 

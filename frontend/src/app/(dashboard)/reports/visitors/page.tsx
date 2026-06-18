@@ -192,7 +192,10 @@ export default function VisitorsLogPage() {
     }
   }, []);
 
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchLogs();
+  }, [fetchLogs]);
 
   // ─── Derived stats ──────────────────────────────────────────────────────────
 
