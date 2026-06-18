@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchClient } from "@/lib/api-client";
+import { useFetch } from "@/hooks/useApi";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Gift, Medal, ArrowRight, User } from "lucide-react";
 import { toast } from "sonner";
@@ -17,23 +17,12 @@ interface Customer {
 }
 
 export default function LoyaltyPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: res, isLoading, error } = useFetch<{ success: boolean; data: Customer[] }>("/customers/reports/loyalty?limit=100");
+  const customers = res?.data || [];
 
-  const fetchLoyaltyLeaderboard = async () => {
-    try {
-      const res = await fetchClient<{ success: boolean; data: Customer[] }>("/customers/reports/loyalty?limit=100");
-      setCustomers(res.data || []);
-    } catch (error) {
-      toast.error("Failed to load loyalty leaderboard");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLoyaltyLeaderboard();
-  }, []);
+  if (error) {
+    toast.error("Failed to load loyalty leaderboard");
+  }
 
   if (isLoading) {
     return (
