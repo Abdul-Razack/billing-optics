@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,11 +13,7 @@ export default function DailyStatementPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchStatement();
-  }, [date]);
-
-  const fetchStatement = async () => {
+  const fetchStatement = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetchClient<{ success: boolean; data: any }>(`/reports/daily-statement?date=${date}`);
@@ -29,7 +25,11 @@ export default function DailyStatementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date]);
+
+  useEffect(() => {
+    fetchStatement();
+  }, [fetchStatement]);
 
   const handlePrint = () => {
     window.print();
