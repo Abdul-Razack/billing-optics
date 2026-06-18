@@ -93,6 +93,10 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${config.database}')\
 GRANT ALL PRIVILEGES ON DATABASE ${config.database} TO ${config.username};
 \\c ${config.database};
 GRANT ALL ON SCHEMA public TO ${config.username};
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${config.username};
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${config.username};
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${config.username};
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${config.username};
 `;
 
     if (isWindows) {
@@ -112,7 +116,7 @@ GRANT ALL ON SCHEMA public TO ${config.username};
         su - postgres -c "psql -p ${config.port} -c \\"ALTER USER ${config.username} WITH ENCRYPTED PASSWORD '${escapedBashPass}';\\""
         su - postgres -c "psql -p ${config.port} -tAc \\"SELECT 1 FROM pg_database WHERE datname='${config.database}'\\"" | grep -q 1 || su - postgres -c "psql -p ${config.port} -c \\"CREATE DATABASE ${config.database};\\""
         su - postgres -c "psql -p ${config.port} -c \\"GRANT ALL PRIVILEGES ON DATABASE ${config.database} TO ${config.username};\\""
-        su - postgres -c "psql -p ${config.port} -d ${config.database} -c \\"GRANT ALL ON SCHEMA public TO ${config.username};\\""
+        su - postgres -c "psql -p ${config.port} -d ${config.database} -c \\"GRANT ALL ON SCHEMA public TO ${config.username}; GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${config.username}; GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${config.username}; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${config.username}; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${config.username};\\""
       `;
       await executePkexec(bashScript);
     }
