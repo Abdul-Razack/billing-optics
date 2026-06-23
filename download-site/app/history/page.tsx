@@ -32,7 +32,7 @@ export default async function VersionHistory() {
       {releases && releases.length > 0 ? (
         <div className="relative border-l border-slate-200 dark:border-slate-800 ml-4 sm:ml-6 space-y-12 py-4">
           {releases.map((release, idx) => {
-            const hasDownloads = !!(release.windowsAsset || release.linuxAssetAppImage);
+            const hasDownloads = !!(release.windowsAsset || release.linuxAssetDeb || release.linuxAssetAppImage);
             
             return (
               <div key={release.version} className="relative pl-8 sm:pl-10 group">
@@ -102,6 +102,27 @@ export default async function VersionHistory() {
                           </div>
                         )}
 
+                        {/* Linux Debian Installer */}
+                        {release.linuxAssetDeb && (
+                          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/40 dark:bg-slate-900/30 border border-slate-200/40 dark:border-slate-800/40 hover:border-emerald-500/15 hover:bg-white/60 dark:hover:bg-slate-900/50 transition-all duration-300">
+                            <div className="flex items-center space-x-2.5 min-w-0">
+                              <Terminal className="h-4 w-4 text-emerald-500 shrink-0" />
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate" title={release.linuxAssetDeb.name}>
+                                  {release.linuxAssetDeb.name}
+                                </span>
+                                <span className="text-[10px] font-semibold text-slate-400">Debian/Ubuntu Pack ({release.linuxAssetDeb.size})</span>
+                              </div>
+                            </div>
+                            <a
+                              href={release.linuxAssetDeb.url}
+                              className="p-2 rounded-xl bg-emerald-600/5 text-emerald-600 hover:bg-emerald-600 hover:text-white dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-white transition-all shadow-sm shrink-0"
+                              title="Download package"
+                            >
+                              <Download className="h-4 w-4" />
+                            </a>
+                          </div>
+                        )}
 
                         {/* Linux AppImage */}
                         {release.linuxAssetAppImage && (
