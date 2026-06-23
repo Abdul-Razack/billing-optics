@@ -1,5 +1,5 @@
 diff --git a/node_modules/electron-updater/out/LinuxUpdater.js b/node_modules/electron-updater/out/LinuxUpdater.js
-index a7587ae..01b5135 100644
+index a7587ae..6a84390 100644
 --- a/node_modules/electron-updater/out/LinuxUpdater.js
 +++ b/node_modules/electron-updater/out/LinuxUpdater.js
 @@ -34,7 +34,7 @@ class LinuxUpdater extends BaseUpdater_1.BaseUpdater {
@@ -7,7 +7,7 @@ index a7587ae..01b5135 100644
              wrapper = "";
          }
 -        return this.spawnSyncLog(sudo[0], [...(sudo.length > 1 ? sudo.slice(1) : []), `${wrapper}/bin/bash`, "-c", `'${commandWithArgs.join(" ")}'${wrapper}`]);
-+        return this.spawnSyncLog(sudo[0], [...(sudo.length > 1 ? sudo.slice(1) : []), `/bin/bash`, "-c", commandWithArgs.join(" ")]);
++        return this.spawnSyncLog(sudo[0], [...(sudo.length > 1 ? sudo.slice(1) : []), `/bin/bash`, "-c", `"${commandWithArgs.join(" ")}"`]);
      }
      sudoWithArgs(installComment) {
          const sudo = this.determineSudoCommand();
