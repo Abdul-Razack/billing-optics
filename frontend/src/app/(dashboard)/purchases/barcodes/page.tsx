@@ -132,7 +132,7 @@ export default function BarcodesDashboardPage() {
           <DialogHeader>
             <DialogTitle>Print Barcode Stickers</DialogTitle>
             <DialogDescription>
-              Preview of {selectedBarcodes.length} barcode(s). You can print this page using your browser's print dialog (Ctrl+P). Once printed, click "Mark as Printed" to move them to the Active pool.
+              Preview of {selectedBarcodes.length} barcode(s). You can print this page using your browser&apos;s print dialog (Ctrl+P). Once printed, click &quot;Mark as Printed&quot; to move them to the Active pool.
             </DialogDescription>
           </DialogHeader>
           
