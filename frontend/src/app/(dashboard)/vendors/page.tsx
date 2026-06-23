@@ -22,7 +22,9 @@ export default function VendorsPage() {
               Import
             </Link>
           </Button>
-          <Button>Add Vendor</Button>
+          <Button asChild>
+            <Link href="/vendors/new">Add Vendor</Link>
+          </Button>
         </div>
       </div>
 

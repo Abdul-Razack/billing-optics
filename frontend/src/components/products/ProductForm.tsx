@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 import { CategoryService, ApiCategory } from "@/services/category.service";
 import { ProductService, ApiProduct } from "@/services/product.service";
-import { InventoryService } from "@/services/inventory.service";
+
 import { CustomField } from "@/types/custom-field";
 import { buildDynamicSchema } from "@/lib/dynamic-schema";
 
@@ -68,8 +68,8 @@ function ProductFormInner({ initialData, categories }: ProductFormInnerProps) {
       barcode: initialData?.barcode || "",
       categoryId: initialData?.categoryId || 0,
       description: initialData?.description || "",
-      costPrice: initialData?.costPrice || 0,
-      sellingPrice: initialData?.sellingPrice || 0,
+      costPrice: initialData?.costPrice ? initialData.costPrice / 100 : 0,
+      sellingPrice: initialData?.sellingPrice ? initialData.sellingPrice / 100 : 0,
       gstPercent: initialData?.gstPercent ?? 18,
       minStockAlert: initialData?.minStockAlert ?? 5,
       initialStock: 0,
@@ -118,29 +118,17 @@ function ProductFormInner({ initialData, categories }: ProductFormInnerProps) {
       const { initialStock, customFields: cf, ...rest } = values as any;
       const payload = {
         ...rest,
+        costPrice: Math.round((rest.costPrice || 0) * 100),
+        sellingPrice: Math.round((rest.sellingPrice || 0) * 100),
         attributes: (cf || {}) as Record<string, any>,
+        initialStock: initialStock || 0,
       };
 
       if (isEditMode && initialData) {
         await ProductService.updateProduct(initialData.id, payload);
         toast.success("Product updated successfully");
       } else {
-        const created = await ProductService.createProduct(payload);
-        // If an initial stock quantity was provided, create an inventory ledger entry
-        if (initialStock && initialStock > 0) {
-          try {
-            await InventoryService.adjustStock({
-              productId: created.id,
-              adjustmentType: "IN",
-              quantity: initialStock,
-              notes: "Initial stock on product creation",
-            });
-          } catch (stockErr) {
-            console.error("Failed to set initial stock:", stockErr);
-            // Don't block the product creation — just warn
-            toast.warning("Product created, but initial stock could not be set. You can adjust it from the product page.");
-          }
-        }
+        await ProductService.createProduct(payload);
         toast.success("Product created successfully");
       }
       

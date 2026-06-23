@@ -210,49 +210,78 @@ export function Sidebar() {
   const { user } = useAuth();
 
   return (
-    <aside className="w-56 bg-card border-r border-border min-h-screen flex flex-col transition-all duration-300">
+    <aside className="w-56 bg-card border-r border-border h-full flex flex-col transition-all duration-300">
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-border shrink-0">
         <span className="font-bold text-lg text-primary tracking-tight">Optics ERP</span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.filter((item) => !user || item.roles.includes(user.role)).map((item) => {
-          if (item.children) {
+      <nav className="flex-1 py-4 px-3 overflow-y-auto flex flex-col">
+        <div className="space-y-0.5">
+          {NAV_ITEMS.filter((item) => item.name !== "Settings" && (!user || item.roles.includes(user.role))).map((item) => {
+            if (item.children) {
+              return (
+                <NavGroup
+                  key={item.name}
+                  item={item}
+                  pathname={pathname}
+                  userRole={user?.role}
+                />
+              );
+            }
+
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
             return (
-              <NavGroup
+              <Link
                 key={item.name}
-                item={item}
-                pathname={pathname}
-                userRole={user?.role}
-              />
+                href={item.href}
+                className={cn(
+                  "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon
+                  className={cn("mr-3 h-5 w-5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")}
+                />
+                {item.name}
+              </Link>
             );
-          }
+          })}
+        </div>
 
-          const isActive =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+        <div className="mt-auto pt-4 space-y-0.5">
+          {NAV_ITEMS.filter((item) => item.name === "Settings" && (!user || item.roles.includes(user.role))).map((item) => {
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <item.icon
-                className={cn("mr-3 h-5 w-5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")}
-              />
-              {item.name}
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon
+                  className={cn("mr-3 h-5 w-5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")}
+                />
+                {item.name}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     </aside>
   );

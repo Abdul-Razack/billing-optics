@@ -74,7 +74,7 @@ function initializeCronJobs() {
 function logStartupError(error: any) {
   console.error('\n================ DATABASE CONNECTION FAILED ================');
   try {
-    const dbUrl = new URL(env.DATABASE_URL);
+    const dbUrl = new URL(env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres');
     console.error(`* Database Host: ${dbUrl.hostname}:${dbUrl.port}`);
     console.error(`* Database Name: ${dbUrl.pathname.replace('/', '')}`);
     console.error(`* Username:      ${dbUrl.username}`);

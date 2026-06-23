@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { db } from '../config/db';
 import { barcodes } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { BarcodeService } from '../services/barcode.service';
 
 export class BarcodeController {
   static async getBarcodes(req: Request, res: Response, next: NextFunction) {
@@ -21,10 +22,31 @@ export class BarcodeController {
     }
   }
 
-  // Placeholder for barcode generation
   static async generateBarcodes(req: Request, res: Response, next: NextFunction) {
     try {
-      res.status(201).json({ success: true, data: [] });
+      // Validate in route validator ideally, but we'll extract directly here
+      const { productVariantId, quantity, batchNumber, mfgDate, expiryDate } = req.body;
+      const data = await BarcodeService.generateBarcodes({
+        productVariantId,
+        quantity,
+        batchNumber,
+        mfgDate: mfgDate ? new Date(mfgDate) : undefined,
+        expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+      });
+      res.status(201).json({ success: true, data, message: `${quantity} barcodes generated successfully.` });
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
+  static async markAsPrinted(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { barcodeIds } = req.body;
+      if (!Array.isArray(barcodeIds)) {
+        return res.status(400).json({ success: false, message: 'barcodeIds array is required' });
+      }
+      const data = await BarcodeService.markAsPrinted(barcodeIds);
+      res.status(200).json({ success: true, data, message: 'Barcodes marked as ACTIVE.' });
     } catch (error: any) {
       next(error);
     }

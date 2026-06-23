@@ -22,7 +22,9 @@ export default function LabJobsPage() {
               Import
             </Link>
           </Button>
-          <Button>New Lab Job</Button>
+          <Button asChild>
+            <Link href="/lab-jobs/new">New Lab Job</Link>
+          </Button>
         </div>
       </div>
 

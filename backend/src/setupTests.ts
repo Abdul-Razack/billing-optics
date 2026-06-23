@@ -12,6 +12,11 @@ const dbMock = {
   set: jest.fn().mockReturnThis(),
   delete: jest.fn().mockReturnThis(),
   execute: jest.fn().mockResolvedValue([]),
+  transaction: jest.fn().mockImplementation(async (cb) => {
+    // The callback 'cb' expects a transaction object 'tx'.
+    // We'll just pass 'dbMock' itself as 'tx' to make it easy to spy on.
+    return cb(dbMock);
+  }),
 };
 
 jest.mock('./config/db', () => ({

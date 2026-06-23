@@ -22,6 +22,7 @@ export interface CreateProductInput {
   sku?: string;
   barcode?: string;
   attributes?: Record<string, any>;
+  initialStock?: number;
 }
 
 export interface UpdateProductInput {
@@ -40,7 +41,7 @@ export interface UpdateProductInput {
 }
 
 export class ProductService {
-  async createProduct(data: CreateProductInput) {
+  async createProduct(data: CreateProductInput, userId?: number) {
     return await db.transaction(async (tx) => {
       const brandStr = data.name.split(' ')[0] || 'GEN';
       const modelStr = data.name.split(' ')[1] || 'MOD';
@@ -64,6 +65,16 @@ export class ProductService {
           attributes: data.attributes || {},
         })
         .returning();
+
+      if (data.initialStock && data.initialStock > 0) {
+        await tx.insert(inventoryLedger).values({
+          productId: newProduct.id,
+          movementType: 'ADJUSTMENT',
+          quantityChange: data.initialStock,
+          notes: 'Initial stock on product creation',
+          createdBy: userId || 1,
+        });
+      }
 
       return newProduct;
     });

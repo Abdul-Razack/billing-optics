@@ -13,6 +13,9 @@ export const pool = new Pool({
   database: dbConfig.database,
   user: dbConfig.username,
   password: dbConfig.password,
+  max: process.env.NODE_POOL_MAX ? parseInt(process.env.NODE_POOL_MAX, 10) : 50,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
 });
 
 export const db = drizzle(pool, { schema });

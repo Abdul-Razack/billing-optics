@@ -12,7 +12,7 @@ export function createAuthRoutes() {
 
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Limit each IP to 10 login requests per `window` (here, per 15 minutes)
+    max: 1000, // Limit each IP to 1000 login requests for testing
     message: { success: false, message: 'Too many login attempts, please try again after 15 minutes.' },
     standardHeaders: true,
     legacyHeaders: false,

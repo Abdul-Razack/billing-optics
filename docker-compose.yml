@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: billing_optics_pgbouncer
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@host.docker.internal:${DB_PORT}/${DB_NAME}
+      - MAX_CLIENT_CONN=${PGBOUNCER_MAX_CLIENT_CONN:-1000}
+      - DEFAULT_POOL_SIZE=${PGBOUNCER_DEFAULT_POOL_SIZE:-50}
+      - POOL_MODE=${PGBOUNCER_POOL_MODE:-transaction}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - IGNORE_STARTUP_PARAMETERS=extra_float_digits,options
+    ports:
+      - "${PGBOUNCER_PORT:-6432}:5432"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

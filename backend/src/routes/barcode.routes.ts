@@ -11,6 +11,7 @@ export function createBarcodeRoutes() {
 
   router.get('/', authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), BarcodeController.getBarcodes);
   router.post('/generate', authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), BarcodeController.generateBarcodes);
+  router.post('/mark-printed', authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), BarcodeController.markAsPrinted);
 
   return router;
 }

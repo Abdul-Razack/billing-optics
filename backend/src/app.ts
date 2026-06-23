@@ -51,7 +51,7 @@ export function buildApp(context: BootstrapContext) {
     standardHeaders: true,
     legacyHeaders: false,
   });
-  app.use('/api/', globalLimiter);
+  // app.use('/api/', globalLimiter); // Temporarily disabled for stress testing
 
   // API Routes
   app.use('/api', createSystemRoutes());
