@@ -121,25 +121,12 @@
     "linux": {
       "icon": "build/icon.png",
       "target": [
-        "AppImage",
-        "deb"
+        "AppImage"
       ],
       "category": "Office",
       "maintainer": "Billing Optics <support@billingoptics.com>",
       "executableName": "billing-optics-erp",
       "artifactName": "${name}-${version}-${arch}.${ext}"
-    },
-    "deb": {
-      "depends": [
-        "libnotify4",
-        "libnss3",
-        "libxtst6",
-        "libxss1",
-        "libasound2t64 | libasound2",
-        "libatk-bridge2.0-0",
-        "libgtk-3-0",
-        "libc6"
-      ]
     }
   }
 }
