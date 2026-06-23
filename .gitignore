@@ -6,6 +6,10 @@ node_modules/
 # Production / Build
 dist/
 build/
+!desktop/build/icon.png
+!desktop/build/icon.ico
+!desktop/build/installerIcon.ico
+!desktop/build/uninstallerIcon.ico
 .next/
 out/
 
