@@ -58,7 +58,7 @@ function createSplashWindow() {
     transparent: true,
     frame: false,
     alwaysOnTop: true,
-    icon: path.join(__dirname, 'build', 'icon.ico'),
+    icon: path.join(__dirname, 'build', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -74,7 +74,7 @@ function createWindow() {
     height: 800,
     show: false, // Don't show immediately, wait for splash screen to close
     title: "Billing Optics ERP",
-    icon: path.join(__dirname, 'build', 'icon.ico'),
+    icon: path.join(__dirname, 'build', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -155,7 +155,7 @@ function createOnboardingWindow() {
     height: 550,
     frame: true,
     title: "Billing Optics ERP - Setup",
-    icon: path.join(__dirname, 'build', 'icon.ico'),
+    icon: path.join(__dirname, 'build', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -172,7 +172,7 @@ function createRecoveryWindow(diagnosticResult, config) {
     height: 500,
     frame: true,
     title: "Billing Optics ERP - Recovery Mode",
-    icon: path.join(__dirname, 'build', 'icon.ico'),
+    icon: path.join(__dirname, 'build', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -192,7 +192,7 @@ function createStartupErrorWindow(errorMsg) {
     height: 400,
     frame: true,
     title: "Billing Optics ERP - Startup Error",
-    icon: path.join(__dirname, 'build', 'icon.ico'),
+    icon: path.join(__dirname, 'build', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
