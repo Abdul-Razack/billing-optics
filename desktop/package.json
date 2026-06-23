@@ -44,6 +44,8 @@
       "*.js",
       "*.html",
       "package.json",
+      "build/icon.png",
+      "build/icon.ico",
       {
         "from": "../backend/dist",
         "to": "backend/dist",
