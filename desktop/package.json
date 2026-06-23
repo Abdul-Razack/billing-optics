@@ -116,7 +116,7 @@
       "uninstallerIcon": "build/uninstallerIcon.ico",
       "installerSidebar": "build/installerSidebar.bmp",
       "installerHeader": "build/installerHeader.bmp",
-      "artifactName": "${productName} Setup ${version}.${ext}"
+      "artifactName": "${name}-Setup-${version}.${ext}"
     },
     "linux": {
       "icon": "build/icon.png",
@@ -127,7 +127,7 @@
       "category": "Office",
       "maintainer": "Billing Optics <support@billingoptics.com>",
       "executableName": "billing-optics-erp",
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
+      "artifactName": "${name}-${version}-${arch}.${ext}"
     },
     "deb": {
       "depends": [
