@@ -835,6 +835,23 @@ async function initializeWorkflow() {
 }
 
 app.whenReady().then(async () => {
+  // Set app icon explicitly for Linux/Wayland - window icon property alone
+  // is not enough on GNOME Wayland; app.setIcon() ensures the taskbar shows correctly.
+  if (process.platform === 'linux') {
+    try {
+      const { nativeImage } = require('electron');
+      const iconPath = path.join(__dirname, 'build', 'icons', '256x256', 'billing-optics-erp.png');
+      const fallbackIconPath = path.join(__dirname, 'build', 'icon.png');
+      const iconFile = fs.existsSync(iconPath) ? iconPath : fallbackIconPath;
+      const appIcon = nativeImage.createFromPath(iconFile);
+      if (!appIcon.isEmpty()) {
+        app.setIcon(appIcon);
+      }
+    } catch (e) {
+      log.warn('Could not set app icon:', e.message);
+    }
+  }
+
   await initializeWorkflow();
 
   app.on('activate', () => {

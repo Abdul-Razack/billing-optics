@@ -10,6 +10,8 @@ build/
 !desktop/build/icon.ico
 !desktop/build/installerIcon.ico
 !desktop/build/uninstallerIcon.ico
+!desktop/build/icons/
+!desktop/build/icons/**
 .next/
 out/
 

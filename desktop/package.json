@@ -46,6 +46,7 @@
       "package.json",
       "build/icon.png",
       "build/icon.ico",
+      "build/icons/**/*",
       {
         "from": "../backend/dist",
         "to": "backend/dist",
@@ -119,7 +120,7 @@
       "artifactName": "${name}-Setup-${version}.${ext}"
     },
     "linux": {
-      "icon": "build/icon.png",
+      "icon": "build/icons",
       "target": [
         "AppImage",
         "deb"
