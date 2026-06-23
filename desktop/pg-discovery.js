@@ -1,7 +1,7 @@
 const { execSync } = require('child_process');
 const os = require('os');
 
-function discoverPostgres() {
+function discoverPostgres(expectedPort = null) {
   const result = {
     installed: false,
     running: false,
@@ -11,17 +11,31 @@ function discoverPostgres() {
   };
 
   const isWindows = os.platform() === 'win32';
+  const fs = require('fs');
 
   // 1. Detection via binaries
   try {
     execSync(isWindows ? 'where psql' : 'which psql', { stdio: 'ignore' });
     result.installed = true;
   } catch (err) {
-    try {
-      execSync(isWindows ? 'where pg_isready' : 'which pg_isready', { stdio: 'ignore' });
-      result.installed = true;
-    } catch(err2) {
-      if (!isWindows) {
+    if (isWindows) {
+      // Fallback: direct path checks for Windows EnterpriseDB installations
+      const commonPaths = [
+        'C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe',
+        'C:\\Program Files\\PostgreSQL\\15\\bin\\psql.exe',
+        'C:\\Program Files\\PostgreSQL\\14\\bin\\psql.exe'
+      ];
+      for (const p of commonPaths) {
+        if (fs.existsSync(p)) {
+          result.installed = true;
+          break;
+        }
+      }
+    } else {
+      try {
+        execSync('which pg_isready', { stdio: 'ignore' });
+        result.installed = true;
+      } catch(err2) {
         try {
           execSync('which postgres', { stdio: 'ignore' });
           result.installed = true;
@@ -59,23 +73,39 @@ function discoverPostgres() {
     } catch(e) {}
   }
 
-  // 3. Port & Running Discovery (Method A)
-  try {
-    const isreadyOut = execSync('pg_isready').toString();
-    result.installed = true;
-    if (isreadyOut.includes('accepting connections')) {
+  // 3. Port & Running Discovery via TCP Ping (Bulletproof method)
+  const portsToTry = expectedPort ? [expectedPort, 5000, 5432] : [5000, 5432];
+  for (const port of portsToTry) {
+    try {
+      const pingCmd = `node -e "const net=require('net');const s=new net.Socket();s.setTimeout(500);s.on('connect',()=>{s.destroy();process.exit(0);});s.on('error',()=>process.exit(1));s.on('timeout',()=>process.exit(1));s.connect(${port},'127.0.0.1');"`;
+      execSync(pingCmd, { stdio: 'ignore' });
+      result.installed = true;
       result.running = true;
-    }
-    const match = isreadyOut.match(/:(\d+)/);
-    if (match && match[1]) {
-      result.port = parseInt(match[1], 10);
-      result.connectionMethod = 'pg_isready';
-    }
-  } catch(e) {
-    if (e.stdout) {
-      const match = e.stdout.toString().match(/:(\d+)/);
+      result.port = port;
+      result.connectionMethod = 'tcp_ping';
+      break; // Stop if we successfully pinged a port
+    } catch(e) {}
+  }
+
+  // Fallback to pg_isready if TCP ping failed
+  if (!result.running) {
+    try {
+      const isreadyOut = execSync('pg_isready').toString();
+      result.installed = true;
+      if (isreadyOut.includes('accepting connections')) {
+        result.running = true;
+      }
+      const match = isreadyOut.match(/:(\d+)/);
       if (match && match[1]) {
         result.port = parseInt(match[1], 10);
+        result.connectionMethod = 'pg_isready';
+      }
+    } catch(e) {
+      if (e.stdout) {
+        const match = e.stdout.toString().match(/:(\d+)/);
+        if (match && match[1]) {
+          result.port = parseInt(match[1], 10);
+        }
       }
     }
   }

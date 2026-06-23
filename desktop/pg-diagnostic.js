@@ -13,7 +13,7 @@ async function runDiagnostics(config) {
     issue: 'Unknown issue'
   };
 
-  const discovery = discoverPostgres();
+  const discovery = discoverPostgres(config.port || null);
   result.postgresInstalled = discovery.installed;
   result.postgresRunning = discovery.running;
   result.detectedPort = discovery.port;

@@ -117,7 +117,8 @@
       "uninstallDisplayName": "Billing Optics ERP",
       "installerIcon": "build/installerIcon.ico",
       "uninstallerIcon": "build/uninstallerIcon.ico",
-      "artifactName": "${name}-Setup-${version}.${ext}"
+      "artifactName": "${name}-Setup-${version}.${ext}",
+      "include": "build/uninstaller.nsh"
     },
     "linux": {
       "icon": "build/icons",

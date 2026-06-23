@@ -37,61 +37,45 @@ export async function initializeDatabase() {
     // Step 1: Clean up old drizzle schema (silently ignore errors)
     await pool.query(`DROP SCHEMA IF EXISTS drizzle CASCADE`).catch(() => {});
 
-    // Step 2: Use pg_catalog to check if core app tables already exist.
-    // pg_catalog is ALWAYS readable regardless of user privileges — unlike information_schema.
-    const usersExists = await tableExists('users');
-    const drizzleTrackingExists = await tableExists('__drizzle_migrations');
-
-    if (usersExists) {
-      // Database is already set up. Skip running migrations (avoid permission issues).
-      console.log('[INIT] Core tables detected. Skipping full migration run.');
-
-      // Clean up stale migration tracking if we can access it
-      if (drizzleTrackingExists) {
-        const canAccessTracking = await hasTableAccess('__drizzle_migrations');
-        if (canAccessTracking) {
-          const countResult = await pool.query(`SELECT count(*) as count FROM public.__drizzle_migrations`);
-          const count = parseInt(countResult.rows[0]?.count || '0', 10);
-          if (count !== 1) {
-            console.log(`[INIT] Resetting stale migration history (${count} records)...`);
-            await pool.query(`DROP TABLE IF EXISTS public.__drizzle_migrations`).catch(() => {});
-          }
-        } else {
-          // Drop inaccessible tracking table (best effort — may fail silently)
-          await pool.query(`DROP TABLE IF EXISTS public.__drizzle_migrations`).catch(() => {});
-        }
+    // Step 2: Attempt auto-migration (Safe upgrade for existing and fresh installations)
+    console.log('[INIT] Running database auto-migration...');
+    const migrationsFolder = path.resolve(__dirname, 'migrations');
+    try {
+      await migrate(db, { migrationsFolder, migrationsSchema: 'public', migrationsTable: '__drizzle_migrations' });
+      console.log('[INIT] Migrations applied successfully.');
+    } catch (migrationError: any) {
+      // Fail-Safe: If migrations fail (e.g., due to permission errors on managed databases, or very old legacy schemas without __drizzle_migrations),
+      // we log the error but allow the application to start up if core tables already exist.
+      console.warn(`[INIT] WARNING: Auto-migration encountered an error: ${migrationError.message}`);
+      const usersExists = await tableExists('users');
+      if (usersExists) {
+        console.warn('[INIT] Core tables exist. Proceeding with startup assuming database is compatible.');
+      } else {
+        console.error('[INIT] FATAL: Database is empty and migrations failed.');
+        throw migrationError;
       }
-
-      // Check seeding status
-      const canAccessUsers = await hasTableAccess('users');
-      if (!canAccessUsers) {
-        // Permissions not set up correctly — log warning but don't crash
-        console.warn('[INIT] WARNING: billing_app lacks access to existing tables.');
-        console.warn('[INIT] Please run as postgres superuser:');
-        console.warn('[INIT] GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO billing_app;');
-        console.warn('[INIT] Continuing startup — some features may not work until permissions are fixed.');
-        return;
-      }
-
-      const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(users);
-      if (Number(count) > 0) {
-        console.log('[INIT] Database is already seeded.');
-        return;
-      }
-
-      await seedDefaultData();
-      return;
     }
 
-    // Step 3: Fresh install — run full migrations
-    console.log('[INIT] Running database migrations...');
-    const migrationsFolder = path.resolve(__dirname, 'migrations');
-    await migrate(db, { migrationsFolder, migrationsSchema: 'public', migrationsTable: '__drizzle_migrations' });
-    console.log('[INIT] Migrations applied successfully.');
+    // Step 3: Check permissions on existing tables (best effort warning)
+    const canAccessUsers = await hasTableAccess('users');
+    if (!canAccessUsers) {
+      console.warn('[INIT] WARNING: billing_app lacks access to existing tables.');
+      console.warn('[INIT] Please run as postgres superuser:');
+      console.warn('[INIT] GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO billing_app;');
+      console.warn('[INIT] Continuing startup — some features may not work until permissions are fixed.');
+    }
 
     // Step 4: Seed default data
-    const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(users);
-    if (Number(count) > 0) {
+    let count = 1;
+    try {
+      const result = await db.select({ count: sql<number>`count(*)` }).from(users);
+      count = Number(result[0].count);
+    } catch (err) {
+      // If we can't query users (e.g. permission error), assume seeded to avoid crashing
+      count = 1;
+    }
+
+    if (count > 0) {
       console.log('[INIT] Database is already seeded.');
       return;
     }
