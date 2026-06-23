@@ -10,7 +10,6 @@ export interface Release {
   releaseDate: string;
   releaseNotes: string;
   windowsAsset?: ReleaseAsset;
-  linuxAssetDeb?: ReleaseAsset;
   linuxAssetAppImage?: ReleaseAsset;
   isPrerelease: boolean;
   htmlUrl: string;
@@ -83,11 +82,6 @@ We are thrilled to present the initial production stable launch of the **Billing
       name: 'Billing Optics ERP Setup 1.0.0.exe',
       url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP%20Setup%201.0.0.exe',
       size: '84.2 MB',
-    },
-    linuxAssetDeb: {
-      name: 'billing-optics-erp_1.0.0_amd64.deb',
-      url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/billing-optics-erp_1.0.0_amd64.deb',
-      size: '68.4 MB',
     },
     linuxAssetAppImage: {
       name: 'Billing_Optics_ERP-1.0.0.AppImage',
@@ -170,8 +164,6 @@ export async function getReleases(): Promise<FetchReleasesResult> {
 
           if (name.endsWith('.exe')) {
             release.windowsAsset = { name, url, size };
-          } else if (name.endsWith('.deb')) {
-            release.linuxAssetDeb = { name, url, size };
           } else if (name.endsWith('.AppImage')) {
             release.linuxAssetAppImage = { name, url, size };
           }

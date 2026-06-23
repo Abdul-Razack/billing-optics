@@ -145,12 +145,12 @@ export default async function ReleaseNotesPage() {
                       <ArrowRight className="h-3 w-3" />
                     </a>
                   )}
-                  {release.linuxAssetDeb && (
+                  {release.linuxAssetAppImage && (
                     <a
-                      href={release.linuxAssetDeb.url}
+                      href={release.linuxAssetAppImage.url}
                       className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-900 hover:text-white dark:bg-slate-900/50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-all text-xs font-bold border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 shadow-sm"
                     >
-                      Debian Pack ({release.linuxAssetDeb.size})
+                      AppImage ({release.linuxAssetAppImage.size})
                       <ArrowRight className="h-3 w-3" />
                     </a>
                   )}

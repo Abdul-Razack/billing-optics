@@ -12,11 +12,7 @@ const MOCK_LATEST_RELEASE = {
       browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP%20Setup%201.0.0.exe',
       size: 88290234
     },
-    {
-      name: 'Billing Optics ERP-1.0.0-amd64.deb',
-      browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP-1.0.0-amd64.deb',
-      size: 71722421
-    },
+
     {
       name: 'Billing Optics ERP-1.0.0-x86_64.AppImage',
       browser_download_url: 'https://github.com/Abdul-Razack/billing-optics/releases/download/v1.0.0/Billing%20Optics%20ERP-1.0.0-x86_64.AppImage',
@@ -86,9 +82,7 @@ export async function GET(request: NextRequest) {
       matchedAsset = assets.find(
         (asset: any) => asset.name.endsWith('.exe') || asset.name.endsWith('.msi')
       );
-    } else if (platform === 'linux-deb') {
-      // Match Debian/Ubuntu package (.deb)
-      matchedAsset = assets.find((asset: any) => asset.name.endsWith('.deb'));
+
     } else if (platform === 'linux-appimage') {
       // Match universal standalone Linux binaries (.AppImage)
       matchedAsset = assets.find((asset: any) => asset.name.endsWith('.AppImage'));
@@ -127,8 +121,7 @@ export async function GET(request: NextRequest) {
 
     if (platform === 'windows') {
       fallbackAsset = MOCK_LATEST_RELEASE.assets.find(a => a.name.endsWith('.exe'));
-    } else if (platform === 'linux-deb') {
-      fallbackAsset = MOCK_LATEST_RELEASE.assets.find(a => a.name.endsWith('.deb'));
+
     } else if (platform === 'linux-appimage') {
       fallbackAsset = MOCK_LATEST_RELEASE.assets.find(a => a.name.endsWith('.AppImage'));
     } else if (platform === 'macos-dmg') {

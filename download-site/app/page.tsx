@@ -36,7 +36,6 @@ export default async function Home() {
   const releaseDateString = latestRelease?.releaseDate || 'May 31, 2026';
   
   const winSize = latestRelease?.windowsAsset?.size || '84.5 MB';
-  const debSize = latestRelease?.linuxAssetDeb?.size || '68.4 MB';
   const appImageSize = latestRelease?.linuxAssetAppImage?.size || '72.1 MB';
 
   return (
@@ -197,8 +196,8 @@ export default async function Home() {
                     <span className="font-extrabold text-slate-700 dark:text-slate-200">Ubuntu, Debian, Fedora, Mint</span>
                   </div>
                   <div className="flex justify-between items-center pb-2 border-b border-slate-200/30 dark:border-slate-800/30">
-                    <span className="text-slate-400 font-bold">Debian Size (.deb)</span>
-                    <span className="font-extrabold text-slate-700 dark:text-slate-200">{debSize}</span>
+                    <span className="text-slate-400 font-bold">AppImage Size (.AppImage)</span>
+                    <span className="font-extrabold text-slate-700 dark:text-slate-200">{appImageSize}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 font-bold">Target Architecture</span>
@@ -210,7 +209,7 @@ export default async function Home() {
               <div className="mt-10 relative z-10 space-y-3">
                 {/* Dynamic stateful direct download buttons */}
                 <div className="grid grid-cols-1 gap-3">
-                  <DownloadButton platform="linux-deb" variant="secondary" />
+                  <DownloadButton platform="linux-appimage" variant="secondary" />
                 </div>
                 
                 <div className="flex items-center justify-center gap-2 text-xs text-slate-400 font-semibold bg-emerald-500/5 dark:bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-xl">
@@ -324,8 +323,8 @@ export default async function Home() {
                   <td className="px-6 py-4 text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                     <Check className="h-4 w-4" /> Enabled (electron-updater)
                   </td>
-                  <td className="px-6 py-4 text-indigo-600 dark:text-indigo-400">
-                    Manual Sync (deb check)
+                  <td className="px-6 py-4 text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                    <Check className="h-4 w-4" /> Enabled (AppImage)
                   </td>
                 </tr>
                 <tr className="hover:bg-slate-100/10 dark:hover:bg-slate-900/10">

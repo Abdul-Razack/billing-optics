@@ -87,7 +87,7 @@ export default function SetupInstructions() {
                   Obtain Desktop Package
                 </h3>
                 <p className="pl-7">
-                  Visit our <Link href="/" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">homepage</Link> and select the appropriate package for your computer. Windows environments should run the `.exe` setup package. Linux users can select either the `.deb` package (Debian/Ubuntu distros) or the universal standalone `.AppImage`.
+                  Visit our <Link href="/" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">homepage</Link> and select the appropriate package for your computer. Windows environments should run the `.exe` setup package. Linux users can select the universal standalone `.AppImage`.
                 </p>
               </div>
 
@@ -155,14 +155,10 @@ export default function SetupInstructions() {
 
               <div className="space-y-3 border-t border-slate-100 dark:border-slate-800/40 pt-4">
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  Linux Debian Upgrades
+                  Linux AppImage Upgrades
                 </h3>
-                <p className="pl-4">
-                  Download the latest `.deb` and run the package manager via terminal:
-                  <code className="block font-mono bg-slate-100 dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200/50 dark:border-slate-800 mt-1.5 text-xs text-indigo-600 dark:text-indigo-400">
-                    sudo dpkg -i billing-optics-erp_latest_amd64.deb
-                  </code>
-                  This updates packages, resets system triggers, and preserves user database configurations.
+                <p className="text-sm text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
+                  The AppImage version seamlessly updates itself securely in the background. No manual downloads or terminal commands are necessary.
                 </p>
               </div>
             </div>
