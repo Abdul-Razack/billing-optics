@@ -1,13 +1,48 @@
 diff --git a/node_modules/electron-updater/out/LinuxUpdater.js b/node_modules/electron-updater/out/LinuxUpdater.js
-index a7587ae..6a84390 100644
+index a7587ae..5804774 100644
 --- a/node_modules/electron-updater/out/LinuxUpdater.js
 +++ b/node_modules/electron-updater/out/LinuxUpdater.js
-@@ -34,7 +34,7 @@ class LinuxUpdater extends BaseUpdater_1.BaseUpdater {
-         if (/pkexec/i.test(sudo[0]) || sudo[0] === "sudo") {
-             wrapper = "";
+@@ -29,12 +29,38 @@ class LinuxUpdater extends BaseUpdater_1.BaseUpdater {
+         const installComment = `"${name} would like to update"`;
+         const sudo = this.sudoWithArgs(installComment);
+         this._logger.info(`Running as non-root user, using sudo to install: ${sudo}`);
+-        let wrapper = `"`;
+-        // some sudo commands dont want the command to be wrapped in " quotes
+-        if (/pkexec/i.test(sudo[0]) || sudo[0] === "sudo") {
+-            wrapper = "";
++        // Write the command to a temp script file to avoid shell quoting issues
++        // with spawnSync's shell:true mode which concatenates args unsafely.
++        const fs = require("fs");
++        const path = require("path");
++        const os = require("os");
++        const scriptPath = path.join(os.tmpdir(), `billing_updater_${Date.now()}.sh`);
++        const scriptContent = `#!/bin/bash\n${commandWithArgs.map(a => `'${a.replace(/'/g, "'\\''")}'`).join(" ")}\n`;
++        fs.writeFileSync(scriptPath, scriptContent, { mode: 0o700 });
++        this._logger.info(`Written update script to: ${scriptPath}`);
++        try {
++            // Use spawnSync without shell:true so args are passed directly to pkexec/sudo
++            const child_process_1 = require("child_process");
++            const sudoArgs = [...(sudo.length > 1 ? sudo.slice(1) : []), "/bin/bash", scriptPath];
++            this._logger.info(`Executing: ${sudo[0]} with args: ${sudoArgs}`);
++            const response = child_process_1.spawnSync(sudo[0], sudoArgs, {
++                env: { ...process.env },
++                encoding: "utf-8",
++                shell: false,
++            });
++            if (response.error != null) {
++                this._logger.error(response.stderr);
++                throw response.error;
++            }
++            else if (response.status != null && response.status !== 0) {
++                this._logger.error(response.stderr);
++                throw new Error(`Command ${sudo[0]} exited with code ${response.status}`);
++            }
++            return response.stdout ? response.stdout.trim() : "";
++        }
++        finally {
++            try { fs.unlinkSync(scriptPath); } catch (e) { /* ignore cleanup error */ }
          }
 -        return this.spawnSyncLog(sudo[0], [...(sudo.length > 1 ? sudo.slice(1) : []), `${wrapper}/bin/bash`, "-c", `'${commandWithArgs.join(" ")}'${wrapper}`]);
-+        return this.spawnSyncLog(sudo[0], [...(sudo.length > 1 ? sudo.slice(1) : []), `/bin/bash`, "-c", `"${commandWithArgs.join(" ")}"`]);
      }
      sudoWithArgs(installComment) {
          const sudo = this.determineSudoCommand();
