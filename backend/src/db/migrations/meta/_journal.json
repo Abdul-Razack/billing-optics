@@ -8,6 +8,13 @@
       "when": 1781740367748,
       "tag": "0000_keen_the_initiative",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787672282209,
+      "tag": "0001_heavy_ghost_rider",
+      "breakpoints": true
     }
   ]
 }

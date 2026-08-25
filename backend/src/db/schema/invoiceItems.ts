@@ -2,6 +2,7 @@ import { pgTable, bigserial, bigint, varchar, integer, check, index } from 'driz
 import { sql } from 'drizzle-orm';
 import { invoices } from './invoices';
 import { products } from './products';
+import { lensSourceEnum } from './enums';
 
 export const invoiceItems = pgTable('invoice_items', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
@@ -18,6 +19,13 @@ export const invoiceItems = pgTable('invoice_items', {
   snapshotTaxPercent: integer('snapshot_tax_percent').notNull(),
   quantity: integer('quantity').notNull().default(1),
   lineTotal: integer('line_total').notNull(),
+  /**
+   * Only set for Lens category line items.
+   * ADD_NEW      → lens is taken from shop inventory (stock decremented).
+   * CUSTOMER_OWN → patient provided their own lens (no inventory change).
+   * null         → not a lens item (Frame, Solution, Contact Lens, etc.).
+   */
+  lensSource: lensSourceEnum('lens_source'),
 }, (table) => ({
   snapshotPriceCheck: check('snapshot_price_check', sql`${table.snapshotPrice} >= 0`),
   snapshotCostPriceCheck: check('snapshot_cost_price_check', sql`${table.snapshotCostPrice} >= 0`),
@@ -27,3 +35,4 @@ export const invoiceItems = pgTable('invoice_items', {
   invoiceIdIdx: index('invoice_items_invoice_id_idx').on(table.invoiceId),
   productIdIdx: index('invoice_items_product_id_idx').on(table.productId),
 }));
+

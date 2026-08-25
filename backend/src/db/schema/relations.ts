@@ -15,6 +15,8 @@ import { posShortcuts } from './posShortcuts';
 import { offers } from './offers';
 import { patients } from './patients';
 import { doctors } from './doctors';
+import { purchaseItems } from './purchaseItems';
+import { purchases } from './purchases';
 
 export const usersRelations = relations(users, ({ many }) => ({
   invoices: many(invoices),
@@ -112,6 +114,11 @@ export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
     fields: [invoiceItems.productId],
     references: [products.id],
   }),
+  // Back-relation: which lab job was created for this line item (if any)
+  labJob: one(labJobs, {
+    fields: [invoiceItems.id],
+    references: [labJobs.invoiceItemId],
+  }),
 }));
 
 export const paymentsRelations = relations(payments, ({ one }) => ({
@@ -151,6 +158,16 @@ export const labJobsRelations = relations(labJobs, ({ one }) => ({
   invoice: one(invoices, {
     fields: [labJobs.invoiceId],
     references: [invoices.id],
+  }),
+  // The specific lens line item on the invoice this lab job was created for
+  invoiceItem: one(invoiceItems, {
+    fields: [labJobs.invoiceItemId],
+    references: [invoiceItems.id],
+  }),
+  // The patient's prescription that drove this lab order
+  prescription: one(prescriptions, {
+    fields: [labJobs.prescriptionId],
+    references: [prescriptions.id],
   }),
   vendor: one(vendors, {
     fields: [labJobs.vendorId],

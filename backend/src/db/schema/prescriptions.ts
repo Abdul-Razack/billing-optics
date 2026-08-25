@@ -10,13 +10,47 @@ export const prescriptions = pgTable('prescriptions', {
   customerId: integer('customer_id').references(() => customers.id, { onDelete: 'set null' }),
   patientId: integer('patient_id').references(() => patients.id, { onDelete: 'set null' }),
   doctorId: integer('doctor_id').references(() => doctors.id, { onDelete: 'set null' }),
-  
+
   prescriptionType: varchar('prescription_type', { length: 50 }).default('EYEWEAR'),
   cardDescription: varchar('card_description', { length: 255 }),
   countInRecords: boolean('count_in_records').default(true),
 
   lensTypes: jsonb('lens_types').$type<string[]>(), // Constant Use, Reading Wear, etc.
   notes: text('notes'),
+
+  /**
+   * Stores physical fitting measurements recorded by the optician.
+   * Captured from the "Add Wearing Parameters" step in POS.
+   * All values are optional — recorded only when the optician measures them.
+   *
+   * Shape:
+   * {
+   *   fittingHeightRight: number | null,   // Vertical distance (mm) from lens bottom to right pupil center
+   *   fittingHeightLeft:  number | null,   // Same for left eye
+   *   segmentHeightRight: number | null,   // Height of bifocal/trifocal dividing line (right)
+   *   segmentHeightLeft:  number | null,   // Height of bifocal/trifocal dividing line (left)
+   *   progressiveLength:  number | null,   // Corridor length (mm) for progressive lenses
+   *   wrapAngle:          number | null,   // Curvature angle of frame face (degrees)
+   *   inclination:        number | null,   // Pantoscopic tilt (degrees)
+   *   bvd:                number | null,   // Back Vertex Distance (mm) — cornea to back of lens
+   *   readingDistance:    number | null,   // Optimal near-vision focal distance (cm)
+   *   fdc:                number | null,   // Frame Distance Center (mm)
+   *   headCapeEyeRatio:   number | null,   // Postural compensation for habitual head rotation
+   * }
+   */
+  fittingParameters: jsonb('fitting_parameters').$type<{
+    fittingHeightRight: number | null;
+    fittingHeightLeft: number | null;
+    segmentHeightRight: number | null;
+    segmentHeightLeft: number | null;
+    progressiveLength: number | null;
+    wrapAngle: number | null;
+    inclination: number | null;
+    bvd: number | null;
+    readingDistance: number | null;
+    fdc: number | null;
+    headCapeEyeRatio: number | null;
+  }>(),
 
   createdBy: integer('created_by').notNull().references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),

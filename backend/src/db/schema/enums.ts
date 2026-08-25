@@ -18,3 +18,12 @@ export const barcodeStatusEnum = pgEnum('barcode_status', ['PENDING_PRINT', 'ACT
 export const adjustmentTypeEnum = pgEnum('adjustment_type', ['FREIGHT', 'DISCOUNT', 'REBATE', 'FITTING_CHARGE']);
 export const transferStatusEnum = pgEnum('transfer_status', ['DRAFT', 'IN_TRANSIT', 'RECEIVED', 'PARTIALLY_RECEIVED', 'CANCELLED']);
 export const auditStatusEnum = pgEnum('audit_status', ['IN_PROGRESS', 'RECONCILED', 'CANCELLED']);
+
+/**
+ * Determines whether a lens line item is sourced from shop inventory (ADD_NEW)
+ * or provided by the customer themselves (CUSTOMER_OWN).
+ * Only relevant for Lens category invoice items — null for all other product types.
+ * ADD_NEW  → decrements inventory stock on checkout.
+ * CUSTOMER_OWN → bypasses inventory decrement entirely.
+ */
+export const lensSourceEnum = pgEnum('lens_source', ['ADD_NEW', 'CUSTOMER_OWN']);

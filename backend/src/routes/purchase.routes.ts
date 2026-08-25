@@ -13,5 +13,9 @@ export function createPurchaseRoutes() {
   router.post('/', authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), PurchaseController.createPurchase);
   router.get('/', authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST, ROLES.CASHIER), PurchaseController.getPurchases);
 
+  // Bulk Rx Lens Grid ingestion — creates variants + purchase items + increments stock atomically
+  router.post('/:purchaseId/lens-grid', authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), PurchaseController.bulkLensGridIngest);
+
   return router;
 }
+

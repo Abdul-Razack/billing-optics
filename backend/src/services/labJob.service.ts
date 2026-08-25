@@ -1,14 +1,14 @@
 import { LabJobRepository } from '../repositories/labJob.repository';
-import { InvoiceRepository } from '../repositories/invoice.repository';
 import { AppError } from '../utils/errors';
 
 export class LabJobService {
   async create(data: any) {
-    // Basic check: does invoice exist?
-    // In a real scenario we'd query InvoiceRepository, but DB foreign key handles it too.
     const dbData = {
       jobTitle: data.jobTitle,
       invoiceId: data.invoiceId,
+      // Wire the clinical chain FKs — these were silently dropped before
+      invoiceItemId: data.invoiceItemId ? Number(data.invoiceItemId) : null,
+      prescriptionId: data.prescriptionId ? Number(data.prescriptionId) : null,
       vendorId: data.vendorId || null,
       status: data.status || 'PENDING',
       notes: data.notes,
@@ -40,6 +40,9 @@ export class LabJobService {
     if (data.expectedDate !== undefined) dbData.expectedDate = data.expectedDate;
     if (data.sentDate !== undefined) dbData.sentDate = data.sentDate;
     if (data.receivedDate !== undefined) dbData.receivedDate = data.receivedDate;
+    // Allow patching the clinical FKs on update as well
+    if (data.invoiceItemId !== undefined) dbData.invoiceItemId = data.invoiceItemId ? Number(data.invoiceItemId) : null;
+    if (data.prescriptionId !== undefined) dbData.prescriptionId = data.prescriptionId ? Number(data.prescriptionId) : null;
 
     return await LabJobRepository.update(id, dbData);
   }
@@ -54,3 +57,5 @@ export class LabJobService {
 }
 
 export const labJobService = new LabJobService();
+
+
