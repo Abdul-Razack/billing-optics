@@ -1,0 +1,28 @@
+config:
+  target: "http://127.0.0.1:5000"
+  phases:
+    - duration: 10
+      arrivalRate: 5
+      name: "Warm up checkout phase"
+    - duration: 20
+      arrivalRate: 15
+      name: "Sustained checkout load"
+  variables:
+    token: "{{ $processEnvironment.ARTILLERY_TOKEN }}"
+    productId: "{{ $processEnvironment.ARTILLERY_PRODUCT_ID }}"
+    customerId: "{{ $processEnvironment.ARTILLERY_CUSTOMER_ID }}"
+scenarios:
+  - name: "Process Checkouts"
+    flow:
+      - post:
+          url: "/api/billing/{{ $randomString() }}-test/checkout"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            customerId: 1
+            items:
+              - productId: 2
+                quantity: 1
+            payments:
+              - method: "CASH"
+                amount: 20

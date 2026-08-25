@@ -1,0 +1,58 @@
+config:
+  target: "http://127.0.0.1:5000"
+  phases:
+    - duration: 15
+      arrivalRate: 20
+      name: "Warm up full system load"
+    - duration: 30
+      arrivalRate: 50
+      name: "Sustained full system load"
+  variables:
+    token: "{{ $processEnvironment.ARTILLERY_TOKEN }}"
+    adminId: "{{ $processEnvironment.ARTILLERY_ADMIN_ID }}"
+    productId: "{{ $processEnvironment.ARTILLERY_PRODUCT_ID }}"
+    variantId: "{{ $processEnvironment.ARTILLERY_VARIANT_ID }}"
+    customerId: "{{ $processEnvironment.ARTILLERY_CUSTOMER_ID }}"
+scenarios:
+  - name: "Billing & Checkout (Creates Invoice and deducts inventory)"
+    weight: 3
+    flow:
+      - post:
+          url: "/api/invoices/STRESS-{{ $randomString() }}/checkout"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            customerId: "{{ customerId }}"
+            createdBy: "{{ adminId }}"
+            items:
+              - productId: "{{ productId }}"
+                quantity: 1
+            payments:
+              - method: "CASH"
+                amount: 100
+  - name: "Inventory & Barcodes (Generate new serial numbers)"
+    weight: 2
+    flow:
+      - post:
+          url: "/api/barcodes/generate"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            productVariantId: "{{ variantId }}"
+            quantity: 5
+            batchNumber: "SYS-STRESS"
+  - name: "Browsing & Lookups (Fetch Products, Customers, Dashboard)"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/products?limit=10"
+          headers:
+            Authorization: "{{ token }}"
+      - get:
+          url: "/api/customers?limit=10"
+          headers:
+            Authorization: "{{ token }}"
+      - get:
+          url: "/api/reports/daily-statement"
+          headers:
+            Authorization: "{{ token }}"

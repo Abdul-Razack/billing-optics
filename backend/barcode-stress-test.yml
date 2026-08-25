@@ -1,0 +1,31 @@
+config:
+  target: "http://127.0.0.1:5000"
+  phases:
+    - duration: 10
+      arrivalRate: 20
+      name: "Warm up barcode generation"
+    - duration: 20
+      arrivalRate: 50
+      name: "Sustained barcode generation load"
+  variables:
+    token: "{{ $processEnvironment.ARTILLERY_TOKEN }}"
+    productVariantId: "{{ $processEnvironment.ARTILLERY_PRODUCT_VARIANT_ID }}"
+scenarios:
+  - name: "Generate Barcodes Concurrently"
+    weight: 4
+    flow:
+      - post:
+          url: "/api/barcodes/generate"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            productVariantId: "{{ productVariantId }}"
+            quantity: 5
+            batchNumber: "STRESS-TEST"
+  - name: "Fetch Pending Barcodes"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/barcodes?status=PENDING_PRINT"
+          headers:
+            Authorization: "{{ token }}"

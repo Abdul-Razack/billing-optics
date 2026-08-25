@@ -1,0 +1,107 @@
+config:
+  processor: "./omni-processor.js"
+  target: "http://127.0.0.1:5000"
+  phases:
+    - duration: 15
+      arrivalRate: 20
+      name: "Warm up Omni load"
+    - duration: 30
+      arrivalRate: 50
+      name: "Sustained Omni load"
+  variables:
+    token: "{{ $processEnvironment.ARTILLERY_TOKEN }}"
+    adminId: "{{ $processEnvironment.ARTILLERY_ADMIN_ID }}"
+    customerId: "{{ $processEnvironment.ARTILLERY_CUSTOMER_ID }}"
+    vendorId: "{{ $processEnvironment.ARTILLERY_VENDOR_ID }}"
+    productId: "{{ $processEnvironment.ARTILLERY_PRODUCT_ID }}"
+    variantId: "{{ $processEnvironment.ARTILLERY_VARIANT_ID }}"
+    prescriptionId: "{{ $processEnvironment.ARTILLERY_PRESCRIPTION_ID }}"
+    offerCode: "{{ $processEnvironment.ARTILLERY_OFFER_CODE }}"
+    invoiceId: "{{ $processEnvironment.ARTILLERY_INVOICE_ID }}"
+    labJobId: "{{ $processEnvironment.ARTILLERY_LAB_JOB_ID }}"
+scenarios:
+  - name: "The Optometrist Workflow (Prescriptions)"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/prescriptions/customer/{{ customerId }}"
+          headers:
+            Authorization: "{{ token }}"
+      - post:
+          url: "/api/prescriptions"
+          beforeRequest: "castIntegers"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            customerId: "{{ customerId }}"
+            prescriptionType: "EYEWEAR"
+            tests:
+              - testType: "AR_READING"
+
+  - name: "The Cashier Workflow (Checkout & Barcodes)"
+    weight: 3
+    flow:
+      - post:
+          url: "/api/invoices/OMNI-{{ $randomString() }}/checkout"
+          beforeRequest: "castIntegers"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            customerId: "{{ customerId }}"
+            items:
+              - productId: "{{ productId }}"
+                quantity: 1
+            payments:
+              - method: "CASH"
+                amount: 150
+      - post:
+          url: "/api/barcodes/generate"
+          beforeRequest: "castIntegers"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            productVariantId: "{{ variantId }}"
+            quantity: 2
+            batchNumber: "OMNI"
+
+  - name: "The Lab Technician Workflow (Lab Jobs)"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/lab-jobs?status=PENDING"
+          headers:
+            Authorization: "{{ token }}"
+      - put:
+          url: "/api/lab-jobs/{{ labJobId }}"
+          headers:
+            Authorization: "{{ token }}"
+          json:
+            status: "PROCESSING"
+
+  - name: "The Manager Workflow (Reports, Vendors, Customers, Inventory)"
+    weight: 4
+    flow:
+      - get:
+          url: "/api/reports/sales"
+          headers:
+            Authorization: "{{ token }}"
+      - get:
+          url: "/api/inventory/alerts"
+          headers:
+            Authorization: "{{ token }}"
+      - get:
+          url: "/api/vendors"
+          headers:
+            Authorization: "{{ token }}"
+      - get:
+          url: "/api/customers"
+          headers:
+            Authorization: "{{ token }}"
+      - get:
+          url: "/api/offers"
+          headers:
+            Authorization: "{{ token }}"
+      - get:
+          url: "/api/users"
+          headers:
+            Authorization: "{{ token }}"
