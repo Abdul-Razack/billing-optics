@@ -444,22 +444,25 @@ export function CategoryAttributesManager({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadAttributes = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await ProductAttributeService.getAttributesByCategory(categoryId);
-      setDefinitions(data);
-    } catch {
-      setError("Failed to load attributes.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [categoryId]);
-
   useEffect(() => {
+    let mounted = true;
+    async function loadAttributes() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await ProductAttributeService.getAttributesByCategory(categoryId);
+        if (mounted) setDefinitions(data);
+      } catch {
+        if (mounted) setError("Failed to load attributes.");
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
     loadAttributes();
-  }, [loadAttributes]);
+    return () => {
+      mounted = false;
+    };
+  }, [categoryId]);
 
   const handleCreated = (def: ApiAttributeDefinition) => {
     setDefinitions((prev) => [...prev, def]);
