@@ -61,28 +61,19 @@ function RxPreview({ prescription }: { prescription: any }) {
 export default function CreateLabJobPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const invoiceIdParam = searchParams.get("invoiceId");
+  const initialInvoiceId = invoiceIdParam ? parseInt(invoiceIdParam, 10) : null;
+  const validInitialInvoiceId = initialInvoiceId !== null && !isNaN(initialInvoiceId) ? initialInvoiceId : null;
+
   const [isLoading, setIsLoading] = useState(false);
-  const [invoiceSearch, setInvoiceSearch] = useState("");
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
+  const [invoiceSearch, setInvoiceSearch] = useState(validInitialInvoiceId ? `Invoice #${validInitialInvoiceId}` : "");
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(validInitialInvoiceId);
   const [selectedInvoiceItemId, setSelectedInvoiceItemId] = useState<number | null>(null);
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState<number | null>(null);
-  const [jobTitle, setJobTitle] = useState("");
+  const [jobTitle, setJobTitle] = useState(validInitialInvoiceId ? `Lab Job — Invoice #${validInitialInvoiceId}` : "");
   const [notes, setNotes] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
   const [vendorId, setVendorId] = useState("");
-
-  // Pre-select invoice from URL param (e.g. coming from Order Detail → "Send to Lab")
-  useEffect(() => {
-    const invoiceIdParam = searchParams.get("invoiceId");
-    if (invoiceIdParam) {
-      const id = parseInt(invoiceIdParam, 10);
-      if (!isNaN(id)) {
-        setSelectedInvoiceId(id);
-        setInvoiceSearch(`Invoice #${id}`);
-        setJobTitle(`Lab Job — Invoice #${id}`);
-      }
-    }
-  }, [searchParams]);
 
   const { data: vendorsResponse } = useFetch<{ success: boolean; data: any[] }>("/vendors");
   const vendors = vendorsResponse?.data || [];
