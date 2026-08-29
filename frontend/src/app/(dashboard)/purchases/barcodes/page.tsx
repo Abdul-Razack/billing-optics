@@ -18,17 +18,33 @@ export default function BarcodesDashboardPage() {
   const { data: response, isLoading, refetch } = useFetch<{ success: boolean, data: any[] }>(`/barcodes?status=${activeTab}`);
   const barcodes = response?.data || [];
 
+  const PRINT_BATCH_LIMIT = 100;
+
   const toggleSelect = (id: number) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    setSelectedIds(prev => {
+      if (prev.includes(id)) return prev.filter(i => i !== id);
+      if (prev.length >= PRINT_BATCH_LIMIT) {
+        toast.error(`You can only select up to ${PRINT_BATCH_LIMIT} barcodes at once to prevent memory issues.`);
+        return prev;
+      }
+      return [...prev, id];
+    });
   };
 
   const toggleAll = () => {
-    if (selectedIds.length === barcodes.length) setSelectedIds([]);
-    else setSelectedIds(barcodes.map(b => b.id));
+    if (selectedIds.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(barcodes.slice(0, PRINT_BATCH_LIMIT).map(b => b.id));
+      if (barcodes.length > PRINT_BATCH_LIMIT) {
+        toast.info(`Selected the first ${PRINT_BATCH_LIMIT} barcodes due to performance limits.`);
+      }
+    }
   };
 
   const handlePrintClick = () => {
     if (selectedIds.length === 0) return toast.error("Select at least one barcode to print");
+    if (selectedIds.length > PRINT_BATCH_LIMIT) return toast.error(`Maximum ${PRINT_BATCH_LIMIT} barcodes allowed per batch.`);
     setShowPrintModal(true);
   };
 
@@ -147,6 +163,7 @@ export default function BarcodesDashboardPage() {
                   fontSize={14}
                   background="#ffffff"
                   lineColor="#000000"
+                  renderer="canvas"
                 />
                 <span className="text-xs mt-1 font-semibold text-gray-600">Product #{b.productVariantId}</span>
               </div>
