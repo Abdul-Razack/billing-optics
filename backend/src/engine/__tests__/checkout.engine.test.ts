@@ -43,7 +43,7 @@ describe('checkout.engine', () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.invoiceId).toBe(99);
+    expect(result.recordId).toBe(99);
     expect(txMock.select).toHaveBeenCalled();
   });
 

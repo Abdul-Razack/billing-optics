@@ -35,18 +35,14 @@ export function createReportRoutes() {
     ReportController.getInventoryReport
   );
   
+  router.get('/customers', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), ReportController.getCustomerReport);
+  router.get('/categories', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), ReportController.getCategoryReport);
+  
   router.get(
     '/low-stock',
     authenticate,
     authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST),
     ReportController.getLowStockReport
-  );
-  
-  router.get(
-    '/customers',
-    authenticate,
-    authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST),
-    ReportController.getCustomerReport
   );
   
   router.get(

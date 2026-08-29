@@ -12,11 +12,14 @@ export const products = pgTable('products', {
   name: varchar('name', { length: 255 }).notNull(),
   description: varchar('description', { length: 1000 }),
   costPrice: integer('cost_price').notNull().default(0),
+  mrp: integer('mrp'),
   sellingPrice: integer('selling_price').notNull().default(0),
   gstPercent: integer('gst_percent').notNull().default(18),
   minStockAlert: integer('min_stock_alert').notNull().default(5),
   isActive: boolean('is_active').notNull().default(true),
   isDeleted: boolean('is_deleted').notNull().default(false),
+  /** Optical product type for typed attribute display (FRAME, LENS, CONTACT_LENS, SUNGLASSES, SOLUTION, OTHER) */
+  productType: varchar('product_type', { length: 50 }).default('OTHER'),
   attributes: jsonb('attributes').default('{}'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')

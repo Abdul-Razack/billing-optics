@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Edit3, CheckCircle, PackagePlus } from "lucide-react";
+import { MoreHorizontal, Eye, PackagePlus, CheckCircle, ShoppingCart } from "lucide-react";
 import { ApiProduct } from "@/services/product.service";
 import Link from "next/link";
 
@@ -19,7 +19,7 @@ export function AlertActionDropdown({ product, onAdjustStock, onMarkReviewed }: 
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[180px]">
+      <DropdownMenuContent align="end" className="w-[200px]">
         <DropdownMenuItem asChild>
           <Link href={`/products/${product.id}`} className="cursor-pointer flex items-center">
             <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -29,6 +29,12 @@ export function AlertActionDropdown({ product, onAdjustStock, onMarkReviewed }: 
         <DropdownMenuItem onClick={() => onAdjustStock(product)} className="cursor-pointer flex items-center">
           <PackagePlus className="mr-2 h-4 w-4 text-muted-foreground" />
           Restock / Adjust
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/purchases/new?productId=${product.id}`} className="cursor-pointer flex items-center">
+            <ShoppingCart className="mr-2 h-4 w-4 text-muted-foreground" />
+            Create Purchase Order
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => onMarkReviewed(product)} className="cursor-pointer flex items-center">

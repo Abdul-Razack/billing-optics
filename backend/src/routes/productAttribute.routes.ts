@@ -34,5 +34,13 @@ router.delete(
   ProductAttributeController.deleteAttributeDefinition
 );
 
+// Admins can delete attribute options
+router.delete(
+  '/options/:optionId',
+  authenticate,
+  authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST),
+  ProductAttributeController.deleteAttributeOption
+);
+
   return router;
 }

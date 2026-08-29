@@ -1,0 +1,918 @@
+
+> frontend@0.1.0 lint
+> eslint
+
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(auth)/activation/page.tsx
+   6:10  warning  'Input' is defined but never used         @typescript-eslint/no-unused-vars
+  41:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/audit-logs/page.tsx
+  62:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/categories/[id]/page.tsx
+  22:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/customers/[id]/prescriptions/page.tsx
+  10:10  warning  'Plus' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/customers/import/page.tsx
+   15:10  warning  'CustomerService' is defined but never used             @typescript-eslint/no-unused-vars
+   36:48  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   37:63  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   42:26  warning  'setImportProgress' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   68:66  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   74:88  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  120:19  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/customers/loyalty/page.tsx
+  3:10  warning  'useState' is defined but never used    @typescript-eslint/no-unused-vars
+  3:20  warning  'useEffect' is defined but never used   @typescript-eslint/no-unused-vars
+  6:32  warning  'ArrowRight' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/customers/marketing/page.tsx
+   6:29  warning  'CardHeader' is defined but never used     @typescript-eslint/no-unused-vars
+   6:41  warning  'CardTitle' is defined but never used      @typescript-eslint/no-unused-vars
+  13:3   warning  'CalendarHeart' is defined but never used  @typescript-eslint/no-unused-vars
+  21:3   warning  'Users' is defined but never used          @typescript-eslint/no-unused-vars
+  68:3   warning  'label' is defined but never used          @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/customers/offers/page.tsx
+  15:29  warning  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+  18:10  warning  'format' is defined but never used           @typescript-eslint/no-unused-vars
+  37:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+  57:73  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  60:56  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  65:21  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  76:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+  76:21  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/customers/page.tsx
+   13:10  warning  'exportToCSV' is defined but never used                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   40:9   warning  The 'allCustomers' logical expression could make the dependencies of useMemo Hook (at line 171) change on every render. To fix this, wrap the initialization of 'allCustomers' in its own useMemo() Hook  react-hooks/exhaustive-deps
+   94:14  warning  'e' is defined but never used                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  107:14  warning  'e' is defined but never used                                                                                                                                                                             @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/customers/referrals/page.tsx
+   6:10  warning  'Badge' is defined but never used       @typescript-eslint/no-unused-vars
+   7:45  warning  'ArrowRight' is defined but never used  @typescript-eslint/no-unused-vars
+   9:10  warning  'format' is defined but never used      @typescript-eslint/no-unused-vars
+  30:14  warning  'error' is defined but never used       @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/database-maintenance/page.tsx
+    7:69  warning  'CardFooter' is defined but never used    @typescript-eslint/no-unused-vars
+   15:3   warning  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+   18:3   warning  'Search' is defined but never used        @typescript-eslint/no-unused-vars
+   19:3   warning  'HardDrive' is defined but never used     @typescript-eslint/no-unused-vars
+   66:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   72:14  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+   95:14  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  107:14  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  122:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  236:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:71  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  238:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  240:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/inventory/alerts/page.tsx
+  11:10  warning  'ProductService' is defined but never used                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  12:10  warning  'CategoryService' is defined but never used                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  13:34  warning  'AlertSeverity' is defined but never used                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  23:9   warning  The 'products' logical expression could make the dependencies of useMemo Hook (at line 42) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'products' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  38:33  warning  Unexpected any. Specify a different type                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/inventory/history/page.tsx
+  42:16  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/inventory/ledger/page.tsx
+  49:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/inventory/page.tsx
+   9:10  warning  'ProductService' is defined but never used                                                                                                                                                       @typescript-eslint/no-unused-vars
+  10:10  warning  'CategoryService' is defined but never used                                                                                                                                                      @typescript-eslint/no-unused-vars
+  20:9   warning  The 'products' logical expression could make the dependencies of useMemo Hook (at line 56) change on every render. To fix this, wrap the initialization of 'products' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  39:45  warning  Unexpected any. Specify a different type                                                                                                                                                         @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/inventory/stock/page.tsx
+   9:10  warning  'ProductService' is defined but never used                                                                                                                                                       @typescript-eslint/no-unused-vars
+  10:10  warning  'CategoryService' is defined but never used                                                                                                                                                      @typescript-eslint/no-unused-vars
+  15:28  warning  'PackagePlus' is defined but never used                                                                                                                                                          @typescript-eslint/no-unused-vars
+  26:9   warning  The 'products' logical expression could make the dependencies of useMemo Hook (at line 73) change on every render. To fix this, wrap the initialization of 'products' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  64:55  warning  Unexpected any. Specify a different type                                                                                                                                                         @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/invoices/[id]/page.tsx
+  237:62   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:95   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:122  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/invoices/page.tsx
+   3:21   warning  'useMemo' is defined but never used                      @typescript-eslint/no-unused-vars
+   8:22   warning  'PaginatedApiInvoiceResponse' is defined but never used  @typescript-eslint/no-unused-vars
+  54:103  warning  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/lab-jobs/import/page.tsx
+   35:48  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   36:63  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   41:26  warning  'setImportProgress' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   52:66  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   58:88  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  104:19  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/lab-jobs/new/page.tsx
+   18:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   23:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   73:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   76:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   88:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  179:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  244:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/lab-jobs/page.tsx
+  43:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  86:83  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/orders/[id]/edit/page.tsx
+   68:19  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+   99:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:16  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  181:14  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/orders/[id]/page.tsx
+   18:10  warning  'InvoiceSummary' is defined but never used   @typescript-eslint/no-unused-vars
+   19:10  warning  'PaymentTimeline' is defined but never used  @typescript-eslint/no-unused-vars
+   81:16  warning  'err' is defined but never used              @typescript-eslint/no-unused-vars
+  102:12  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/orders/create/page.tsx
+   21:58  warning  'Printer' is defined but never used                                                                                                                                                          @typescript-eslint/no-unused-vars
+   31:9   warning  'router' is assigned a value but never used                                                                                                                                                  @typescript-eslint/no-unused-vars
+  206:12  warning  Unexpected any. Specify a different type                                                                                                                                                     @typescript-eslint/no-explicit-any
+  247:14  warning  'err' is defined but never used                                                                                                                                                              @typescript-eslint/no-unused-vars
+  270:9   warning  The 'handleSubmit' function makes the dependencies of useEffect Hook (at line 421) change on every render. To fix this, wrap the definition of 'handleSubmit' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  333:9   warning  'searchInputRef' is assigned a value but never used                                                                                                                                          @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/orders/page.tsx
+   19:10  warning  'isFetching' is assigned a value but never used                                                                 @typescript-eslint/no-unused-vars
+   57:14  warning  'err' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+   68:6   warning  React Hook useEffect has a missing dependency: 'fetchOrders'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  115:14  warning  'e' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/page.tsx
+  18:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/payments/[id]/page.tsx
+  2:10  warning  'ProductHeader' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/payments/page.tsx
+  49:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/prescriptions/page.tsx
+  7:10  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+  8:8   warning  'Link' is defined but never used    @typescript-eslint/no-unused-vars
+  9:10  warning  'Plus' is defined but never used    @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/products/[id]/page.tsx
+   77:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/products/import/page.tsx
+  23:18  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  28:10  warning  'rawFile' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  30:63  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  31:10  warning  'mapping' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  34:66  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/products/page.tsx
+    8:10  warning  'CategoryService' is defined but never used                                                                                                                                                       @typescript-eslint/no-unused-vars
+   15:10  warning  'exportToCSV' is defined but never used                                                                                                                                                           @typescript-eslint/no-unused-vars
+   54:9   warning  The 'products' logical expression could make the dependencies of useMemo Hook (at line 156) change on every render. To fix this, wrap the initialization of 'products' in its own useMemo() Hook  react-hooks/exhaustive-deps
+   99:66  warning  Unexpected any. Specify a different type                                                                                                                                                          @typescript-eslint/no-explicit-any
+  147:37  warning  Unexpected any. Specify a different type                                                                                                                                                          @typescript-eslint/no-explicit-any
+  147:83  warning  Unexpected any. Specify a different type                                                                                                                                                          @typescript-eslint/no-explicit-any
+  149:37  warning  Unexpected any. Specify a different type                                                                                                                                                          @typescript-eslint/no-explicit-any
+  149:83  warning  Unexpected any. Specify a different type                                                                                                                                                          @typescript-eslint/no-explicit-any
+  159:74  warning  Unexpected any. Specify a different type                                                                                                                                                          @typescript-eslint/no-explicit-any
+  225:14  warning  'error' is defined but never used                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  249:14  warning  'error' is defined but never used                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  273:14  warning  'error' is defined but never used                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  313:14  warning  'error' is defined but never used                                                                                                                                                                 @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/purchases/barcodes/page.tsx
+  18:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/purchases/page.tsx
+  13:83  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  17:10  warning  'refresh' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/reports/customers/page.tsx
+   11:10  warning  'startOfDay' is defined but never used    @typescript-eslint/no-unused-vars
+   11:22  warning  'endOfDay' is defined but never used      @typescript-eslint/no-unused-vars
+   59:14  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  103:80  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/reports/daily-statement/page.tsx
+   13:36  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   14:10  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   19:63  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  120:40  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  129:61  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/reports/inventory/page.tsx
+   12:10  warning  'startOfDay' is defined but never used    @typescript-eslint/no-unused-vars
+   12:22  warning  'endOfDay' is defined but never used      @typescript-eslint/no-unused-vars
+   12:32  warning  'startOfWeek' is defined but never used   @typescript-eslint/no-unused-vars
+   12:45  warning  'startOfMonth' is defined but never used  @typescript-eslint/no-unused-vars
+   58:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  122:14  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/reports/sales/page.tsx
+   78:14  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  130:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/reports/visitors/page.tsx
+  86:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/sales/bulk-invoice/page.tsx
+   24:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   25:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   36:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   40:48  warning  'rowIndex' is defined but never used      @typescript-eslint/no-unused-vars
+   42:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   56:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/settings/locations/page.tsx
+  31:38   warning  'error' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  31:100  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  34:40   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  73:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  86:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/settings/page.tsx
+  18:10  warning  'ProtectedRoute' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+  36:10  warning  'isSaving' is assigned a value but never used                                                                    @typescript-eslint/no-unused-vars
+  48:14  warning  'error' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  59:6   warning  React Hook useEffect has a missing dependency: 'loadSettings'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  77:14  warning  'error' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/settings/product-attributes/page.tsx
+   18:60   warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   26:99   warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   27:9    warning  The 'categories' logical expression could make the dependencies of useEffect Hook (at line 93) change on every render. To fix this, wrap the initialization of 'categories' in its own useMemo() Hook  react-hooks/exhaustive-deps
+   30:100  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   52:14   warning  'error' is defined but never used                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   67:14   warning  'error' is defined but never used                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   83:14   warning  'error' is defined but never used                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  178:56   warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/system-health/page.tsx
+  71:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+  89:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/users/page.tsx
+  23:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/vendors/import/page.tsx
+    3:20  warning  'useEffect' is defined but never used                   @typescript-eslint/no-unused-vars
+   32:48  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   33:63  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   38:26  warning  'setImportProgress' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   49:66  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   55:88  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  101:19  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/vendors/new/page.tsx
+  39:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/(dashboard)/vendors/page.tsx
+  11:83  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/error.tsx
+  8:3  warning  'reset' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/global-error.tsx
+  8:3  warning  'reset' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/app/unauthorized/page.tsx
+  4:10  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/PerformancePatch.tsx
+  15:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/audit/AuditLogsTable.tsx
+   1:27  warning  'useEffect' is defined but never used     @typescript-eslint/no-unused-vars
+  18:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/auth/LoginForm.tsx
+   56:19  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  124:22  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/auth/LoginForm.tsx:124:22
+  122 |           <Checkbox 
+  123 |             id="rememberMe" 
+> 124 |             checked={form.watch("rememberMe")}
+      |                      ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  125 |             onCheckedChange={(checked) => form.setValue("rememberMe", checked as boolean)}
+  126 |           />
+  127 |           <label   react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/bulk-operations/ImportWizard.tsx
+  7:10  warning  'CustomField' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/categories/CategoryAttributesManager.tsx
+    3:31  warning  'useCallback' is defined but never used   @typescript-eslint/no-unused-vars
+   10:3   warning  'X' is defined but never used             @typescript-eslint/no-unused-vars
+  322:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/categories/CategoryForm.tsx
+  28:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/categories/CategoryTable.tsx
+  163:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/categories/CategoryTable.tsx:163:17
+  161 |   ], [onDelete]);
+  162 |
+> 163 |   const table = useReactTable({
+      |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  164 |     data,
+  165 |     columns,
+  166 |     getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/custom-fields/DynamicFieldBuilder.tsx
+   91:44  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  102:24  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/custom-fields/DynamicFieldBuilder.tsx:102:24
+  100 |   };
+  101 |
+> 102 |   const needsOptions = form.watch("type") === "DROPDOWN" || form.watch("type") === "MULTI_SELECT";
+      |                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  103 |
+  104 |   return (
+  105 |     <div className="bg-card rounded-lg border border-border shadow-sm flex flex-col h-full">  react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/customers/CustomerForm.tsx
+   73:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  119:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  205:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/customers/CustomerHistorySection.tsx
+  8:42  warning  'customerId' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/customers/CustomerTable.tsx
+   99:29  warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  155:9   warning  'isAdmin' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  278:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/customers/CustomerTable.tsx:278:17
+  276 |   ], [updateState, onDelete]);
+  277 |
+> 278 |   const table = useReactTable({
+      |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  279 |     data,
+  280 |     columns,
+  281 |     pageCount: Math.ceil(totalItems / state.size),  react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/customers/ExportModal.tsx
+   60:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/customers/PrescriptionHistoryTimeline.tsx
+   9:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  93:27  warning  'index' is defined but never used         @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/AlertActionDropdown.tsx
+  3:31  warning  'Edit3' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/BulkAdjustmentModal.tsx
+    8:22  warning  'ProductService' is defined but never used  @typescript-eslint/no-unused-vars
+   11:10  warning  'PackagePlus' is defined but never used     @typescript-eslint/no-unused-vars
+   37:33  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  120:21  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/CategoryStockSummary.tsx
+  16:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/InventoryActivityFeed.tsx
+  72:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/InventoryQuickActions.tsx
+  3:25  warning  'ArrowRightLeft' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/InventoryTable.tsx
+  106:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/InventoryTable.tsx:106:17
+  104 |   ];
+  105 |
+> 106 |   const table = useReactTable({
+      |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  107 |     data,
+  108 |     columns,
+  109 |     getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/QuantityPreviewCard.tsx
+  10:63  warning  'adjustmentType' is defined but never used       @typescript-eslint/no-unused-vars
+  13:9   warning  'isNegative' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/StockAdjustmentForm.tsx
+   8:22  warning  'ProductService' is defined but never used  @typescript-eslint/no-unused-vars
+  25:36  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  95:21  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/StockHistoryTable.tsx
+  4:10  warning  'ArrowRight' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/inventory/StockTable.tsx
+    1:10  warning  'useState' is defined but never used                 @typescript-eslint/no-unused-vars
+   37:9   warning  'isSomeSelected' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  109:46  warning  Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/invoices/InvoiceForm.tsx
+  32:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/invoices/InvoiceTable.tsx
+  168:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/invoices/InvoiceTable.tsx:168:17
+  166 |   ];
+  167 |
+> 168 |   const table = useReactTable({
+      |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  169 |     data,
+  170 |     columns,
+  171 |     getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/invoices/PrintableReceipt.tsx
+  37:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/CustomerQuickAddModal.tsx
+  34:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/CustomerSelector.tsx
+  2:39  warning  'Search' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/OrderTable.tsx
+   8:58  warning  'Copy' is defined but never used                   @typescript-eslint/no-unused-vars
+  66:3   warning  'sortBy' is defined but never used                 @typescript-eslint/no-unused-vars
+  67:3   warning  'sortDirection' is defined but never used          @typescript-eslint/no-unused-vars
+  77:14  warning  'error' is defined but never used                  @typescript-eslint/no-unused-vars
+  92:9   warning  'someSelected' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/ProductOrderSelector.tsx
+   3:10  warning  'Check' is defined but never used  @typescript-eslint/no-unused-vars
+   4:10  warning  'cn' is defined but never used     @typescript-eslint/no-unused-vars
+  89:18  warning  'err' is defined but never used    @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/analytics/PaymentStatusChart.tsx
+  37:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/analytics/RevenueChart.tsx
+  45:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/details/OrderActionsBar.tsx
+   6:3   warning  'Printer' is defined but never used               @typescript-eslint/no-unused-vars
+   7:3   warning  'Download' is defined but never used              @typescript-eslint/no-unused-vars
+  29:9   warning  'handlePrint' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  40:19  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/edit/EditableOrderForm.tsx
+   3:10  warning  'ProductOrderSelector' is defined but never used  @typescript-eslint/no-unused-vars
+  10:10  warning  'PaymentStatusBadge' is defined but never used    @typescript-eslint/no-unused-vars
+  12:10  warning  'PaymentStatus' is defined but never used         @typescript-eslint/no-unused-vars
+  41:3   warning  'onAddProduct' is defined but never used          @typescript-eslint/no-unused-vars
+  83:78  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/payment/PaymentHistoryList.tsx
+   3:16  warning  'CardContent' is defined but never used   @typescript-eslint/no-unused-vars
+   3:29  warning  'CardHeader' is defined but never used    @typescript-eslint/no-unused-vars
+   3:41  warning  'CardTitle' is defined but never used     @typescript-eslint/no-unused-vars
+  49:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/print/InvoicePrintToolbar.tsx
+  3:10  warning  'Printer' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/orders/print/PrintableInvoice.tsx
+  11:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/payments/PaymentForm.tsx
+  37:27  warning  'values' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/payments/PaymentTable.tsx
+   57:54  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  102:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/payments/PaymentTable.tsx:102:17
+  100 |   ];
+  101 |
+> 102 |   const table = useReactTable({
+      |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  103 |     data,
+  104 |     columns,
+  105 |     getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/prescriptions/PrescriptionForm.tsx
+    3:31  warning  'useCallback' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   12:23  warning  'Plus' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   12:29  warning  'Trash2' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   12:37  warning  'CalendarIcon' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   13:24  warning  'PrescriptionTest' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   22:16  warning  'TabsContent' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   91:16  warning  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  170:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  236:92  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  261:32  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  332:38  warning  'testIndex' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  440:30  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/prescriptions/PrescriptionForm.tsx:440:30
+  438 |                   <Checkbox 
+  439 |                     id={`type-${type}`} 
+> 440 |                     checked={form.watch("lensTypes").includes(type)}
+      |                              ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  441 |                     onCheckedChange={(checked) => {
+  442 |                       const current = form.getValues("lensTypes");
+  443 |                       const updated = checked   react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/prescriptions/PrescriptionTable.tsx
+   38:10  warning  'Badge' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  122:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/prescriptions/PrescriptionTable.tsx:122:17
+  120 |   ];
+  121 |
+> 122 |   const table = useReactTable({
+      |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  123 |     data,
+  124 |     columns,
+  125 |     getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/DynamicFieldRenderer.tsx
+  10:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/ProductCustomFields.tsx
+  9:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/ProductExportModal.tsx
+   62:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/ProductForm.tsx
+   20:10   warning  'CustomField' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   83:30   warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/ProductForm.tsx:83:30
+  81 |   const { formState: { isDirty } } = form;
+  82 |   
+> 83 |   const selectedCategoryId = form.watch("categoryId");
+     |                              ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  84 |   const { data: attributesResponse, refetch: refetchAttributes } = useFetch<{ success: boolean, data: any[] }>(
+  85 |     `/product-attributes/categories/${selectedCategoryId || '0'}/attributes`,
+  86 |     { enabled: !!selectedCategoryId }  react-hooks/incompatible-library
+   84:103  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-explicit-any
+  104:58   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-explicit-any
+  109:14   warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  114:9    warning  The 'onSubmit' function makes the dependencies of useCallback Hook (at line 154) change on every render. To fix this, wrap the definition of 'onSubmit' in its own useCallback() Hook                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+  114:9    warning  The 'onSubmit' function makes the dependencies of useCallback Hook (at line 160) change on every render. To fix this, wrap the definition of 'onSubmit' in its own useCallback() Hook                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+  118:69   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-explicit-any
+  123:50   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/ProductGridCard.tsx
+  23:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/ProductInfoCard.tsx
+  3:10  warning  'cn' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/ProductListTable.tsx
+   24:10  warning  'Input' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   32:25  warning  'X' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   32:28  warning  'Filter' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   32:74  warning  'Search' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   63:3   warning  'onCategoryFilterChange' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   66:3   warning  'onSearchChange' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+   69:3   warning  'onStockFilterChange' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  156:50  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  169:50  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  209:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/ProductListTable.tsx:209:17
+  207 |   ], [categories, onDelete, onQuickStockUpdate]);
+  208 |
+> 209 |   const table = useReactTable({
+      |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  210 |     data,
+  211 |     columns,
+  212 |     getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+  231:9   warning  'clearAllFilters' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  238:9   warning  'activeFiltersCount' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  313:64  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/import/ConfirmStep.tsx
+  48:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/import/MappingStep.tsx
+  12:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  81:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/import/PreviewStep.tsx
+  36:42  warning  'index' is defined but never used               @typescript-eslint/no-unused-vars
+  78:9   warning  'hasErrors' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/products/import/UploadStep.tsx
+   8:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  68:18  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/purchases/LensGridModal.tsx
+   45:68  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   47:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   89:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  119:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/charts/CustomerGrowthChart.tsx
+  59:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/charts/RevenueLineChart.tsx
+  54:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/charts/TopProductsPieChart.tsx
+  54:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/customers/CustomerGrowthChart.tsx
+  43:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/customers/CustomerSegmentsChart.tsx
+  42:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/inventory/CategoryBreakdownChart.tsx
+  39:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/inventory/LowStockTable.tsx
+  2:10  warning  'formatCurrency' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/inventory/StockHealthChart.tsx
+  42:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/sales/SalesReportToolbar.tsx
+  90:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/reports/sales/SalesTrendChart.tsx
+  54:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/settings/OffersSettings.tsx
+  17:10  warning  'format' is defined but never used        @typescript-eslint/no-unused-vars
+  36:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  56:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  75:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/settings/PosShortcuts.tsx
+  31:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  57:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/settings/SystemUpdates.tsx
+   15:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   23:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   25:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   26:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   27:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   71:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   77:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  132:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  174:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  193:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/shared/SecureActionConfirm.tsx
+  37:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  66:25  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  66:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/shared/import/FileUploader.tsx
+  10:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:18  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/shared/import/ImportPreview.tsx
+   7:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/shared/import/MappingTable.tsx
+   1:20  warning  'useEffect' is defined but never used     @typescript-eslint/no-unused-vars
+  17:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:76  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:16  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  69:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/system/UpdateBanner.tsx
+  16:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/ui/alert-dialog.tsx
+  13:62   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:110  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/ui/button.tsx
+   3:20   warning  'VariantProps' is defined but never used  @typescript-eslint/no-unused-vars
+  44:52   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  55:58   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  55:112  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/ui/calendar.tsx
+  135:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/ui/dialog.tsx
+  14:57   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:110  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/ui/dropdown-menu.tsx
+   18:63   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:110  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   90:4    warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  105:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  105:110  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/ui/popover.tsx
+  13:58   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:110  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/ui/sheet.tsx
+  14:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:110  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/users/UserForm.tsx
+  60:16  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  89:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/users/UserTable.tsx
+  102:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/components/users/UserTable.tsx:102:17
+  100 |   ];
+  101 |
+> 102 |   const table = useReactTable({
+      |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  103 |     data,
+  104 |     columns,
+  105 |     getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/contexts/BranchContext.tsx
+  23:16  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/hooks/useApi.ts
+  2:23  warning  'ApiError' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/hooks/useProductUrlState.ts
+  14:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  86:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/lib/api-client.ts
+    6:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    6:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    8:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   23:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   30:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:14  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+   70:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:14  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  168:14  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  184:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  208:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/lib/dynamic-schema.ts
+  4:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  4:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/lib/export.ts
+   9:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/lib/mock-customer-data.ts
+  8:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/lib/mock-prescription-data.ts
+  1:10  warning  'Prescription' is defined but never used  @typescript-eslint/no-unused-vars
+  3:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/lib/table-utils.ts
+  13:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/services/customer.service.ts
+  19:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/services/offer.service.ts
+  37:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/services/order.service.ts
+  53:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/services/product.service.ts
+  16:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/services/report.service.ts
+  123:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/services/user.service.ts
+  9:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/types/customer.ts
+  11:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/types/electron.d.ts
+  2:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  6:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/types/offer.ts
+  14:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdul-razack-a/Personal/Freelance/billing-optics/frontend/src/types/product.ts
+  34:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 479 problems (0 errors, 479 warnings)
+

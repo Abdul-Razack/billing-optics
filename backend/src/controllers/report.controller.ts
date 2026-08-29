@@ -61,6 +61,21 @@ export class ReportController {
     }
   }
 
+  
+  static async getCategoryReport(req: Request, res: Response, next: NextFunction) {
+    try {
+      const startDateStr = req.query.startDate as string;
+      const endDateStr = req.query.endDate as string;
+      
+      const startDate = startDateStr ? new Date(startDateStr) : undefined;
+      const endDate = endDateStr ? new Date(endDateStr) : undefined;
+
+      const result = await ReportService.getCategoryReport(startDate, endDate);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
   static async getRevenueReport(req: Request, res: Response, next: NextFunction) {
     try {
       const startDateStr = req.query.startDate as string;

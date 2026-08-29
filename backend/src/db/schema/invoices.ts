@@ -1,8 +1,9 @@
-import { pgTable, bigserial, bigint, varchar, integer, timestamp, check, index } from 'drizzle-orm/pg-core';
+import { pgTable, bigserial, bigint, integer, varchar, timestamp, check, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { customers } from './customers';
 import { users } from './users';
 import { offers } from './offers';
+import { prescriptions } from './prescriptions';
 import { paymentStatusEnum, deliveryStatusEnum } from './enums';
 
 import { locations } from './locations';
@@ -28,6 +29,14 @@ export const invoices = pgTable('invoices', {
   paymentStatus: paymentStatusEnum('payment_status').notNull().default('UNPAID'),
   deliveryStatus: deliveryStatusEnum('delivery_status').notNull().default('PENDING'),
   notes: varchar('notes', { length: 1000 }),
+  /** Expected date the order will be ready for customer pickup */
+  deliveryDate: timestamp('delivery_date'),
+  /** Staff member who handled this sale (for commission tracking) */
+  salespersonId: bigint('salesperson_id', { mode: 'number' })
+    .references(() => users.id, { onDelete: 'set null' }),
+  /** Prescription linked to this invoice (e.g. the Rx the lenses were made to) */
+  prescriptionId: integer('prescription_id')
+    .references(() => prescriptions.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()

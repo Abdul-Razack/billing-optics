@@ -7,16 +7,19 @@ import { ApiProduct } from "@/services/product.service";
 export interface InvoiceLineItem {
   product: ApiProduct;
   quantity: number;
+  /** Discount percentage on this line (0–100) */
+  discountPercent?: number;
 }
 
 interface InvoiceLineItemsProps {
   items: InvoiceLineItem[];
   onChangeQuantity: (productId: number, newQuantity: number) => void;
+  onChangeDiscount?: (productId: number, discountPercent: number) => void;
   onRemove: (productId: number) => void;
   disabled?: boolean;
 }
 
-export function InvoiceLineItems({ items, onChangeQuantity, onRemove, disabled }: InvoiceLineItemsProps) {
+export function InvoiceLineItems({ items, onChangeQuantity, onChangeDiscount, onRemove, disabled }: InvoiceLineItemsProps) {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed rounded-md bg-muted/20">
@@ -32,15 +35,18 @@ export function InvoiceLineItems({ items, onChangeQuantity, onRemove, disabled }
   return (
     <div className="rounded-md border bg-card overflow-hidden">
       <div className="grid grid-cols-12 gap-2 bg-muted/50 p-3 text-xs font-medium text-muted-foreground border-b hidden sm:grid">
-        <div className="col-span-5">Product Details</div>
+        <div className="col-span-4">Product Details</div>
         <div className="col-span-2 text-right">Unit Price</div>
-        <div className="col-span-3 text-center">Qty</div>
+        <div className="col-span-2 text-center">Qty</div>
+        <div className="col-span-2 text-center">Disc %</div>
         <div className="col-span-2 text-right pr-2">Total</div>
       </div>
       <div className="divide-y">
         {items.map((item) => {
-          const { product, quantity } = item;
-          const lineTotal = product.sellingPrice * quantity;
+          const { product, quantity, discountPercent = 0 } = item;
+          const baseTotal = product.sellingPrice * quantity;
+          const discountAmt = Math.round(baseTotal * (discountPercent / 100));
+          const lineTotal = baseTotal - discountAmt;
 
           return (
             <div key={product.id} className="p-3 sm:p-0 flex flex-col sm:grid sm:grid-cols-12 sm:gap-2 sm:items-center hover:bg-muted/30 transition-colors">
@@ -59,7 +65,7 @@ export function InvoiceLineItems({ items, onChangeQuantity, onRemove, disabled }
               </div>
 
               {/* Desktop: Details */}
-              <div className="sm:col-span-5 sm:p-3 sm:border-r border-transparent flex justify-between items-center hidden sm:flex">
+              <div className="sm:col-span-4 sm:p-3 sm:border-r border-transparent flex justify-between items-center hidden sm:flex">
                 <div className="flex flex-col truncate pr-2">
                   <span className="font-medium text-sm truncate">{product.name}</span>
                   <span className="text-xs text-muted-foreground">SKU: {product.sku}</span>
@@ -73,7 +79,7 @@ export function InvoiceLineItems({ items, onChangeQuantity, onRemove, disabled }
               </div>
 
               {/* Quantity */}
-              <div className="flex justify-between items-center sm:justify-center sm:col-span-3 sm:p-3 mb-2 sm:mb-0">
+              <div className="flex justify-between items-center sm:justify-center sm:col-span-2 sm:p-3 mb-2 sm:mb-0">
                 <span className="sm:hidden text-xs text-muted-foreground">Quantity:</span>
                 <div className="flex items-center space-x-1">
                   <Button
@@ -98,7 +104,7 @@ export function InvoiceLineItems({ items, onChangeQuantity, onRemove, disabled }
                     min={1}
                     disabled={disabled}
                     onChange={(e) => {
-                      if (e.target.value === "") return; // Allow intermediate empty state during typing
+                      if (e.target.value === "") return;
                       const val = parseInt(e.target.value);
                       if (val === 0) {
                         onRemove(product.id);
@@ -119,11 +125,39 @@ export function InvoiceLineItems({ items, onChangeQuantity, onRemove, disabled }
                 </div>
               </div>
 
+              {/* Per-line Discount % */}
+              <div className="flex justify-between items-center sm:justify-center sm:col-span-2 sm:p-3 mb-2 sm:mb-0">
+                <span className="sm:hidden text-xs text-muted-foreground">Discount %:</span>
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="NUMBER"
+                    value={discountPercent || ""}
+                    placeholder="0"
+                    className="h-7 w-14 text-center text-sm p-1 hide-arrows"
+                    min={0}
+                    max={100}
+                    disabled={disabled || !onChangeDiscount}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (onChangeDiscount) {
+                        onChangeDiscount(product.id, isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
+                      }
+                    }}
+                  />
+                  <span className="text-xs text-muted-foreground">%</span>
+                </div>
+              </div>
+
               {/* Line Total & Desktop Delete */}
               <div className="flex justify-between items-center sm:col-span-2 sm:justify-end sm:p-3 font-medium text-foreground">
                 <span className="sm:hidden text-xs text-muted-foreground">Line Total:</span>
                 <div className="flex items-center gap-2">
-                  {formatCurrency(lineTotal)}
+                  <div className="text-right">
+                    <div>{formatCurrency(lineTotal)}</div>
+                    {discountPercent > 0 && (
+                      <div className="text-xs text-emerald-600">-{formatCurrency(discountAmt)}</div>
+                    )}
+                  </div>
                   <Button 
                     variant="ghost" 
                     size="icon" 

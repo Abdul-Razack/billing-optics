@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ProductHeader } from "@/components/products/ProductHeader";
+import { SectionCard } from "@/components/dashboard/SectionCard";
 import { CategoryForm } from "@/components/categories/CategoryForm";
 import { CategoryService, ApiCategory } from "@/services/category.service";
 import { Loader2 } from "lucide-react";
@@ -51,8 +53,11 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <PageContainer title="Edit Category" description="Update category details.">
-      <CategoryForm initialData={category} />
+    <PageContainer title="Categories" description="Update category details.">
+      <ProductHeader title="Edit Category" />
+      <SectionCard className="max-w-4xl mx-auto">
+        <CategoryForm initialData={category} />
+      </SectionCard>
     </PageContainer>
   );
 }

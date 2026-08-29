@@ -8,14 +8,15 @@ import { CustomerCard } from "@/components/customers/CustomerCard";
 import { CustomerStatsCard } from "@/components/customers/CustomerStatsCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingBag, Calendar, DollarSign, Loader2, FileText } from "lucide-react";
+import { ShoppingBag, Calendar, DollarSign, Loader2, FileText, BookOpen } from "lucide-react";
 import { useFetch } from "@/hooks/useApi";
 import { ApiCustomer } from "@/types/customer";
 import { ApiSettings } from "@/services/settings.service";
 import { OrderService } from "@/services/order.service";
 import { OrderTable } from "@/components/orders/OrderTable";
-import { ApiInvoice } from "@/types/order";
+import { ApiInvoice, ApiPayment } from "@/types/order";
 import { Prescription } from "@/types/prescription";
+import { formatCurrency } from "@/lib/utils";
 
 interface CustomerWithDetails extends ApiCustomer {
   prescriptions?: Prescription[];
@@ -89,6 +90,7 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
+          <TabsTrigger value="ledger"><BookOpen className="h-3.5 w-3.5 mr-1.5" />Ledger</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-6">
@@ -224,6 +226,91 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
             ) : (
               <p className="text-sm text-muted-foreground text-center py-8">No prescriptions found for this customer.</p>
             )}
+          </CustomerCard>
+        </TabsContent>
+
+        <TabsContent value="ledger">
+          <CustomerCard title="Customer Ledger" description="Financial Dr/Cr history for this account.">
+            {(() => {
+              // Build ledger rows from invoices + their payments
+              type LedgerRow = { date: string; description: string; dr: number; cr: number; balance: number };
+              const rows: LedgerRow[] = [];
+              let balance = 0;
+              const allInvoices = [...invoices].sort(
+                (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              );
+              for (const inv of allInvoices) {
+                // DR — invoice created
+                balance += inv.grandTotal;
+                rows.push({
+                  date: inv.createdAt,
+                  description: `Invoice ${inv.invoiceNumber || `#${inv.id}`}`,
+                  dr: inv.grandTotal,
+                  cr: 0,
+                  balance,
+                });
+                // CR — each payment
+                for (const pmt of (inv.payments || [])) {
+                  balance -= pmt.amount;
+                  rows.push({
+                    date: pmt.createdAt || inv.createdAt,
+                    description: `Payment — ${pmt.paymentMethod}`,
+                    dr: 0,
+                    cr: pmt.amount,
+                    balance,
+                  });
+                }
+              }
+              if (rows.length === 0) return (
+                <p className="text-sm text-muted-foreground text-center py-8">No ledger entries yet.</p>
+              );
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-muted-foreground">
+                        <th className="text-left py-2 pr-4 font-medium">Date</th>
+                        <th className="text-left py-2 pr-4 font-medium">Description</th>
+                        <th className="text-right py-2 pr-4 font-medium text-red-600">Dr (Debit)</th>
+                        <th className="text-right py-2 pr-4 font-medium text-green-600">Cr (Credit)</th>
+                        <th className="text-right py-2 font-medium">Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((row, i) => (
+                        <tr key={i} className={`border-b last:border-0 hover:bg-muted/30 transition-colors ${row.dr > 0 ? 'bg-red-50/30' : 'bg-green-50/30'}`}>
+                          <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap">
+                            {new Date(row.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                          </td>
+                          <td className="py-2 pr-4 font-medium">{row.description}</td>
+                          <td className="py-2 pr-4 text-right text-red-600">
+                            {row.dr > 0 ? formatCurrency(row.dr) : ""}
+                          </td>
+                          <td className="py-2 pr-4 text-right text-green-600">
+                            {row.cr > 0 ? formatCurrency(row.cr) : ""}
+                          </td>
+                          <td className={`py-2 text-right font-semibold ${row.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            {formatCurrency(Math.abs(row.balance))}
+                            <span className="ml-1 text-xs font-normal">{row.balance > 0 ? 'Dr' : 'Cr'}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 font-semibold">
+                        <td colSpan={2} className="py-3 text-muted-foreground">Closing Balance</td>
+                        <td className="py-3 text-right text-red-600">{formatCurrency(rows.reduce((s, r) => s + r.dr, 0))}</td>
+                        <td className="py-3 pr-4 text-right text-green-600">{formatCurrency(rows.reduce((s, r) => s + r.cr, 0))}</td>
+                        <td className={`py-3 text-right ${(rows[rows.length - 1]?.balance ?? 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {formatCurrency(Math.abs(rows[rows.length - 1]?.balance ?? 0))}
+                          <span className="ml-1 text-xs font-normal">{(rows[rows.length - 1]?.balance ?? 0) > 0 ? 'Dr' : 'Cr'}</span>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              );
+            })()}
           </CustomerCard>
         </TabsContent>
 

@@ -18,6 +18,7 @@ export const createProductSchema = z.object({
     gstPercent: z.number().int().nonnegative().max(100).optional(),
     minStockAlert: z.number().int().nonnegative().max(10000).optional(),
     isActive: z.boolean().optional(),
+    productType: z.string().max(50).optional(),
     attributes: z.record(z.any()).optional(),
   })
 });

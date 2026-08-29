@@ -82,6 +82,27 @@ export interface CustomerReportData {
   }[];
 }
 
+export interface CategoryReportData {
+  kpis: {
+    totalCategories: number;
+    activeCategories: number;
+    totalRevenue: number;
+    totalInventoryValue: number;
+    topCategory: string;
+    topCategoryRevenue: number;
+  };
+  categoryBreakdown: {
+    id: number;
+    name: string;
+    isActive: boolean;
+    productCount: number;
+    stock: number;
+    inventoryValue: number;
+    revenue: number;
+    unitsSold: number;
+  }[];
+}
+
 export class ReportService {
   static async getSalesReport(startDate?: string, endDate?: string): Promise<SalesReportData> {
     const params = new URLSearchParams();
@@ -148,6 +169,18 @@ export class ReportService {
     const endpoint = queryString ? `/reports/payments?${queryString}` : `/reports/payments`;
     
     const response = await fetchClient<{ success: boolean; data: PaymentSummaryData[] }>(endpoint);
+    return response.data;
+  }
+
+  static async getCategoryReport(startDate?: string, endDate?: string): Promise<CategoryReportData> {
+    const params = new URLSearchParams();
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    
+    const queryString = params.toString();
+    const endpoint = queryString ? `/reports/categories?${queryString}` : `/reports/categories`;
+    
+    const response = await fetchClient<{ success: boolean; data: CategoryReportData }>(endpoint);
     return response.data;
   }
 }

@@ -80,9 +80,10 @@ interface OptionTagInputProps {
   definitionId: number;
   existingOptions: Array<{ id: number; value: string }>;
   onOptionAdded: (newOption: { id: number; value: string }) => void;
+  onOptionDeleted: (optionId: number) => void;
 }
 
-function OptionTagInput({ definitionId, existingOptions, onOptionAdded }: OptionTagInputProps) {
+function OptionTagInput({ definitionId, existingOptions, onOptionAdded, onOptionDeleted }: OptionTagInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +118,16 @@ function OptionTagInput({ definitionId, existingOptions, onOptionAdded }: Option
     }
   };
 
+  const handleDeleteOption = async (opt: { id: number; value: string }) => {
+    if (!confirm(`Delete option "${opt.value}"?`)) return;
+    try {
+      await ProductAttributeService.deleteAttributeOption(opt.id);
+      onOptionDeleted(opt.id);
+    } catch {
+      setError("Failed to delete option.");
+    }
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-1.5 min-h-[32px]">
@@ -126,8 +137,15 @@ function OptionTagInput({ definitionId, existingOptions, onOptionAdded }: Option
           </span>
         )}
         {existingOptions.map((opt) => (
-          <Badge key={opt.id} variant="secondary" className="text-xs h-6">
+          <Badge key={opt.id} variant="secondary" className="text-xs h-6 pr-1 gap-1 flex items-center">
             {opt.value}
+            <button
+              type="button"
+              onClick={() => handleDeleteOption(opt)}
+              className="rounded-full hover:bg-muted-foreground/20 p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
           </Badge>
         ))}
       </div>
@@ -172,9 +190,10 @@ interface AttributeRowProps {
   definition: ApiAttributeDefinition;
   onDelete: (id: number) => void;
   onOptionAdded: (defId: number, newOption: { id: number; value: string }) => void;
+  onOptionDeleted: (defId: number, optionId: number) => void;
 }
 
-function AttributeRow({ definition, onDelete, onOptionAdded }: AttributeRowProps) {
+function AttributeRow({ definition, onDelete, onOptionAdded, onOptionDeleted }: AttributeRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const meta = INPUT_TYPE_META[definition.inputType];
@@ -249,6 +268,7 @@ function AttributeRow({ definition, onDelete, onOptionAdded }: AttributeRowProps
             definitionId={definition.id}
             existingOptions={definition.options}
             onOptionAdded={(opt) => onOptionAdded(definition.id, opt)}
+            onOptionDeleted={(optId) => onOptionDeleted(definition.id, optId)}
           />
         </div>
       )}
@@ -480,6 +500,14 @@ export function CategoryAttributesManager({
     );
   };
 
+  const handleOptionDeleted = (defId: number, optionId: number) => {
+    setDefinitions((prev) =>
+      prev.map((d) =>
+        d.id === defId ? { ...d, options: d.options.filter(o => o.id !== optionId) } : d
+      )
+    );
+  };
+
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-6">
       {/* Section header */}
@@ -528,6 +556,7 @@ export function CategoryAttributesManager({
               definition={def}
               onDelete={handleDeleted}
               onOptionAdded={handleOptionAdded}
+              onOptionDeleted={handleOptionDeleted}
             />
           ))}
         </div>

@@ -35,11 +35,13 @@ const productSchema = z.object({
   categoryId: z.number({ required_error: "Category is required", invalid_type_error: "Category is required" }).min(1, "Category is required"),
   description: z.string().optional(),
   costPrice: z.number().min(0, "Must be >= 0"),
+  mrp: z.number().min(0, "Must be >= 0").optional(),
   sellingPrice: z.number().min(0, "Must be >= 0"),
   gstPercent: z.number().min(0).max(100),
   minStockAlert: z.number().min(0),
   initialStock: z.number().min(0).default(0),
   isActive: z.boolean(),
+  productType: z.string().optional().default("OTHER"),
   customFields: z.record(z.any()).optional(),
 });
 
@@ -69,11 +71,14 @@ function ProductFormInner({ initialData, categories }: ProductFormInnerProps) {
       categoryId: initialData?.categoryId || 0,
       description: initialData?.description || "",
       costPrice: initialData?.costPrice ? initialData.costPrice / 100 : 0,
+      mrp: initialData?.mrp ? initialData.mrp / 100 : undefined,
       sellingPrice: initialData?.sellingPrice ? initialData.sellingPrice / 100 : 0,
       gstPercent: initialData?.gstPercent ?? 18,
       minStockAlert: initialData?.minStockAlert ?? 5,
       initialStock: 0,
       isActive: initialData?.isActive ?? true,
+      productType: (initialData as any)?.productType || "OTHER",
+      // Dynamic fields loaded directly from the JSONB blob
       customFields: initialData?.attributes || {},
     },
   });
@@ -115,12 +120,18 @@ function ProductFormInner({ initialData, categories }: ProductFormInnerProps) {
     setIsSaving(true);
     setError(null);
     try {
-      const { initialStock, customFields: cf, ...rest } = values as any;
+      const { 
+        initialStock, 
+        customFields: cf, 
+        ...rest 
+      } = values as any;
+      
       const payload = {
         ...rest,
         costPrice: Math.round((rest.costPrice || 0) * 100),
+        mrp: rest.mrp != null ? Math.round(rest.mrp * 100) : undefined,
         sellingPrice: Math.round((rest.sellingPrice || 0) * 100),
-        attributes: (cf || {}) as Record<string, any>,
+        attributes: cf || {},
         initialStock: initialStock || 0,
       };
 

@@ -4,6 +4,8 @@ export interface ApiCategory {
   id: number;
   name: string;
   description: string;
+  parentId?: number | null;
+  attributeSchema?: any;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

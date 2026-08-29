@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { ApiCustomer } from "@/types/customer";
-import { Edit, FileText, Phone, Mail, MapPin } from "lucide-react";
+import { Edit, FileText, Phone, Mail, MapPin, Stethoscope, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
@@ -53,8 +53,20 @@ export function CustomerProfileHeader({ customer, children }: CustomerProfileHea
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-3 shrink-0 flex-wrap justify-end">
         {children}
+        <Button variant="outline" asChild>
+          <Link href={`/prescriptions/new?customerId=${customer.id}`}>
+            <Stethoscope className="mr-2 h-4 w-4" />
+            Add Prescription
+          </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href={`/payments/new?customerId=${customer.id}`}>
+            <CreditCard className="mr-2 h-4 w-4" />
+            Record Payment
+          </Link>
+        </Button>
         <Button variant="outline" asChild>
           <Link href={`/customers/${customer.id}/edit`}>
             <Edit className="mr-2 h-4 w-4" />

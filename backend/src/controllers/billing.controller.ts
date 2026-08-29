@@ -31,8 +31,8 @@ export class BillingController {
         userId: req.user?.id,
         action: 'CREATE_INVOICE',
         module: 'INVOICE',
-        recordId: result.invoiceId.toString(),
-        newValues: { invoiceId: result.invoiceId },
+        recordId: result.recordId.toString(),
+        newValues: { recordId: result.recordId, isOrder: result.isOrder },
         req,
       });
 

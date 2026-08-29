@@ -19,6 +19,7 @@ export const createInvoiceSchema = z.object({
 
 export const checkoutSchema = z.object({
   body: z.object({
+    action: z.enum(['SAVE_AS_ORDER', 'DIRECT_INVOICE']).optional(),
     invoiceId: z.string().trim().optional(),
     customerId: z.number().int().positive().optional(),
     items: z.array(

@@ -15,6 +15,34 @@
       "when": 1787672282209,
       "tag": "0001_heavy_ghost_rider",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787925067495,
+      "tag": "0002_dusty_photon",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787930416215,
+      "tag": "0003_remarkable_kingpin",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787930445343,
+      "tag": "0004_steady_peter_quill",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787932524220,
+      "tag": "0005_chief_boomerang",
+      "breakpoints": true
     }
   ]
 }

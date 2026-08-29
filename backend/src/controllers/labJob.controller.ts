@@ -28,11 +28,11 @@ export class LabJobController {
       const search = req.query.search as string | undefined;
       const status = req.query.status as string | undefined;
       const vendorId = req.query.vendorId ? parseInt(req.query.vendorId as string, 10) : undefined;
-      const invoiceId = req.query.invoiceId ? parseInt(req.query.invoiceId as string, 10) : undefined;
+      const orderId = req.query.orderId ? parseInt(req.query.orderId as string, 10) : undefined;
       const page = req.query.page ? parseInt(req.query.page as string, 10) : undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
 
-      const result = await labJobService.getAll({ search, status, vendorId, invoiceId, page, limit });
+      const result = await labJobService.getAll({ search, status, vendorId, orderId, page, limit });
       res.status(200).json({ success: true, data: result.data, meta: result.meta });
     } catch (error) {
       next(error);

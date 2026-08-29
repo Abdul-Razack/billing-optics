@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../config/db';
-import { products, categories, vendors, labJobs, invoices, customers } from '../db/schema';
+import { products, categories, vendors, labJobs, invoices, orders, customers } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { parse } from 'csv-parse';
 import * as fs from 'fs';
@@ -316,9 +316,9 @@ export class BulkController {
       let skipped = 0;
       let errors = [];
 
-      // Pre-fetch invoices mapping (invoiceNumber -> id)
-      const allInvoices = await db.select({ id: invoices.id, invoiceNumber: invoices.invoiceNumber }).from(invoices);
-      const invoiceMap = new Map(allInvoices.map(i => [i.invoiceNumber.toLowerCase(), i.id]));
+      // Pre-fetch orders mapping (orderNumber -> id)
+      const allOrders = await db.select({ id: orders.id, orderNumber: orders.orderNumber }).from(orders);
+      const orderMap = new Map(allOrders.map(o => [o.orderNumber.toLowerCase(), o.id]));
 
       // Pre-fetch vendors mapping (name -> id)
       const allVendors = await db.select({ id: vendors.id, name: vendors.name }).from(vendors);
@@ -333,16 +333,16 @@ export class BulkController {
             continue;
           }
 
-          const invoiceNumberRaw = row.invoiceNumber || row['Invoice Number'];
-          if (!invoiceNumberRaw) {
-            errors.push(`Row ${index + 1}: Missing Invoice Number`);
+          const orderNumberRaw = row.orderNumber || row['Order Number'];
+          if (!orderNumberRaw) {
+            errors.push(`Row ${index + 1}: Missing Order Number`);
             skipped++;
             continue;
           }
 
-          const invId = invoiceMap.get(invoiceNumberRaw.toLowerCase());
-          if (!invId) {
-            errors.push(`Row ${index + 1}: Invoice Number '${invoiceNumberRaw}' not found in database`);
+          const orderId = orderMap.get(orderNumberRaw.toLowerCase());
+          if (!orderId) {
+            errors.push(`Row ${index + 1}: Order Number '${orderNumberRaw}' not found in database`);
             skipped++;
             continue;
           }
@@ -379,7 +379,7 @@ export class BulkController {
 
           await db.insert(labJobs).values({
             jobTitle,
-            invoiceId: invId,
+            orderId: orderId,
             vendorId,
             status: status as any,
             notes,

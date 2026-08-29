@@ -85,4 +85,16 @@ export class ProductAttributeController {
       next(error);
     }
   }
+
+  // 5. Delete an attribute option
+  static async deleteAttributeOption(req: Request, res: Response, next: NextFunction) {
+    try {
+      const optionId = parseInt(req.params.optionId, 10);
+      await db.delete(productAttributeOptions)
+        .where(eq(productAttributeOptions.id, optionId));
+      res.status(200).json({ success: true });
+    } catch (error: any) {
+      next(error);
+    }
+  }
 }

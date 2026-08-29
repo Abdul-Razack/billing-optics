@@ -21,6 +21,7 @@ export interface CreateProductInput {
   minStockAlert?: number;
   sku?: string;
   barcode?: string;
+  productType?: string;
   attributes?: Record<string, any>;
   initialStock?: number;
 }
@@ -37,6 +38,7 @@ export interface UpdateProductInput {
   isDeleted?: boolean;
   sku?: string;
   barcode?: string;
+  productType?: string;
   attributes?: Record<string, any>;
 }
 
@@ -62,6 +64,7 @@ export class ProductService {
           minStockAlert: data.minStockAlert,
           sku,
           barcode,
+          productType: data.productType || 'OTHER',
           attributes: data.attributes || {},
         })
         .returning();

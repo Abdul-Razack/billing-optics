@@ -8,11 +8,13 @@ export interface ApiProduct {
   name: string;
   description: string;
   costPrice: number;
+  mrp?: number; // MRP / retail price (optional)
   sellingPrice: number;
   gstPercent: number;
   minStockAlert: number;
   stock?: number;
   isActive: boolean;
+  productType?: string; // FRAME | LENS | CONTACT_LENS | SUNGLASSES | SOLUTION | OTHER
   attributes: Record<string, any>;
   createdAt: string;
   updatedAt: string;

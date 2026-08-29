@@ -9,6 +9,7 @@ import { SalesTab } from "@/components/reports/tabs/SalesTab";
 import { InventoryTab } from "@/components/reports/tabs/InventoryTab";
 import { TaxesTab } from "@/components/reports/tabs/TaxesTab";
 import { CustomersTab } from "@/components/reports/tabs/CustomersTab";
+import { CategoriesTab } from "@/components/reports/tabs/CategoriesTab";
 
 export default function ReportsDashboardPage() {
   return (
@@ -27,6 +28,7 @@ export default function ReportsDashboardPage() {
             <TabsTrigger value="inventory" className="data-[state=active]:bg-background px-6">Inventory</TabsTrigger>
             <TabsTrigger value="taxes" className="data-[state=active]:bg-background px-6">GST & Taxes</TabsTrigger>
             <TabsTrigger value="customers" className="data-[state=active]:bg-background px-6">Customers</TabsTrigger>
+            <TabsTrigger value="categories" className="data-[state=active]:bg-background px-6">Categories</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sales" className="space-y-6">
@@ -43,6 +45,10 @@ export default function ReportsDashboardPage() {
 
           <TabsContent value="customers" className="space-y-6">
             <CustomersTab />
+          </TabsContent>
+
+          <TabsContent value="categories" className="space-y-6">
+            <CategoriesTab />
           </TabsContent>
         </Tabs>
       </PageContainer>

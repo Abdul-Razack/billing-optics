@@ -5,9 +5,9 @@ export class LabJobService {
   async create(data: any) {
     const dbData = {
       jobTitle: data.jobTitle,
-      invoiceId: data.invoiceId,
-      // Wire the clinical chain FKs — these were silently dropped before
-      invoiceItemId: data.invoiceItemId ? Number(data.invoiceItemId) : null,
+      orderId: data.orderId,
+      // Wire the clinical chain FKs
+      orderItemId: data.orderItemId ? Number(data.orderItemId) : null,
       prescriptionId: data.prescriptionId ? Number(data.prescriptionId) : null,
       vendorId: data.vendorId || null,
       status: data.status || 'PENDING',
@@ -19,7 +19,7 @@ export class LabJobService {
     return await LabJobRepository.create(dbData);
   }
 
-  async getAll(filters?: { search?: string; status?: string; vendorId?: number; invoiceId?: number; page?: number; limit?: number }) {
+  async getAll(filters?: { search?: string; status?: string; vendorId?: number; orderId?: number; page?: number; limit?: number }) {
     return await LabJobRepository.findAll(filters || {});
   }
 
@@ -41,7 +41,7 @@ export class LabJobService {
     if (data.sentDate !== undefined) dbData.sentDate = data.sentDate;
     if (data.receivedDate !== undefined) dbData.receivedDate = data.receivedDate;
     // Allow patching the clinical FKs on update as well
-    if (data.invoiceItemId !== undefined) dbData.invoiceItemId = data.invoiceItemId ? Number(data.invoiceItemId) : null;
+    if (data.orderItemId !== undefined) dbData.orderItemId = data.orderItemId ? Number(data.orderItemId) : null;
     if (data.prescriptionId !== undefined) dbData.prescriptionId = data.prescriptionId ? Number(data.prescriptionId) : null;
 
     return await LabJobRepository.update(id, dbData);

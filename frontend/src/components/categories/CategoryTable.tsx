@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ApiCategory } from "@/services/category.service";
 import { TableSkeleton } from "@/components/shared/LoadingSkeletons";
@@ -140,6 +141,16 @@ export function CategoryTable({ data, isLoading = false, onDelete }: CategoryTab
       cell: ({ row }) => (
         <div className="font-medium text-foreground">{row.getValue("name")}</div>
       )
+    },
+    {
+      accessorKey: "parentId",
+      header: "Parent Category",
+      cell: ({ row }) => {
+        const parentId = row.getValue<number>("parentId");
+        if (!parentId) return <span className="text-muted-foreground">-</span>;
+        const parent = data.find(c => c.id === parentId);
+        return <Badge variant="outline">{parent?.name || "Unknown"}</Badge>;
+      }
     },
     {
       accessorKey: "description",

@@ -10,6 +10,8 @@ export * from './products';
 export * from './inventoryLedger';
 export * from './invoices';
 export * from './invoiceItems';
+export * from './orders';
+export * from './orderItems';
 export * from './payments';
 export * from './settings';
 export * from './relations';

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { CategoryService } from "@/services/category.service";
 import { CategoryAttributesManager } from "@/components/categories/CategoryAttributesManager";
@@ -19,6 +20,7 @@ import { CategoryAttributesManager } from "@/components/categories/CategoryAttri
 const categorySchema = z.object({
   name: z.string().min(1, "Category Name is required"),
   description: z.string().optional().nullable(),
+  parentId: z.string().optional(),
   isActive: z.boolean(),
 });
 
@@ -32,6 +34,11 @@ export function CategoryForm({ initialData }: CategoryFormProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    CategoryService.getCategories().then(setCategories).catch(console.error);
+  }, []);
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
@@ -39,6 +46,7 @@ export function CategoryForm({ initialData }: CategoryFormProps) {
       name: initialData?.name || "",
       description: initialData?.description || "",
       isActive: initialData?.isActive ?? true,
+      parentId: initialData?.parentId ? String(initialData.parentId) : "none",
     },
   });
 
@@ -49,16 +57,16 @@ export function CategoryForm({ initialData }: CategoryFormProps) {
       const payload = {
         ...values,
         description: values.description || undefined,
+        parentId: values.parentId === "none" ? null : Number(values.parentId),
       };
       
       if (initialData) {
-        // Assume updateCategory exists on CategoryService, or fallback to fetchClient
         await CategoryService.updateCategory(initialData.id, payload);
       } else {
         await CategoryService.createCategory(payload);
       }
       router.push("/categories");
-      router.refresh(); // Refresh list
+      router.refresh(); 
     } catch (err: any) {
       setError(err.message || "An error occurred while saving the category.");
     } finally {
@@ -66,38 +74,19 @@ export function CategoryForm({ initialData }: CategoryFormProps) {
     }
   };
 
-  return (
-    <div className="space-y-8 max-w-2xl">
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="icon" asChild>
-              <Link href="/categories">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {initialData ? "Edit Category" : "Create Category"}
-            </h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" type="button" asChild disabled={isSaving}>
-              <Link href="/categories">Cancel</Link>
-            </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Category
-            </Button>
-          </div>
-        </div>
+  // Filter out self and children to prevent circular dependencies
+  const availableParents = categories.filter(c => c.id !== initialData?.id);
 
+  return (
+    <div className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {error && (
           <div className="p-4 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
             {error}
           </div>
         )}
 
-        <div className="space-y-6 rounded-xl border border-border bg-card p-6">
+        <div className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Category Name <span className="text-destructive">*</span></Label>
@@ -105,6 +94,29 @@ export function CategoryForm({ initialData }: CategoryFormProps) {
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="parentId">Parent Category</Label>
+              <Controller
+                control={form.control}
+                name="parentId"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select parent category (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (Top-level Category)</SelectItem>
+                      {availableParents.map((cat) => (
+                        <SelectItem key={cat.id} value={String(cat.id)}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             <div className="space-y-2">
@@ -136,6 +148,14 @@ export function CategoryForm({ initialData }: CategoryFormProps) {
               />
             </div>
           </div>
+        </div>
+        
+        <div className="flex justify-end space-x-4">
+          <Button variant="outline" type="button" onClick={() => router.back()} disabled={isSaving}>Cancel</Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {initialData ? "Save Changes" : "Create Category"}
+          </Button>
         </div>
       </form>
 

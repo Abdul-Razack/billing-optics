@@ -30,6 +30,13 @@ export class ReportService {
     return await ReportRepository.getCustomerAnalytics(customerType, frequency, startDate, endDate);
   }
 
+  
+  static async getCategoryReport(startDate?: Date, endDate?: Date) {
+    if (startDate && endDate && startDate > endDate) {
+      throw new ValidationError('startDate cannot be after endDate');
+    }
+    return await ReportRepository.getCategoryAnalytics(startDate, endDate);
+  }
   static async getLowStockReport() {
     return await ReportRepository.getProductsBelowStockThreshold();
   }

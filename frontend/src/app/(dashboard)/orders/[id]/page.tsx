@@ -8,7 +8,7 @@ import { OrderService } from "@/services/order.service";
 import { CustomerService } from "@/services/customer.service";
 import { ApiInvoice } from "@/types/order";
 import { ApiCustomer } from "@/types/customer";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -116,6 +116,14 @@ export default function OrderDetailsPage() {
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Orders
             </Link>
           </Button>
+          {invoice && (
+            <Button variant="outline" asChild>
+              <Link href={`/lab-jobs/new?invoiceId=${invoice.id}`}>
+                <FlaskConical className="mr-2 h-4 w-4" />
+                Send to Lab
+              </Link>
+            </Button>
+          )}
           {invoice && <InvoicePrintToolbar printRef={printRef} receiptRef={receiptRef} invoiceNumber={invoice.invoiceNumber || String(invoice.id)} invoiceId={invoice.id} />}
           {invoice && <OrderActionsBar invoice={invoice} onRecordPayment={() => handleRecordPayment(true)} />}
         </div>
@@ -153,6 +161,36 @@ export default function OrderDetailsPage() {
               
               <div className="space-y-6">
                 <CustomerInvoiceCard customer={customer} mockName={invoice.customerName} />
+
+                {/* Order Info — delivery date, salesperson, linked prescription */}
+                {(invoice.deliveryDate || invoice.salespersonId || invoice.prescriptionId) && (
+                  <div className="bg-white p-6 rounded-lg border shadow-sm space-y-3">
+                    <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">Order Info</h2>
+                    {invoice.deliveryDate && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Delivery Date</span>
+                        <span className="font-medium">
+                          {new Date(invoice.deliveryDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                      </div>
+                    )}
+                    {invoice.salespersonId && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Salesperson</span>
+                        <span className="font-medium">Staff #{invoice.salespersonId}</span>
+                      </div>
+                    )}
+                    {invoice.prescriptionId && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Linked Prescription</span>
+                        <Link href={`/prescriptions/${invoice.prescriptionId}`} className="font-medium text-primary hover:underline">
+                          Rx #{invoice.prescriptionId}
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <PaymentSummaryCard invoice={invoice} onRecordPayment={handleRecordPayment} />
                 
                 <div className="bg-white p-6 rounded-lg border shadow-sm">

@@ -6,6 +6,8 @@ import { categories } from './categories';
 import { products } from './products';
 import { invoices } from './invoices';
 import { invoiceItems } from './invoiceItems';
+import { orders } from './orders';
+import { orderItems } from './orderItems';
 import { payments } from './payments';
 import { inventoryLedger } from './inventoryLedger';
 import { auditLogs } from './auditLogs';
@@ -27,6 +29,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export const customersRelations = relations(customers, ({ many }) => ({
   invoices: many(invoices),
+  orders: many(orders),
   prescriptions: many(prescriptions),
   patients: many(patients),
 }));
@@ -80,6 +83,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
     references: [categories.id],
   }),
   invoiceItems: many(invoiceItems),
+  orderItems: many(orderItems),
   inventoryLedger: many(inventoryLedger),
   posShortcuts: many(posShortcuts),
 }));
@@ -99,10 +103,6 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   }),
   lines: many(invoiceItems),
   payments: many(payments),
-  labJob: one(labJobs, {
-    fields: [invoices.id],
-    references: [labJobs.invoiceId],
-  }),
 }));
 
 export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
@@ -114,17 +114,16 @@ export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
     fields: [invoiceItems.productId],
     references: [products.id],
   }),
-  // Back-relation: which lab job was created for this line item (if any)
-  labJob: one(labJobs, {
-    fields: [invoiceItems.id],
-    references: [labJobs.invoiceItemId],
-  }),
 }));
 
 export const paymentsRelations = relations(payments, ({ one }) => ({
   invoice: one(invoices, {
     fields: [payments.invoiceId],
     references: [invoices.id],
+  }),
+  order: one(orders, {
+    fields: [payments.orderId],
+    references: [orders.id],
   }),
 }));
 
@@ -154,15 +153,51 @@ export const vendorsRelations = relations(vendors, ({ many }) => ({
   labJobs: many(labJobs),
 }));
 
-export const labJobsRelations = relations(labJobs, ({ one }) => ({
-  invoice: one(invoices, {
-    fields: [labJobs.invoiceId],
-    references: [invoices.id],
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [orders.customerId],
+    references: [customers.id],
   }),
-  // The specific lens line item on the invoice this lab job was created for
-  invoiceItem: one(invoiceItems, {
-    fields: [labJobs.invoiceItemId],
-    references: [invoiceItems.id],
+  createdBy: one(users, {
+    fields: [orders.createdBy],
+    references: [users.id],
+  }),
+  offer: one(offers, {
+    fields: [orders.offerId],
+    references: [offers.id],
+  }),
+  lines: many(orderItems),
+  payments: many(payments),
+  labJob: one(labJobs, {
+    fields: [orders.id],
+    references: [labJobs.orderId],
+  }),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderItems.orderId],
+    references: [orders.id],
+  }),
+  product: one(products, {
+    fields: [orderItems.productId],
+    references: [products.id],
+  }),
+  labJob: one(labJobs, {
+    fields: [orderItems.id],
+    references: [labJobs.orderItemId],
+  }),
+}));
+
+export const labJobsRelations = relations(labJobs, ({ one }) => ({
+  order: one(orders, {
+    fields: [labJobs.orderId],
+    references: [orders.id],
+  }),
+  // The specific lens line item on the order this lab job was created for
+  orderItem: one(orderItems, {
+    fields: [labJobs.orderItemId],
+    references: [orderItems.id],
   }),
   // The patient's prescription that drove this lab order
   prescription: one(prescriptions, {

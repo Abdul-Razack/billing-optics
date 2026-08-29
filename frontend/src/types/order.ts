@@ -49,4 +49,10 @@ export interface ApiInvoice {
   offer?: Offer;
   lines?: ApiInvoiceLine[];
   payments?: ApiPayment[];
+  /** Expected delivery/pickup date */
+  deliveryDate?: string;
+  /** ID of the staff member who handled this sale */
+  salespersonId?: number;
+  /** ID of the linked prescription (if any) */
+  prescriptionId?: number;
 }

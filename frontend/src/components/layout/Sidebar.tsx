@@ -21,6 +21,9 @@ import {
   ChevronDown,
   Building2,
   FlaskConical,
+  PlusCircle,
+  ListOrdered,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -45,23 +48,43 @@ interface NavItem {
 // ─── Navigation structure ──────────────────────────────────────────────────────
 
 export const NAV_ITEMS: NavItem[] = [
-  { name: "Dashboard",      href: "/",             icon: LayoutDashboard, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
-  { name: "Sales / Invoices", href: "/invoices",   icon: FileText,        roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+  { name: "Dashboard", href: "/", icon: LayoutDashboard, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+  {
+    name: "Sales",
+    href: "/orders",
+    icon: FileText,
+    roles: ["ADMIN", "OPTOMETRIST", "CASHIER"],
+    children: [
+      { name: "New Invoice",    href: "/orders/create",      icon: PlusCircle,   roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+      { name: "Order History",  href: "/orders",             icon: ListOrdered,  roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+      { name: "Invoices",       href: "/invoices",           icon: FileText,     roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+      { name: "Bulk Invoice",   href: "/sales/bulk-invoice", icon: Layers,       roles: ["ADMIN"] },
+    ],
+  },
   {
     name: "Customers",
     href: "/customers",
     icon: Users,
     roles: ["ADMIN", "OPTOMETRIST", "CASHIER"],
     children: [
-      { name: "All Customers",  href: "/customers",            icon: Users,         roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
-      { name: "Marketing Hub",  href: "/customers/marketing",  icon: Gift,          roles: ["ADMIN", "OPTOMETRIST"] },
-      { name: "Visitors Log",   href: "/reports/visitors",     icon: ClipboardList, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
-      { name: "Offers & Coupons", href: "/customers/offers",   icon: Package,       roles: ["ADMIN"] },
-      { name: "Referral Network", href: "/customers/referrals", icon: Users,        roles: ["ADMIN", "OPTOMETRIST"] },
-      { name: "Loyalty Program", href: "/customers/loyalty",   icon: Gift,          roles: ["ADMIN", "OPTOMETRIST"] },
+      { name: "All Customers",    href: "/customers",            icon: Users,         roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+      { name: "Marketing Hub",    href: "/customers/marketing",  icon: Gift,          roles: ["ADMIN", "OPTOMETRIST"] },
+      { name: "Visitors Log",     href: "/reports/visitors",     icon: ClipboardList, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+      { name: "Offers & Coupons", href: "/customers/offers",     icon: Package,       roles: ["ADMIN"] },
+      { name: "Referral Network", href: "/customers/referrals",  icon: Users,         roles: ["ADMIN", "OPTOMETRIST"] },
+      { name: "Loyalty Program",  href: "/customers/loyalty",   icon: Gift,          roles: ["ADMIN", "OPTOMETRIST"] },
     ],
   },
-  { name: "Products",      href: "/products",      icon: Package,      roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+  {
+    name: "Products",
+    href: "/products",
+    icon: Package,
+    roles: ["ADMIN", "OPTOMETRIST", "CASHIER"],
+    children: [
+      { name: "All Products", href: "/products", icon: Package, roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
+      { name: "Categories", href: "/categories", icon: ListOrdered, roles: ["ADMIN", "OPTOMETRIST"] },
+    ],
+  },
   { name: "Purchases",     href: "/purchases",     icon: ShoppingCart, roles: ["ADMIN", "OPTOMETRIST"] },
   { name: "Inventory",     href: "/inventory",     icon: Boxes,        roles: ["ADMIN", "OPTOMETRIST"] },
   { name: "Prescriptions", href: "/prescriptions", icon: Stethoscope,  roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
@@ -70,7 +93,6 @@ export const NAV_ITEMS: NavItem[] = [
   { name: "Payments",      href: "/payments",      icon: CreditCard,   roles: ["ADMIN", "OPTOMETRIST", "CASHIER"] },
   { name: "Reports",       href: "/reports",       icon: BarChart3,    roles: ["ADMIN", "OPTOMETRIST"] },
   { name: "Users",         href: "/users",         icon: UserCog,      roles: ["ADMIN"] },
-  { name: "Custom Fields", href: "/custom-fields", icon: FormInput,    roles: ["ADMIN"] },
   { name: "Settings",      href: "/settings",      icon: Settings,     roles: ["ADMIN"] },
 ];
 

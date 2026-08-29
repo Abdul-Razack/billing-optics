@@ -31,14 +31,14 @@ export class LabJobRepository {
     const result = await dbClient.query.labJobs.findFirst({
       where: eq(labJobs.id, id),
       with: {
-        invoice: true,
+        order: true,
         vendor: true,
       }
     });
     return result;
   }
 
-  static async findAll(filters: { search?: string; status?: string; vendorId?: number; invoiceId?: number; page?: number; limit?: number }, dbClient: DbOrTx = db) {
+  static async findAll(filters: { search?: string; status?: string; vendorId?: number; orderId?: number; page?: number; limit?: number }, dbClient: DbOrTx = db) {
     const { page, limit, offset } = getPaginationParams(filters.page, filters.limit);
     const conditions: ReturnType<typeof eq>[] = [];
 
@@ -53,8 +53,8 @@ export class LabJobRepository {
     if (filters.vendorId !== undefined) {
       conditions.push(eq(labJobs.vendorId, filters.vendorId));
     }
-    if (filters.invoiceId !== undefined) {
-      conditions.push(eq(labJobs.invoiceId, filters.invoiceId));
+    if (filters.orderId !== undefined) {
+      conditions.push(eq(labJobs.orderId, filters.orderId));
     }
 
     const whereClause = conditions.length === 0
@@ -70,7 +70,7 @@ export class LabJobRepository {
       dbClient.query.labJobs.findMany({
         where: whereClause,
         with: {
-          invoice: true,
+          order: true,
           vendor: true,
         },
         orderBy: [desc(labJobs.createdAt)],

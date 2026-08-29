@@ -34,10 +34,16 @@ const prescriptionTestSchema = z.object({
   rightEyeNv: eyeMeasurementSchema.optional(),
   rightEyeAdd: z.string().optional().nullable(),
   rightEyePd: z.string().optional().nullable(),
+  rightEyePrism: z.string().optional().nullable(),
+  rightEyeBc: z.string().optional().nullable(),
+  rightEyeDia: z.string().optional().nullable(),
   leftEyeDv: eyeMeasurementSchema.optional(),
   leftEyeNv: eyeMeasurementSchema.optional(),
   leftEyeAdd: z.string().optional().nullable(),
   leftEyePd: z.string().optional().nullable(),
+  leftEyePrism: z.string().optional().nullable(),
+  leftEyeBc: z.string().optional().nullable(),
+  leftEyeDia: z.string().optional().nullable(),
 });
 
 const prescriptionSchema = z.object({
@@ -116,6 +122,8 @@ export function PrescriptionForm({ initialData }: PrescriptionFormProps) {
     control: form.control,
     name: "tests",
   });
+
+  const prescriptionType = form.watch("prescriptionType");
 
   // Auto-calculation logic for Near Vision (NV) based on Distance Vision (DV) + ADD
   const calculateNV = (testIndex: number, eye: "rightEye" | "leftEye") => {
@@ -341,41 +349,53 @@ export function PrescriptionForm({ initialData }: PrescriptionFormProps) {
                   <h4 className="font-semibold text-blue-700 flex items-center gap-2">
                     RIGHT EYE (OD)
                   </h4>
-                  <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium text-muted-foreground bg-muted py-2 rounded-md">
+                  <div className="grid grid-cols-8 gap-2 text-center text-sm font-medium text-muted-foreground bg-muted py-2 rounded-md">
                     <div className="col-span-2 text-left pl-4">Type</div>
                     <div>SPH</div>
                     <div>CYL</div>
                     <div>AXIS</div>
                     <div>VA</div>
+                    <div>PRISM</div>
                     <div>PD</div>
                   </div>
                   
                   {/* DV Row */}
-                  <div className="grid grid-cols-7 gap-2 items-center">
+                  <div className="grid grid-cols-8 gap-2 items-center">
                     <div className="col-span-2 font-medium text-sm text-muted-foreground pl-2">Distance Vision (DV)</div>
                     <Input placeholder="±0.00" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeDv.sph`)} onBlur={() => calculateNV(formIndex, "rightEye")} />
                     <Input placeholder="±0.00" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeDv.cyl`)} onBlur={() => calculateNV(formIndex, "rightEye")} />
                     <Input placeholder="0-180" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeDv.axis`)} onBlur={() => calculateNV(formIndex, "rightEye")} />
                     <Input placeholder="6/6" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeDv.va`)} />
+                    <Input placeholder="e.g. 2Δ" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyePrism`)} />
                     <Input placeholder="62" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyePd`)} />
                   </div>
 
                   {/* ADD Row */}
-                  <div className="grid grid-cols-7 gap-2 items-center">
+                  <div className="grid grid-cols-8 gap-2 items-center">
                     <div className="col-span-2 font-medium text-sm text-muted-foreground pl-2">Addition (ADD)</div>
                     <Input placeholder="+0.00" className="text-center font-mono bg-blue-50 border-blue-200" {...form.register(`tests.${formIndex}.rightEyeAdd`)} onBlur={() => calculateNV(formIndex, "rightEye")} />
-                    <div className="col-span-4 text-xs text-muted-foreground pl-2 italic">Fill ADD to auto-calculate Near Vision</div>
+                    <div className="col-span-5 text-xs text-muted-foreground pl-2 italic">Fill ADD to auto-calculate Near Vision</div>
                   </div>
 
                   {/* NV Row */}
-                  <div className="grid grid-cols-7 gap-2 items-center">
+                  <div className="grid grid-cols-8 gap-2 items-center">
                     <div className="col-span-2 font-medium text-sm text-muted-foreground pl-2">Near Vision (NV)</div>
                     <Input placeholder="±0.00" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeNv.sph`)} />
                     <Input placeholder="±0.00" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeNv.cyl`)} />
                     <Input placeholder="0-180" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeNv.axis`)} />
                     <Input placeholder="6/6" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeNv.va`)} />
-                    <div className="col-span-1"></div>
+                    <div className="col-span-2" />
                   </div>
+
+                  {/* Contact Lens BC/DIA */}
+                  {prescriptionType === "CONTACT_LENS" && (
+                    <div className="grid grid-cols-8 gap-2 items-center bg-amber-50/40 p-2 rounded border border-amber-200/60">
+                      <div className="col-span-2 font-medium text-sm text-amber-700 pl-2">CL: BC / DIA</div>
+                      <Input placeholder="e.g. 8.6" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeBc`)} />
+                      <Input placeholder="e.g. 14.2" className="text-center font-mono" {...form.register(`tests.${formIndex}.rightEyeDia`)} />
+                      <div className="col-span-4 text-xs text-muted-foreground italic">Base Curve / Diameter (Contact Lens)</div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="h-px bg-border w-full my-6"></div>
@@ -385,41 +405,53 @@ export function PrescriptionForm({ initialData }: PrescriptionFormProps) {
                   <h4 className="font-semibold text-green-700 flex items-center gap-2">
                     LEFT EYE (OS)
                   </h4>
-                  <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium text-muted-foreground bg-muted py-2 rounded-md">
+                  <div className="grid grid-cols-8 gap-2 text-center text-sm font-medium text-muted-foreground bg-muted py-2 rounded-md">
                     <div className="col-span-2 text-left pl-4">Type</div>
                     <div>SPH</div>
                     <div>CYL</div>
                     <div>AXIS</div>
                     <div>VA</div>
+                    <div>PRISM</div>
                     <div>PD</div>
                   </div>
                   
                   {/* DV Row */}
-                  <div className="grid grid-cols-7 gap-2 items-center">
+                  <div className="grid grid-cols-8 gap-2 items-center">
                     <div className="col-span-2 font-medium text-sm text-muted-foreground pl-2">Distance Vision (DV)</div>
                     <Input placeholder="±0.00" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeDv.sph`)} onBlur={() => calculateNV(formIndex, "leftEye")} />
                     <Input placeholder="±0.00" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeDv.cyl`)} onBlur={() => calculateNV(formIndex, "leftEye")} />
                     <Input placeholder="0-180" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeDv.axis`)} onBlur={() => calculateNV(formIndex, "leftEye")} />
                     <Input placeholder="6/6" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeDv.va`)} />
+                    <Input placeholder="e.g. 2Δ" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyePrism`)} />
                     <Input placeholder="62" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyePd`)} />
                   </div>
 
                   {/* ADD Row */}
-                  <div className="grid grid-cols-7 gap-2 items-center">
+                  <div className="grid grid-cols-8 gap-2 items-center">
                     <div className="col-span-2 font-medium text-sm text-muted-foreground pl-2">Addition (ADD)</div>
                     <Input placeholder="+0.00" className="text-center font-mono bg-blue-50 border-blue-200" {...form.register(`tests.${formIndex}.leftEyeAdd`)} onBlur={() => calculateNV(formIndex, "leftEye")} />
-                    <div className="col-span-4 text-xs text-muted-foreground pl-2 italic">Fill ADD to auto-calculate Near Vision</div>
+                    <div className="col-span-5 text-xs text-muted-foreground pl-2 italic">Fill ADD to auto-calculate Near Vision</div>
                   </div>
 
                   {/* NV Row */}
-                  <div className="grid grid-cols-7 gap-2 items-center">
+                  <div className="grid grid-cols-8 gap-2 items-center">
                     <div className="col-span-2 font-medium text-sm text-muted-foreground pl-2">Near Vision (NV)</div>
                     <Input placeholder="±0.00" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeNv.sph`)} />
                     <Input placeholder="±0.00" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeNv.cyl`)} />
                     <Input placeholder="0-180" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeNv.axis`)} />
                     <Input placeholder="6/6" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeNv.va`)} />
-                    <div className="col-span-1"></div>
+                    <div className="col-span-2" />
                   </div>
+
+                  {/* Contact Lens BC/DIA */}
+                  {prescriptionType === "CONTACT_LENS" && (
+                    <div className="grid grid-cols-8 gap-2 items-center bg-amber-50/40 p-2 rounded border border-amber-200/60">
+                      <div className="col-span-2 font-medium text-sm text-amber-700 pl-2">CL: BC / DIA</div>
+                      <Input placeholder="e.g. 8.6" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeBc`)} />
+                      <Input placeholder="e.g. 14.2" className="text-center font-mono" {...form.register(`tests.${formIndex}.leftEyeDia`)} />
+                      <div className="col-span-4 text-xs text-muted-foreground italic">Base Curve / Diameter (Contact Lens)</div>
+                    </div>
+                  )}
                 </div>
               </div>
             );

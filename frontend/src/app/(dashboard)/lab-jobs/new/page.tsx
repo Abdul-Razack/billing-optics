@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { Input } from "@/components/ui/input";
@@ -60,6 +60,7 @@ function RxPreview({ prescription }: { prescription: any }) {
 
 export default function CreateLabJobPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
@@ -69,6 +70,19 @@ export default function CreateLabJobPage() {
   const [notes, setNotes] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
   const [vendorId, setVendorId] = useState("");
+
+  // Pre-select invoice from URL param (e.g. coming from Order Detail → "Send to Lab")
+  useEffect(() => {
+    const invoiceIdParam = searchParams.get("invoiceId");
+    if (invoiceIdParam) {
+      const id = parseInt(invoiceIdParam, 10);
+      if (!isNaN(id)) {
+        setSelectedInvoiceId(id);
+        setInvoiceSearch(`Invoice #${id}`);
+        setJobTitle(`Lab Job — Invoice #${id}`);
+      }
+    }
+  }, [searchParams]);
 
   const { data: vendorsResponse } = useFetch<{ success: boolean; data: any[] }>("/vendors");
   const vendors = vendorsResponse?.data || [];

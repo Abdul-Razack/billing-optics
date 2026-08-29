@@ -6,6 +6,8 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CustomerSelector } from "@/components/orders/CustomerSelector";
 import { ProductOrderSelector } from "@/components/orders/ProductOrderSelector";
 import { InvoiceLineItems, InvoiceLineItem } from "@/components/orders/InvoiceLineItems";
@@ -18,10 +20,11 @@ import { ApiCustomer } from "@/types/customer";
 import { PaymentMethod, ApiInvoice } from "@/types/order";
 import { Offer } from "@/types/offer";
 import { toast } from "sonner";
-import { Loader2, Receipt, Save, CheckCircle2, ScanLine, Printer, ReceiptText, FileText } from "lucide-react";
+import { Loader2, Receipt, Save, CheckCircle2, ScanLine, Printer, ReceiptText, FileText, Calendar, UserCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
+import { useFetch } from "@/hooks/useApi";
 import { PrintableInvoice } from "@/components/orders/print/PrintableInvoice";
 import { PrintableReceipt } from "@/components/invoices/PrintableReceipt";
 import { useReactToPrint } from "react-to-print";
@@ -39,6 +42,12 @@ export default function CreateOrderPage() {
   const [customerId, setCustomerId] = useState<number | undefined>(undefined);
   const [customer, setCustomer] = useState<ApiCustomer | null>(null);
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
+  const [deliveryDate, setDeliveryDate] = useState<string>("");
+  const [salespersonId, setSalespersonId] = useState<number | undefined>(undefined);
+  
+  // Load users for salesperson dropdown
+  const { data: usersResponse } = useFetch<{ success: boolean; data: { id: number; fullName: string; role: string }[] }>('/users');
+  const staffUsers = usersResponse?.data || [];
   
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
@@ -129,19 +138,24 @@ export default function CreateOrderPage() {
   const totals = useMemo(() => {
     let sub = 0;
     let tax = 0;
+    let lineDiscount = 0;
     lineItems.forEach(item => {
-      const itemTotal = item.product.sellingPrice * item.quantity;
+      const itemBase = item.product.sellingPrice * item.quantity;
+      const itemDiscAmt = Math.round(itemBase * ((item.discountPercent || 0) / 100));
+      const itemTotal = itemBase - itemDiscAmt;
       const itemTax = Math.round((itemTotal * (item.product.gstPercent || 0)) / 100);
-      sub += itemTotal;
+      sub += itemBase;
+      lineDiscount += itemDiscAmt;
       tax += itemTax;
     });
 
-    let discount = 0;
+    let offerDiscount = 0;
+    const subAfterLineDisc = sub - lineDiscount;
     if (selectedOfferId) {
       const offer = availableOffers.find(o => o.id === selectedOfferId);
-      if (offer && sub >= (offer.minOrderValue || 0)) {
+      if (offer && subAfterLineDisc >= (offer.minOrderValue || 0)) {
         
-        let eligibleSubtotal = sub;
+        let eligibleSubtotal = subAfterLineDisc;
         if (offer.applicableProducts?.length || offer.applicableCategories?.length) {
           eligibleSubtotal = 0;
           lineItems.forEach(item => {
@@ -152,28 +166,32 @@ export default function CreateOrderPage() {
                isEligible = true;
             }
             if (isEligible) {
-               eligibleSubtotal += (item.product.sellingPrice * item.quantity);
+               const base = item.product.sellingPrice * item.quantity;
+               const disc = Math.round(base * ((item.discountPercent || 0) / 100));
+               eligibleSubtotal += (base - disc);
             }
           });
         }
 
         if (eligibleSubtotal > 0) {
           if (offer.type === 'PERCENTAGE') {
-            discount = Math.round((eligibleSubtotal * offer.value) / 100);
+            offerDiscount = Math.round((eligibleSubtotal * offer.value) / 100);
           } else {
-            discount = offer.value;
+            offerDiscount = offer.value;
           }
-          if (discount > sub + tax) discount = sub + tax;
+          if (offerDiscount > subAfterLineDisc + tax) offerDiscount = subAfterLineDisc + tax;
         }
       }
     }
 
-
+    const totalDiscount = lineDiscount + offerDiscount;
     return {
       subtotal: sub,
       taxTotal: tax,
-      discountTotal: discount,
-      grandTotal: sub + tax - discount
+      discountTotal: totalDiscount,
+      lineDiscount,
+      offerDiscount,
+      grandTotal: sub + tax - totalDiscount
     };
   }, [lineItems, selectedOfferId, availableOffers]);
 
@@ -262,6 +280,10 @@ export default function CreateOrderPage() {
     setLineItems((prev) => prev.filter(i => i.product.id !== productId));
   };
 
+  const handleUpdateDiscount = (productId: number, discountPercent: number) => {
+    setLineItems(prev => prev.map(i => i.product.id === productId ? { ...i, discountPercent } : i));
+  };
+
   // Set default full payment when items change, if not manually overridden
   const handleAutoFillPayment = () => {
     setAmountPaid(grandTotal / 100);
@@ -291,8 +313,10 @@ export default function CreateOrderPage() {
       const amountPaidCents = Math.round(amountPaid * 100);
       const payload = {
         customerId,
-        items: lineItems.map(i => ({ productId: i.product.id, quantity: i.quantity })),
+        items: lineItems.map(i => ({ productId: i.product.id, quantity: i.quantity, discountPercent: i.discountPercent || 0 })),
         offerId: selectedOfferId,
+        deliveryDate: deliveryDate || undefined,
+        salespersonId: salespersonId || undefined,
         payments: amountPaidCents > 0 ? [{
           method: paymentMethod,
           amount: amountPaidCents,
@@ -509,6 +533,50 @@ export default function CreateOrderPage() {
             </CardContent>
           </Card>
 
+          {/* Order Details: Delivery Date + Salesperson */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">Order Details</CardTitle>
+              <CardDescription>Optional fields for delivery tracking and staff attribution.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="delivery-date" className="flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    Delivery Date
+                  </Label>
+                  <Input
+                    id="delivery-date"
+                    type="date"
+                    value={deliveryDate}
+                    onChange={e => setDeliveryDate(e.target.value)}
+                    disabled={isSubmitting}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="salesperson" className="flex items-center gap-1.5">
+                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                    Salesperson
+                  </Label>
+                  <select
+                    id="salesperson"
+                    value={salespersonId ?? ""}
+                    onChange={e => setSalespersonId(e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                    disabled={isSubmitting}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  >
+                    <option value="">— Not assigned —</option>
+                    {staffUsers.map(u => (
+                      <option key={u.id} value={u.id}>{u.fullName}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
               <div>
@@ -536,6 +604,7 @@ export default function CreateOrderPage() {
                 <InvoiceLineItems 
                   items={lineItems} 
                   onChangeQuantity={handleUpdateQuantity}
+                  onChangeDiscount={handleUpdateDiscount}
                   onRemove={handleRemoveProduct}
                   disabled={isSubmitting}
                 />

@@ -53,7 +53,12 @@ export function ProductGridCard({ product, category, onDelete, onQuickStockUpdat
       <div className="p-4 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-1 gap-2">
           <h3 className="font-semibold text-lg line-clamp-1 flex-1">{product.name}</h3>
-          <span className="font-bold whitespace-nowrap">{formattedPrice}</span>
+          <div className="text-right whitespace-nowrap">
+            <span className="font-bold">{formattedPrice}</span>
+            {product.mrp && product.mrp > product.sellingPrice && (
+              <div className="text-xs text-muted-foreground line-through">{formatCurrency(product.mrp)}</div>
+            )}
+          </div>
         </div>
         
         <div className="text-xs text-muted-foreground mb-3 flex items-center justify-between">

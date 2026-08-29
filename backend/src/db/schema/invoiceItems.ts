@@ -18,6 +18,7 @@ export const invoiceItems = pgTable('invoice_items', {
   snapshotCostPrice: integer('snapshot_cost_price').notNull().default(0),
   snapshotTaxPercent: integer('snapshot_tax_percent').notNull(),
   quantity: integer('quantity').notNull().default(1),
+  discountPercent: integer('discount_percent').notNull().default(0),
   lineTotal: integer('line_total').notNull(),
   /**
    * Only set for Lens category line items.

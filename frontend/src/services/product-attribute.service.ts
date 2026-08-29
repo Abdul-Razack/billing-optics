@@ -61,4 +61,9 @@ export const ProductAttributeService = {
   deleteAttributeDefinition: async (id: number): Promise<void> => {
     await fetchClient(`/product-attributes/attributes/${id}`, { method: "DELETE" });
   },
+
+  /** Delete a specific attribute option */
+  deleteAttributeOption: async (optionId: number): Promise<void> => {
+    await fetchClient(`/product-attributes/options/${optionId}`, { method: "DELETE" });
+  },
 };

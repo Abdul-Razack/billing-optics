@@ -14,6 +14,8 @@ export const prescriptions = pgTable('prescriptions', {
   prescriptionType: varchar('prescription_type', { length: 50 }).default('EYEWEAR'),
   cardDescription: varchar('card_description', { length: 255 }),
   countInRecords: boolean('count_in_records').default(true),
+  /** Name of actual patient — may differ from account holder (e.g. family member) */
+  patientName: varchar('patient_name', { length: 255 }),
 
   lensTypes: jsonb('lens_types').$type<string[]>(), // Constant Use, Reading Wear, etc.
   notes: text('notes'),
@@ -76,9 +78,14 @@ export const prescriptionTests = pgTable('prescription_tests', {
   rightEyeNvAxis: integer('r_nv_axis'),
   rightEyeNvVa: varchar('r_nv_va', { length: 20 }),
 
-  // Right Eye Add & PD
+  // Right Eye Add, PD & PRISM
   rightEyeAdd: varchar('r_add', { length: 10 }),
   rightEyePd: varchar('r_pd', { length: 10 }),
+  rightEyePrism: varchar('r_prism', { length: 20 }),
+  /** Contact Lens: Base Curve (right eye) */
+  rightEyeBc: varchar('r_bc', { length: 10 }),
+  /** Contact Lens: Diameter (right eye) */
+  rightEyeDia: varchar('r_dia', { length: 10 }),
 
   // Left Eye (OS) Distance
   leftEyeDvSph: varchar('l_dv_sph', { length: 10 }),
@@ -92,7 +99,12 @@ export const prescriptionTests = pgTable('prescription_tests', {
   leftEyeNvAxis: integer('l_nv_axis'),
   leftEyeNvVa: varchar('l_nv_va', { length: 20 }),
 
-  // Left Eye Add & PD
+  // Left Eye Add, PD & PRISM
   leftEyeAdd: varchar('l_add', { length: 10 }),
   leftEyePd: varchar('l_pd', { length: 10 }),
+  leftEyePrism: varchar('l_prism', { length: 20 }),
+  /** Contact Lens: Base Curve (left eye) */
+  leftEyeBc: varchar('l_bc', { length: 10 }),
+  /** Contact Lens: Diameter (left eye) */
+  leftEyeDia: varchar('l_dia', { length: 10 }),
 });
