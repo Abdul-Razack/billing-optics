@@ -51,6 +51,12 @@ export function LoginForm() {
         return;
       }
       
+      if (values.rememberMe) {
+        localStorage.setItem("optics_remembered_email", values.email);
+      } else {
+        localStorage.removeItem("optics_remembered_email");
+      }
+
       await login(values.email, values.password, values.rememberMe);
       router.push("/");
     } catch (err: any) {
@@ -62,6 +68,13 @@ export function LoginForm() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // Pre-fill remembered email
+      const savedEmail = localStorage.getItem("optics_remembered_email");
+      if (savedEmail) {
+        form.setValue("email", savedEmail);
+        form.setValue("rememberMe", true);
+      }
+
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("expired") === "true") {
         setError("Your session has expired. Please log in again.");
@@ -69,7 +82,7 @@ export function LoginForm() {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
-  }, []);
+  }, [form]);
 
   // Redirect to dashboard if already logged in
   const { user } = useAuth();
@@ -88,6 +101,7 @@ export function LoginForm() {
           <Input 
             type="email" 
             placeholder="admin@opticspos.com" 
+            autoComplete="email"
             {...form.register("email")}
             className={form.formState.errors.email ? "border-destructive" : ""}
           />
@@ -102,6 +116,7 @@ export function LoginForm() {
             <Input 
               type={showPassword ? "text" : "password"} 
               placeholder="••••••••" 
+              autoComplete="current-password"
               {...form.register("password")}
               className={form.formState.errors.password ? "border-destructive pr-10" : "pr-10"}
             />
