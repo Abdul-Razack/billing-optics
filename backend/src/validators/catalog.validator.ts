@@ -3,7 +3,15 @@ import { z } from 'zod';
 export const createCategorySchema = z.object({
   body: z.object({
     name: z.string().trim().min(1).max(255),
+    description: z.string().trim().max(500).optional().nullable(),
+    parentId: z.number().int().positive().optional().nullable(),
+    isActive: z.boolean().optional(),
+    attributeSchema: z.any().optional(),
   }),
+});
+
+export const updateCategorySchema = z.object({
+  body: createCategorySchema.shape.body.partial(),
 });
 
 export const createProductSchema = z.object({

@@ -54,6 +54,7 @@ interface CategoryTableProps {
   data: ApiCategory[];
   isLoading?: boolean;
   onDelete?: (id: number) => void;
+  className?: string;
 }
 
 function CategoryActionsCell({ category, onDelete }: { category: ApiCategory, onDelete?: (id: number) => void }) {
@@ -92,9 +93,10 @@ function CategoryActionsCell({ category, onDelete }: { category: ApiCategory, on
                 variant="destructive"
                 className="cursor-pointer" 
                 onClick={handleDeleteClick}
+                disabled={(category.productCount ?? 0) > 0}
               >
                 <Trash className="mr-2 h-4 w-4" />
-                Delete
+                Delete {(category.productCount ?? 0) > 0 ? `(${category.productCount})` : ""}
               </DropdownMenuItem>
             </RequireRole>
           </DropdownMenuGroup>
@@ -106,23 +108,33 @@ function CategoryActionsCell({ category, onDelete }: { category: ApiCategory, on
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-destructive" />
-              Delete Category?
+              {(category.productCount ?? 0) > 0 ? "Cannot Delete Category" : "Delete Category?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
+              {(category.productCount ?? 0) > 0 ? (
+                <span>
+                  &quot;{category.name}&quot; has <strong>{category.productCount}</strong> active product(s) assigned to it. You must reassign or remove those products before deleting this category.
+                </span>
+              ) : (
+                <span>
+                  Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
+                </span>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => {
-                onDelete?.(category.id);
-                setShowDeleteDialog(false);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
+            {(category.productCount ?? 0) === 0 && (
+              <AlertDialogAction 
+                onClick={() => {
+                  onDelete?.(category.id);
+                  setShowDeleteDialog(false);
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -130,7 +142,12 @@ function CategoryActionsCell({ category, onDelete }: { category: ApiCategory, on
   );
 }
 
-export function CategoryTable({ data, isLoading = false, onDelete }: CategoryTableProps) {
+export function CategoryTable({
+  data,
+  isLoading = false,
+  onDelete,
+  className
+}: CategoryTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -141,6 +158,18 @@ export function CategoryTable({ data, isLoading = false, onDelete }: CategoryTab
       cell: ({ row }) => (
         <div className="font-medium text-foreground">{row.getValue("name")}</div>
       )
+    },
+    {
+      accessorKey: "productCount",
+      header: "Products",
+      cell: ({ row }) => {
+        const count = row.original.productCount ?? 0;
+        return (
+          <Badge variant={count > 0 ? "secondary" : "outline"} className="font-mono text-xs">
+            {count} {count === 1 ? "product" : "products"}
+          </Badge>
+        );
+      }
     },
     {
       accessorKey: "parentId",
@@ -169,7 +198,7 @@ export function CategoryTable({ data, isLoading = false, onDelete }: CategoryTab
       id: "actions",
       cell: ({ row }) => <CategoryActionsCell category={row.original} onDelete={onDelete} />,
     },
-  ], [onDelete]);
+  ], [onDelete, data]);
 
   const table = useReactTable({
     data,

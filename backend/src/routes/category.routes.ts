@@ -3,7 +3,7 @@ import { CategoryController } from '../controllers/category.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { authorizeRoles } from '../middleware/role.middleware';
 import { ROLES } from '../constants/roles';
-import { createCategorySchema } from '../validators/catalog.validator';
+import { createCategorySchema, updateCategorySchema } from '../validators/catalog.validator';
 import { validate } from '../middleware/validation.middleware';
 
 export function createCategoryRoutes() {
@@ -12,7 +12,7 @@ export function createCategoryRoutes() {
   router.get('/', authenticate, CategoryController.getAll);
   router.get('/:id', authenticate, CategoryController.getById);
   router.post('/', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validate(createCategorySchema), CategoryController.create);
-  router.put('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validate(createCategorySchema), CategoryController.update);
+  router.put('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), validate(updateCategorySchema), CategoryController.update);
   router.delete('/:id', authenticate, authorizeRoles(ROLES.ADMIN, ROLES.OPTOMETRIST), CategoryController.delete);
   return router;
 }

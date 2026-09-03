@@ -7,6 +7,7 @@ export interface ApiCategory {
   parentId?: number | null;
   attributeSchema?: any;
   isActive: boolean;
+  productCount?: number;
   createdAt: string;
   updatedAt: string;
 }

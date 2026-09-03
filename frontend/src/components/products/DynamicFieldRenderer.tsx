@@ -47,20 +47,33 @@ export function DynamicFieldRenderer({ fieldDef, value, onChange, onAddOption }:
         </div>
       );
     case "SELECT":
+      const options = fieldDef.options || [];
+      const hasSelectedInOptions = options.some((opt: any) => opt.value === value);
+
       return (
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1.5">
           <Select value={value || ""} onValueChange={(val) => { if (val) onChange(val); }}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="flex-1 h-9 text-sm">
               <SelectValue placeholder={`Select ${fieldDef.label.toLowerCase()}`} />
             </SelectTrigger>
-            <SelectContent>
-              {fieldDef.options?.map((opt: any) => (
+            <SelectContent className="max-h-64">
+              {value && !hasSelectedInOptions && (
+                <SelectItem value={value}>{value}</SelectItem>
+              )}
+              {options.map((opt: any) => (
                 <SelectItem key={opt.id} value={opt.value}>{opt.value}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           {onAddOption && (
-            <Button type="button" variant="outline" size="icon" onClick={() => onAddOption(fieldDef.id)} title="Add missing option">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="icon" 
+              className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={() => onAddOption(fieldDef.id)} 
+              title={`Add new ${fieldDef.label}`}
+            >
               <Plus className="h-4 w-4" />
             </Button>
           )}

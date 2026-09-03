@@ -27,7 +27,7 @@ export default function ProductAttributesSettingsPage() {
   const categories = categoriesResponse?.data || [];
 
   // Fetch attributes for selected category
-  const { data: attributesResponse, isLoading: attrsLoading } = useFetch<{ success: boolean, data: any[] }>(
+  const { data: attributesResponse, isLoading: attrsLoading, refetch: refetchAttributes } = useFetch<{ success: boolean, data: any[] }>(
     `/product-attributes/categories/${selectedCategory?.id || '0'}/attributes`,
     { enabled: !!selectedCategory }
   );
@@ -47,8 +47,7 @@ export default function ProductAttributesSettingsPage() {
       toast.success("Field created successfully");
       setIsAddDialogOpen(false);
       setNewField({ label: "", name: "", inputType: "SELECT", isRequired: false });
-      // In a real app we'd trigger a re-fetch, for now we can just reload or rely on mutate
-      window.location.reload();
+      refetchAttributes();
     } catch (error) {
       toast.error("Failed to create field");
     } finally {
@@ -63,7 +62,7 @@ export default function ProductAttributesSettingsPage() {
         method: "DELETE",
       });
       toast.success("Field deleted");
-      window.location.reload();
+      refetchAttributes();
     } catch (error) {
       toast.error("Failed to delete field");
     }
@@ -79,7 +78,7 @@ export default function ProductAttributesSettingsPage() {
       toast.success("Option added");
       setNewOptionValue("");
       setAddingOptionToId(null);
-      window.location.reload();
+      refetchAttributes();
     } catch (error) {
       toast.error("Failed to add option");
     }

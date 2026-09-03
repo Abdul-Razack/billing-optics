@@ -86,6 +86,26 @@ function ProductFormInner({ initialData, categories }: ProductFormInnerProps) {
   const { formState: { isDirty } } = form;
   
   const selectedCategoryId = form.watch("categoryId");
+
+  // Auto-sync productType to category name
+  useEffect(() => {
+    if (selectedCategoryId && categories.length > 0) {
+      const selectedCat = categories.find((c) => c.id === selectedCategoryId);
+      if (selectedCat) {
+        const lower = selectedCat.name.toLowerCase();
+        let mappedType = "OTHER";
+        if (lower.includes("frame")) mappedType = "FRAME";
+        else if (lower.includes("sunglass")) mappedType = "SUNGLASSES";
+        else if (lower.includes("contact")) mappedType = "CONTACT_LENS";
+        else if (lower.includes("lens")) mappedType = "LENS";
+        else if (lower.includes("solution")) mappedType = "SOLUTION";
+        else if (lower.includes("non-chargeable") || lower.includes("non chargeable")) mappedType = "NON_CHARGEABLE";
+
+        form.setValue("productType", mappedType, { shouldDirty: true });
+      }
+    }
+  }, [selectedCategoryId, categories, form]);
+
   const { data: attributesResponse, refetch: refetchAttributes } = useFetch<{ success: boolean, data: any[] }>(
     `/product-attributes/categories/${selectedCategoryId || '0'}/attributes`,
     { enabled: !!selectedCategoryId }
@@ -171,8 +191,21 @@ function ProductFormInner({ initialData, categories }: ProductFormInnerProps) {
     [form, onSubmit]
   );
 
+  // Auto-select Frame (or first category) on create mode so optical parameters appear right away
+  useEffect(() => {
+    if (!isEditMode && categories.length > 0 && !form.getValues("categoryId")) {
+      const defaultCat = categories.find((c) => c.name.toLowerCase() === "frame") || categories[0];
+      if (defaultCat) {
+        form.setValue("categoryId", defaultCat.id, { shouldDirty: false });
+        form.setValue("gstPercent", 18, { shouldDirty: false });
+      }
+    }
+  }, [categories, isEditMode, form]);
+
+  const selectedCat = categories.find((c) => c.id === selectedCategoryId);
+
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto pb-12">
       {isEditMode && initialData && (
         <ProductEditHeader title={initialData.name} isDirty={isDirty} />
       )}
@@ -185,27 +218,21 @@ function ProductFormInner({ initialData, categories }: ProductFormInnerProps) {
 
       <FormProvider {...form}>
         <UnsavedChangesGuard isDirty={isDirty} />
-        <form onSubmit={handleFormSubmit} className="space-y-8">
-          
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            {/* Main Form Area */}
-            <div className="xl:col-span-2 space-y-8">
-              <ProductFormFields categories={categories} isEditMode={isEditMode} />
-              
-              {categoryAttributes.length > 0 && (
-                <ProductCustomFields 
-                  customFields={categoryAttributes} 
-                  onAddOption={(fieldId) => setInlineOptionModal({ isOpen: true, fieldId, value: "" })}
-                />
-              )}
-            </div>
+        <form onSubmit={handleFormSubmit} className="space-y-6">
+          <ProductFormFields categories={categories} isEditMode={isEditMode}>
+            {categoryAttributes.length > 0 && (
+              <ProductCustomFields 
+                customFields={categoryAttributes} 
+                categoryName={selectedCat?.name}
+                onAddOption={(fieldId) => setInlineOptionModal({ isOpen: true, fieldId, value: "" })}
+              />
+            )}
+          </ProductFormFields>
 
-            {/* Sidebar Area */}
-            <div className="xl:col-span-1 space-y-8">
-              <ProductImageUploader maxImages={5} />
-            </div>
-          </div>
+          {/* Product Media */}
+          <ProductImageUploader maxImages={5} />
 
+          {/* Form Actions */}
           {isEditMode ? (
             <ProductUpdateActions isSaving={isSaving} isDirty={isDirty} />
           ) : (

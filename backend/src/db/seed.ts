@@ -61,11 +61,16 @@ async function seed() {
 
     console.log('Seeding categories...');
     const insertedCategories = await db.insert(categories).values([
-      { name: 'Frames', description: 'Spectacle frames and sunglasses' },
-      { name: 'Lenses', description: 'Ophthalmic lenses' },
+      { name: 'Frame', description: 'Optical frames and spectacle eyeglasses' },
+      { name: 'Sunglasses', description: 'Fashion and prescription sunglasses' },
+      { name: 'Lens', description: 'Ophthalmic prescription spectacle lenses' },
+      { name: 'Contact Lens', description: 'Contact lenses, toric, and cosmetic colored lenses' },
+      { name: 'Solution', description: 'Contact lens and eyeglass cleaning solutions' },
+      { name: 'Other', description: 'Optical accessories, cases, cloths, and spare parts' },
+      { name: 'Non-Chargeable', description: 'Promotional giveaways, sample kits, and packaging materials' },
     ]).returning();
-    const framesCategory = insertedCategories.find((c) => c.name === 'Frames')!;
-    const lensesCategory = insertedCategories.find((c) => c.name === 'Lenses')!;
+    const framesCategory = insertedCategories.find((c) => c.name === 'Frame')!;
+    const lensesCategory = insertedCategories.find((c) => c.name === 'Lens')!;
     console.log('Categories seeded.');
 
     console.log('Seeding products...');
